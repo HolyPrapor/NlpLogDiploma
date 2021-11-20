@@ -1,6 +1,10 @@
+from collections import Counter
 from typing import Tuple
-
+# from bigfloat import *
+from decimal import *
 from model import ModelInterface
+import random
+import pickle
 
 
 class ArithmeticEncoder:
@@ -13,7 +17,10 @@ class ArithmeticEncoder:
         self.token_by_symbol = self.model.preprocess(text)
 
     def encode(self) -> Tuple[float]:
-        lower_bound, upper_bound = 0, 1
+        # if model.get_probabilities(a) == model.get_probabilities(a)
+        # if index of required token = 3
+        # we need only prefix sum 0 2
+        lower_bound, upper_bound = Decimal(0), Decimal(1)
         prev_symbol = ArithmeticEncoder.START_SYMBOL
         for current_symbol in self.text:
             current_length = upper_bound - lower_bound
@@ -29,11 +36,11 @@ class ArithmeticEncoder:
     def decode(self, result_lower_bound: float, result_upper_bound: float) -> str:
         # TODO: think about tokens from who i get tokens in decode
         # TODO: think about compare float
-        lower_bound = 0
-        upper_bound = 1
+        lower_bound = Decimal(0)
+        upper_bound = Decimal(1)
         tokens = []
         prev_token = self.token_by_symbol[ArithmeticEncoder.START_SYMBOL]
-        while lower_bound != result_lower_bound:
+        while lower_bound.compare(result_lower_bound) != 0 or upper_bound.compare(result_upper_bound) != 0:
             current_length = upper_bound - lower_bound
             for token, probability in sorted(self.model.get_probabilities(prev_token).items(),
                                              key=lambda item: -item[1]):
@@ -55,7 +62,7 @@ class TestModel(ModelInterface):
         return {'a': 1, 'b': 2, 'c': 3, '': 4}
 
     def get_probabilities(self, token):
-        return {1: 0.6, 2: 0.2, 3: 0.15, 4: 0.05}
+        return {1: Decimal(0.6), 2: Decimal(0.2), 3: Decimal(0.15), 4: Decimal(0.13)}
 
     def postprocess(self, tokens):
         symbols_by_token = {1: 'a', 2: 'b', 3: 'c', 4: ''}
@@ -65,9 +72,36 @@ class TestModel(ModelInterface):
         return ''.join(symbols)
 
 
-s = "ccbaccbaccaccb"
-encoder = ArithmeticEncoder(TestModel(), s)
-res = encoder.encode()
-print(res)
-print(encoder.decode(*res))
-print(s == encoder.decode(*res))
+def get_symbol(rand):
+    if rand < 0.3:
+        return 'a'
+    if rand < 0.6:
+        return 'b'
+    return 'c'
+
+
+def benchmark(n):
+    for _ in range(n):
+        amount = random.randint(10000, 50000)
+        s = ''.join([get_symbol(random.random()) for i in range(amount)])
+        getcontext().prec = amount
+
+        print(amount, Counter(s))
+
+        # print(s)
+        encoder = ArithmeticEncoder(TestModel(), s)
+        res = encoder.encode()
+        # print(res)
+        # print(encoder.decode(*res))
+        print(s == encoder.decode(*res))
+        with open('test.bin', 'wb') as f:
+            pickle.dump(res, f)
+        with open('test.ex', 'wb') as f:
+            pickle.dump(s, f)
+
+
+benchmark(1)
+
+
+# 11100101001
+# 11100100000
