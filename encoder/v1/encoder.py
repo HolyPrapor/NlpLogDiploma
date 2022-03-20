@@ -1,10 +1,12 @@
+import pickle
+import random
 from collections import Counter
-from typing import Tuple
 # from bigfloat import *
 from decimal import *
+from typing import Tuple
+
+from model.test_model import TestModel
 from model import ModelInterface
-import random
-import pickle
 
 
 class ArithmeticEncoder:
@@ -24,7 +26,7 @@ class ArithmeticEncoder:
         prev_symbol = ArithmeticEncoder.START_SYMBOL
         for current_symbol in self.text:
             current_length = upper_bound - lower_bound
-            for token, probability in sorted(self.model.get_probabilities(self.token_by_symbol[prev_symbol]).items(),
+            for token, probability in sorted(self.model.get_frequencies(self.token_by_symbol[prev_symbol]).items(),
                                              key=lambda item: -item[1]):
                 if token == self.token_by_symbol[current_symbol]:
                     upper_bound = lower_bound + probability * current_length
@@ -42,7 +44,7 @@ class ArithmeticEncoder:
         prev_token = self.token_by_symbol[ArithmeticEncoder.START_SYMBOL]
         while lower_bound.compare(result_lower_bound) != 0 or upper_bound.compare(result_upper_bound) != 0:
             current_length = upper_bound - lower_bound
-            for token, probability in sorted(self.model.get_probabilities(prev_token).items(),
+            for token, probability in sorted(self.model.get_frequencies(prev_token).items(),
                                              key=lambda item: -item[1]):
                 if (lower_bound <= result_lower_bound and
                         lower_bound + probability * current_length >= result_upper_bound):
@@ -52,25 +54,6 @@ class ArithmeticEncoder:
                     break
                 lower_bound += probability * current_length
         return self.model.postprocess(tokens)
-
-
-class TestModel(ModelInterface):
-    def __init__(self):
-        pass
-
-    def preprocess(self, text):
-        return {'a': 1, 'b': 2, 'c': 3, '': 4}
-
-    def get_probabilities(self, token):
-        return {1: Decimal(0.6), 2: Decimal(0.2), 3: Decimal(0.15), 4: Decimal(0.13)}
-
-    def postprocess(self, tokens):
-        symbols_by_token = {1: 'a', 2: 'b', 3: 'c', 4: ''}
-        symbols = []
-        for token in tokens:
-            symbols.append(symbols_by_token[token])
-        return ''.join(symbols)
-
 
 def get_symbol(rand):
     if rand < 0.3:
