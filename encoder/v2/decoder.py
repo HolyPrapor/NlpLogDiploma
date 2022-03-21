@@ -12,7 +12,6 @@ class ArithmeticDecoder(ArithmeticCoderBase):
         for _ in range(self.num_state_bits):
             self.code = self.code << 1 | self.read_code_bit()
 
-    # TODO: replace int result by token
     def read(self, frequencies: Dict[Token, int]) -> Token:
         total = max(frequencies.values())
 
