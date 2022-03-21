@@ -26,7 +26,7 @@ class ArithmeticEncoder:
         prev_symbol = ArithmeticEncoder.START_SYMBOL
         for current_symbol in self.text:
             current_length = upper_bound - lower_bound
-            for token, probability in sorted(self.model.get_frequencies(self.token_by_symbol[prev_symbol]).items(),
+            for token, probability in sorted(self.model.get_probabilities(self.token_by_symbol[prev_symbol]).items(),
                                              key=lambda item: -item[1]):
                 if token == self.token_by_symbol[current_symbol]:
                     upper_bound = lower_bound + probability * current_length
@@ -44,7 +44,7 @@ class ArithmeticEncoder:
         prev_token = self.token_by_symbol[ArithmeticEncoder.START_SYMBOL]
         while lower_bound.compare(result_lower_bound) != 0 or upper_bound.compare(result_upper_bound) != 0:
             current_length = upper_bound - lower_bound
-            for token, probability in sorted(self.model.get_frequencies(prev_token).items(),
+            for token, probability in sorted(self.model.get_probabilities(prev_token).items(),
                                              key=lambda item: -item[1]):
                 if (lower_bound <= result_lower_bound and
                         lower_bound + probability * current_length >= result_upper_bound):

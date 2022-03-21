@@ -9,7 +9,7 @@ class ModelInterface:
     def preprocess(self, text: str) -> List[Token]:
         raise NotImplementedError()
 
-    def get_frequencies(self, token: Token) -> Dict[Token, int]:
+    def get_probabilities(self, tokens: List[Token]) -> Dict[Token, float]:
         raise NotImplementedError()
 
     def postprocess(self, tokens: List[Token]) -> str:
@@ -18,5 +18,5 @@ class ModelInterface:
     def get_eof_token(self) -> Token:
         raise NotImplementedError()
 
-    def get_sof_token(self) -> Token:
+    def get_left_padding(self, tokens: List[Token], window_size: int) -> List[Token]:
         raise NotImplementedError()
