@@ -1,4 +1,5 @@
 from typing import List, Dict
+from os import path
 
 from model.model import ModelInterface, Token
 import youtokentome as yttm
@@ -12,8 +13,12 @@ class LstmLogModel(ModelInterface):
         return [0 for _ in range(len(tokens) - window_size)] + tokens
 
     def __init__(self, yttm_model_path=None, lstm_model_path=None):
-        yttm_model_path = "yttm.model" if not yttm_model_path else yttm_model_path
-        lstm_model_path = "lstm" if not lstm_model_path else lstm_model_path
+        cur_dir = path.dirname(__file__)
+        yttm_model_path = path.join(
+            cur_dir, "yttm.model") if not yttm_model_path else yttm_model_path
+        lstm_model_path = path.join(
+            cur_dir, "lstm") if not lstm_model_path else lstm_model_path
+
         self.bpe = yttm.BPE(model=yttm_model_path)
         self.model = tf.keras.models.load_model(lstm_model_path)
 
