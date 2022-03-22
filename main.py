@@ -1,6 +1,6 @@
 from encoder.v2.encoder import ArithmeticEncoder
 from encoder.v2.decoder import ArithmeticDecoder
-from model.test_model import TestModel
+from model.lstm_log_model.lstm_log_model import LstmLogModel
 from iostream.input_stream import BitInputStream
 from iostream.output_stream import BitOutputStream
 from argparse import ArgumentParser, Namespace
@@ -27,7 +27,7 @@ def parse_args():
 
 
 def main(args: Namespace) -> None:
-    model = TestModel()
+    model = LstmLogModel()
     if args.mode == ENCODE:
         encode(model, args.input, args.output, args.num_bits, args.encoding, args.window_size)
     if args.mode == DECODE:

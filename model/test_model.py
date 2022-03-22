@@ -19,7 +19,7 @@ class TestModel(ModelInterface):
             tokens.append(self.token_by_symbol[symbol])
         return tokens
 
-    def get_probabilities(self, token: Token) -> Dict[Token, int]:
+    def get_probabilities(self, tokens: List[Token]) -> Dict[Token, float]:
         return self.prob
 
     def postprocess(self, tokens: List[Token]) -> str:
