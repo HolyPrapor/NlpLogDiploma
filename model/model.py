@@ -1,4 +1,4 @@
-from typing import Dict, List, NamedTuple
+from typing import List, NamedTuple, Tuple
 
 
 class Token(NamedTuple):
@@ -9,7 +9,7 @@ class ModelInterface:
     def preprocess(self, text: str) -> List[Token]:
         raise NotImplementedError()
 
-    def get_probabilities(self, tokens: List[Token]) -> Dict[Token, float]:
+    def get_probabilities(self, tokens: List[Token]) -> List[Tuple[Token, float]]:
         raise NotImplementedError()
 
     def postprocess(self, tokens: List[Token]) -> str:

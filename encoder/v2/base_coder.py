@@ -1,5 +1,4 @@
-from typing import Dict
-from model.model import Token
+from typing import List
 
 
 class ArithmeticCoderBase:
@@ -18,12 +17,12 @@ class ArithmeticCoderBase:
         self.low = 0
         self.high = self.state_mask
 
-    def update(self, frequencies: Dict[Token, int], symbol: Token) -> None:
+    def update(self, frequencies: List[int], symbol: int) -> None:
         range_length = self.high - self.low + 1
 
-        total = max(frequencies.values())
-        symbol_low = int(frequencies[Token(symbol.value - 1)]) if symbol.value > 1 else 0
-        symbol_high = int(frequencies[symbol])
+        total = frequencies[-1]
+        symbol_low = frequencies[symbol - 1] if symbol > 0 else 0
+        symbol_high = frequencies[symbol]
         low = self.low
 
         self.low = low + symbol_low * range_length // total

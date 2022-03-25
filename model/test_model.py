@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Tuple
 
 from model.model import ModelInterface, Token
 
@@ -8,7 +8,7 @@ class TestModel(ModelInterface):
         return tokens
 
     def __init__(self):
-        self.prob = {Token(1): 16, Token(2): 24, Token(3): 28, Token(4): 30, Token(5): 32}
+        self.prob = [(Token(1), 0.5), (Token(2), 0.25), (Token(3), 0.125), (Token(4), 0.125)]
         self.token_by_symbol = {'a': Token(1), 'b': Token(2), 'c': Token(3), '': Token(4)}
         self.symbol_by_token = {Token(1): 'a', Token(2): 'b', Token(3): 'c', Token(4): ''}
 
@@ -19,7 +19,7 @@ class TestModel(ModelInterface):
             tokens.append(self.token_by_symbol[symbol])
         return tokens
 
-    def get_probabilities(self, token: Token) -> Dict[Token, int]:
+    def get_probabilities(self, token: Token) -> List[Tuple[Token, float]]:
         return self.prob
 
     def postprocess(self, tokens: List[Token]) -> str:
@@ -29,4 +29,4 @@ class TestModel(ModelInterface):
         return ''.join(text)
 
     def get_eof_token(self) -> Token:
-        return Token(5)
+        return Token(4)
