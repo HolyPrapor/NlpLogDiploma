@@ -5,7 +5,7 @@ from iostream.input_stream import BitInputStream
 from iostream.output_stream import BitOutputStream
 from argparse import ArgumentParser, Namespace
 from model.model import ModelInterface, Token
-from typing import Dict
+from typing import List, Tuple, Dict
 from math import ceil
 
 ENCODE = 'encode'
@@ -34,12 +34,18 @@ def main(args: Namespace) -> None:
         decode(model, args.input, args.output, args.num_bits, args.encoding, args.window_size)
 
 
-def probabilities_to_frequencies(probabilities: Dict[Token, float], num_bits: int) -> Dict[Token, int]:
-    frequencies = {}
-    for token in probabilities:
-        left = frequencies[Token(token.value - 1)] if token.value > 1 else 0
-        frequencies[token] = left + ceil((2 ** num_bits - 1) * probabilities[token])
-    return frequencies
+def probabilities_to_frequencies(probabilities: List[Tuple[Token, float]], num_bits: int) -> Tuple[List[int],
+                                                                                                   List[Token],
+                                                                                                   Dict[Token, int]]:
+    frequencies = []
+    index_to_token = []
+    token_to_index = {}
+    for token, probability in probabilities:
+        token_to_index[token] = len(frequencies)
+        index_to_token.append(token)
+        left = frequencies[-1] if frequencies else 0
+        frequencies.append(left + ceil((2 ** num_bits - 1) * probability))
+    return frequencies, index_to_token, token_to_index
 
 
 def encode(model: ModelInterface, input_file: str, output_file: str, num_bits: int, encoding: str,
@@ -51,8 +57,9 @@ def encode(model: ModelInterface, input_file: str, output_file: str, num_bits: i
     tokens = model.preprocess(input_text)
     tokens.append(model.get_eof_token())
     for i in range(len(tokens)):
-        encoder.write(probabilities_to_frequencies(model.get_probabilities(model.get_left_padding(
-            tokens[i-window_size+1:i+1], window_size)), num_bits), tokens[i])
+        frequencies, _, token_to_index = probabilities_to_frequencies(model.get_probabilities(model.get_left_padding(
+            tokens[max(i-window_size+1, 0):i+1], window_size)), num_bits)
+        encoder.write(frequencies, token_to_index[tokens[i]])
     encoder.finish()
     output_stream.close()
 
@@ -63,8 +70,9 @@ def decode(model: ModelInterface, input_file: str, output_file: str, num_bits: i
     decoder = ArithmeticDecoder(num_bits, input_stream)
     tokens = []
     while True:
-        current_token = decoder.read(probabilities_to_frequencies(model.get_probabilities(model.get_left_padding(
-            tokens[-window_size:], window_size)), num_bits))
+        frequencies, index_to_token, _ = probabilities_to_frequencies(model.get_probabilities(model.get_left_padding(
+            tokens[-window_size:], window_size)), num_bits)
+        current_token = index_to_token[decoder.read(frequencies)]
         if current_token == model.get_eof_token():
             break
         tokens.append(current_token)

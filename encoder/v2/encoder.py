@@ -1,7 +1,6 @@
 from encoder.v2.base_coder import ArithmeticCoderBase
 from iostream.output_stream import BitOutputStream
-from typing import Dict
-from model.model import Token
+from typing import List
 
 
 class ArithmeticEncoder(ArithmeticCoderBase):
@@ -10,7 +9,7 @@ class ArithmeticEncoder(ArithmeticCoderBase):
         self.output_stream = output_stream
         self.num_underflow = 0
 
-    def write(self, frequencies: Dict[Token, int], symbol: Token) -> None:
+    def write(self, frequencies: List[int], symbol: int) -> None:
         self.update(frequencies, symbol)
 
     def finish(self) -> None:
