@@ -58,7 +58,7 @@ def encode(model: ModelInterface, input_file: str, output_file: str, num_bits: i
     tokens.append(model.get_eof_token())
     for i in range(len(tokens)):
         frequencies, _, token_to_index = probabilities_to_frequencies(model.get_probabilities(model.get_left_padding(
-            tokens[max(i-window_size+1, 0):i+1], window_size)), num_bits)
+            tokens[max(i-window_size, 0):i], window_size)), num_bits)
         encoder.write(frequencies, token_to_index[tokens[i]])
     encoder.finish()
     output_stream.close()
