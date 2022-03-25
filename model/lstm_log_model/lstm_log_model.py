@@ -31,14 +31,14 @@ class LstmLogModel(ModelInterface):
     def get_probabilities(self, tokens: List[Token]) -> Dict[Token, float]:
         decoded = self.__decode_tokens(tokens)
         result = self.model.predict(np.expand_dims(decoded, axis=0))[0]
-        return {Token(k): v for k, v in enumerate(result)}
+        return [(Token(k), v) for k, v in enumerate(result)]
 
     def postprocess(self, tokens: List[Token]) -> str:
         return self.bpe.decode(self.__decode_tokens(tokens))
 
     def get_eof_token(self) -> Token:
         return Token(3)
-    
+
     def __encode_tokens(self, tokens: List[int]) -> List[Token]:
         return [Token(x) for x in tokens]
 
