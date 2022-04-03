@@ -1,6 +1,6 @@
 class BaseCoder:
     def __init__(self, window_size):
-        self.link_size = 6
+        self.link_size = len(self._encode_link(0, 0, 0))
         self.super_symbol = '~'
         self.window_size = window_size
         self.log_records = []
@@ -14,7 +14,7 @@ class BaseCoder:
         return self._to_bytes(ord(self.super_symbol), 1) + self._to_bytes(record_index, 1) + self._to_bytes(start_index, 2) + self._to_bytes(length, 2)
 
     def _decode_link(self, record, i):
-        assert(len(record) - i > 4)
+        assert(len(record) - i >= self.link_size)
         record_index = self._from_bytes(record[i+1:i+2])
         start_index = self._from_bytes(record[i+2:i+4])
         length = self._from_bytes(record[i+4:i+6])
