@@ -1,10 +1,10 @@
 from encoder.v2.encoder import ArithmeticEncoder
 from encoder.v2.decoder import ArithmeticDecoder
-from model.test_model import TestModel
+from probability_model.test_model import TestModel
 from iostream.input_stream import BitInputStream
 from iostream.output_stream import BitOutputStream
 from argparse import ArgumentParser, Namespace
-from model.model import ModelInterface, Token
+from probability_model.model import ModelInterface, Token
 from typing import List, Tuple, Dict
 from math import ceil
 
@@ -22,7 +22,7 @@ def parse_args():
     parser.add_argument('-m', '--mode', type=str, choices=[ENCODE, DECODE], required=True,
                         help='Mode, in which we want to process input file')
     parser.add_argument('-e', '--encoding', default='utf-8', help='Encoding, in which stored input file')
-    parser.add_argument('-w', '--window-size', type=int, default=1, help='Size, what use model for predict frequencies')
+    parser.add_argument('-w', '--window-size', type=int, default=1, help='Size, what use probability_model for predict frequencies')
     return parser.parse_args()
 
 

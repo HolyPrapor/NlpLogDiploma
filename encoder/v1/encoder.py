@@ -5,8 +5,8 @@ from collections import Counter
 from decimal import *
 from typing import Tuple
 
-from model.test_model import TestModel
-from model import ModelInterface
+from probability_model.test_model import TestModel
+from probability_model import ModelInterface
 
 
 class ArithmeticEncoder:
@@ -19,7 +19,7 @@ class ArithmeticEncoder:
         self.token_by_symbol = self.model.preprocess(text)
 
     def encode(self) -> Tuple[float]:
-        # if model.get_probabilities(a) == model.get_probabilities(a)
+        # if probability_model.get_probabilities(a) == probability_model.get_probabilities(a)
         # if index of required token = 3
         # we need only prefix sum 0 2
         lower_bound, upper_bound = Decimal(0), Decimal(1)

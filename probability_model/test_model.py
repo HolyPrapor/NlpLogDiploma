@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from model.model import ModelInterface, Token
+from probability_model.model import ModelInterface, Token
 
 
 class TestModel(ModelInterface):
