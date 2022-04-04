@@ -1,0 +1,3 @@
+class ArithmeticLogBaseCoder:
+    pass
+

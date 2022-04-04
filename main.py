@@ -1,5 +1,5 @@
-from encoder.v2.encoder import ArithmeticEncoder
-from encoder.v2.decoder import ArithmeticDecoder
+from arithmetic_encoder.v2.encoder import ArithmeticEncoder
+from arithmetic_encoder.v2.decoder import ArithmeticDecoder
 from probability_model.lstm_log_model.lstm_log_model import LstmLogModel
 from iostream.input_stream import BitInputStream
 from iostream.output_stream import BitOutputStream
