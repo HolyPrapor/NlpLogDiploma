@@ -1,10 +1,9 @@
+import utils.find_subarray as fs
 from typing import *
 from math import log2, ceil
 import numpy as np
 import pyximport
 pyximport.install()
-import utils.find_subarray as fs
-
 
 
 class AbstractRecordStorage:
@@ -235,7 +234,8 @@ class Decompressor:
 
 def compress(compressor, text):
     # crop line endings
-    lines = [np.array([ord(ch) for ch in line[:-1]], dtype=np.int32) for line in text]
+    lines = [np.array([ord(ch) for ch in line[:-1]], dtype=np.int32)
+             for line in text]
     return compressor.compress_lines(lines)
 
 
