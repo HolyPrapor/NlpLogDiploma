@@ -23,8 +23,8 @@ class BaseCoder:
     def _encode_link(self, record_index, start_index, length):
         return (self._to_bytes(ord(self.super_symbol), 1) +
                 self._to_bytes(record_index, self.record_index_size) +
-                self._to_bytes(start_index, 2) +
-                self._to_bytes(length, 2))
+                self._to_bytes(start_index, self.start_index_size) +
+                self._to_bytes(length, self.length_size))
 
     def _decode_link(self, record, i):
         assert(len(record) - i >= self.link_size)
