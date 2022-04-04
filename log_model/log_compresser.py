@@ -1,5 +1,10 @@
-from math import log2, ceil
 from typing import *
+from math import log2, ceil
+import numpy as np
+import pyximport
+pyximport.install()
+import utils.find_subarray as fs
+
 
 
 class AbstractRecordStorage:
@@ -26,10 +31,10 @@ class AbstractBaseCoder:
     def decode_int(self, record, i, size=None) -> Tuple[int, int]:
         raise NotImplementedError()
 
-    def encode_char(self, char) -> List[int]:
+    def encode_token(self, char) -> List[int]:
         raise NotImplementedError()
 
-    def decode_char(self, record, i) -> Tuple[int, int]:
+    def decode_token(self, record, i) -> Tuple[int, int]:
         raise NotImplementedError()
 
     def should_decode_as_link(self, record, i) -> bool:
@@ -96,11 +101,11 @@ class NaiveCoder(AbstractBaseCoder):
             cur |= char
         return cur, i + size
 
-    def encode_char(self, char) -> List[int]:
-        return [ord(char)]
+    def encode_token(self, token) -> List[int]:
+        return [token]
 
-    def decode_char(self, record, i) -> Tuple[int, int]:
-        return chr(record[i]), i + 1
+    def decode_token(self, record, i) -> Tuple[int, int]:
+        return record[i], i + 1
 
     def should_decode_as_link(self, record, i) -> bool:
         return chr(record[i]) == self.super_symbol
@@ -130,15 +135,15 @@ class SmartCoder(AbstractBaseCoder):
         i += 1
         return value, i
 
-    def encode_char(self, char) -> List[int]:
-        if ord(char) < 127:
-            return [ord(char)]
-        return [127, ord(char)]
+    def encode_token(self, token) -> List[int]:
+        if token < 127:
+            return [token]
+        return [127, token]
 
-    def decode_char(self, record, i) -> Tuple[int, int]:
+    def decode_token(self, record, i) -> Tuple[int, int]:
         if i + 1 < len(record) and record[i] == 127 and record[i + 1] >= 127:
-            return chr(record[i + 1]), i + 2
-        return chr(record[i]), i + 1
+            return record[i + 1], i + 2
+        return record[i], i + 1
 
     def should_decode_as_link(self, record, i) -> bool:
         return record[i] >= 128
@@ -164,14 +169,14 @@ class Compressor:
         self.coder = coder
         self.storage = storage
 
-    def compress(self, line: str) -> str:
+    def compress(self, line: List[int]) -> List[int]:
         res = []
         start = 0
         while start < len(line):
             length = 1
             record_index = record_start_index = None
             for r, record in enumerate(self.storage.log_records):
-                while length < len(line) - start and (index := record.find(line[start:start + length])) != -1:
+                while length < len(line) - start and (index := fs.find_subarray(record, line[start:start + length])) != -1:
                     record_index = r
                     record_start_index = index
                     length += 1
@@ -181,15 +186,18 @@ class Compressor:
                                               record_start_index, length)
             else:
                 for i in range(length):
-                    res += self.coder.encode_char(line[start + i])
+                    res += self.coder.encode_token(line[start + i])
             start += length
         self.storage.store_record(line)
         return res
 
-    def compress_lines(self, lines):
+    def compress_lines(self, lines: List[List[int]]) -> List[int]:
         compressed = []
+        i = 0
         for line in lines:
-            encoded = self.compress(line[:-1])  # remove eol tokens
+            # print(f"{i}/{len(lines)}")
+            i += 1
+            encoded = self.compress(line)
             compressed += self.coder.encode_int(len(encoded), 2) + encoded
         return bytes(compressed)
 
@@ -199,7 +207,7 @@ class Decompressor:
         self.coder = coder
         self.storage = storage
 
-    def decompress(self, line: str) -> str:
+    def decompress(self, line: List[int]) -> List[int]:
         i = 0
         cur = []
         while i < len(line):
@@ -207,15 +215,14 @@ class Decompressor:
                 record_index, start_index, length, i = self.coder.decode_link(
                     line, i)
                 parsed_link = self.storage.log_records[record_index][start_index:start_index + length]
-                cur.append(parsed_link)
+                cur += parsed_link
             else:
-                decoded_char, i = self.coder.decode_char(line, i)
-                cur.append(decoded_char)
-        decoded = ''.join(cur)
-        self.storage.store_record(decoded)
-        return decoded
+                decoded_char, i = self.coder.decode_token(line, i)
+                cur += [decoded_char]
+        self.storage.store_record(cur)
+        return cur
 
-    def decompress_lines(self, lines):
+    def decompress_lines(self, lines: List[int]) -> List[List[int]]:
         decompressed = []
         text = lines
         i = 0
@@ -223,24 +230,36 @@ class Decompressor:
             cur_length, i = self.coder.decode_int(text, i, 2)
             decompressed.append(self.decompress(text[i:i+cur_length]))
             i += cur_length
-        # append eol tokens since we removed them during compression
-        return '\n'.join(decompressed)
+        return decompressed
 
 
-window_size = 20
-coder = SmartCoder()
-storage = SlidingWindowRecordStorage(window_size)
+def compress(compressor, text):
+    # crop line endings
+    lines = [np.array([ord(ch) for ch in line[:-1]], dtype=np.int32) for line in text]
+    return compressor.compress_lines(lines)
 
-compressor = Compressor(coder, storage)
-with open('in.txt', mode='r') as f:
-    text = f.readlines()
-with open('out.txt', mode='wb') as f:
-    f.write(compressor.compress_lines(text))
 
-storage.drop()
+def decompress(decompressor, bytetext):
+    decompressed = decompressor.decompress_lines(bytetext)
+    # put back line endings
+    return '\n'.join([''.join([chr(byte) for byte in line]) for line in decompressed])
 
-decompressor = Decompressor(coder, storage)
-with open('out.txt', mode='rb') as f:
-    text = f.read()
-with open('decoded.txt', mode='w') as f:
-    print(decompressor.decompress_lines(text), file=f)
+
+if __name__ == '__main__':
+    window_size = 20
+    coder = SmartCoder()
+    storage = SlidingWindowRecordStorage(window_size)
+
+    compressor = Compressor(coder, storage)
+    with open('log_model/in.txt', mode='r') as f:
+        text = f.readlines()
+    with open('log_model/out.txt', mode='wb') as f:
+        f.write(compress(compressor, text))
+
+    storage.drop()
+
+    decompressor = Decompressor(coder, storage)
+    with open('log_model/out.txt', mode='rb') as f:
+        bytetext = f.read()
+    with open('log_model/decoded.txt', mode='w') as f:
+        print(decompress(decompressor, bytetext), file=f)
