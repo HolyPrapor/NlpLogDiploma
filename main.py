@@ -59,7 +59,7 @@ def encode(model: ModelInterface, input_file: str, output_file: str, num_bits: i
         probs = model.get_probabilities()
         frequencies, _, _ = probabilities_to_frequencies(probs, num_bits)
         encoder.write(frequencies, tokens[i].value)
-        model.feed(tokens[i])
+        model.feed([tokens[i]])
     encoder.finish()
     output_stream.close()
 
@@ -75,7 +75,7 @@ def decode(model: ModelInterface, input_file: str, output_file: str, num_bits: i
         if current_token == model.get_eof_token():
             break
         tokens.append(current_token)
-        model.feed(current_token)
+        model.feed([current_token])
     input_stream.close()
     text = model.postprocess(tokens)
     with open(output_file, mode='w', encoding=encoding) as f:

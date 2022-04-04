@@ -1,9 +1,10 @@
+import pyximport
+pyximport.install()
+
 import utils.find_subarray as fs
 from typing import *
 from math import log2, ceil
 import numpy as np
-import pyximport
-pyximport.install()
 
 
 class AbstractRecordStorage:

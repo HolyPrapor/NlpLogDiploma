@@ -23,10 +23,11 @@ class LstmLogModel(ModelInterface):
         self.context = np.array([0 for _ in range(19)])
         self.hash = RollingHash(2500, 19)
 
-    def feed(self, next_token: Token):
-        self.hash.roll(next_token.value, self.context[0])
-        self.context = np.roll(self.context, -1)
-        self.context[-1] = next_token.value
+    def feed(self, next_tokens: List[Token]):
+        for next_token in next_tokens[-19:]:
+            self.hash.roll(next_token.value, self.context[0])
+            self.context = np.roll(self.context, -1)
+            self.context[-1] = next_token.value
 
     def preprocess(self, text: str) -> List[Token]:
         tokens = self.bpe.encode(text, output_type=yttm.OutputType.ID)
