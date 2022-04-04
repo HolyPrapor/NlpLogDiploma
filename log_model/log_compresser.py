@@ -1,13 +1,58 @@
 from math import log2, ceil
+from typing import *
 
 
-class BaseCoder:
-    def __init__(self, window_size):
-        self.super_symbol = '~'
-        self.window_size = window_size
+class AbstractRecordStorage:
+    def __init__(self) -> None:
         self.log_records = []
+
+    def store_record(self, record):
+        raise NotImplementedError()
+
+
+class AbstractBaseCoder:
+    def encode_link(self, record_index, start_index, length) -> List[int]:
+        raise NotImplementedError()
+
+    def decode_link(self, record, i) -> Tuple[int, int, int, int]:
+        raise NotImplementedError()
+
+    def encode_int(self, value, size) -> List[int]:
+        raise NotImplementedError()
+
+    def decode_int(self, record, i, size) -> Tuple[int, int]:
+        raise NotImplementedError()
+
+    def encode_char(self, char) -> List[int]:
+        raise NotImplementedError()
+
+    def decode_char(self, record, i) -> Tuple[int, int]:
+        raise NotImplementedError()
+
+    def should_decode_as_link(self, record, i) -> bool:
+        raise NotImplementedError()
+
+    def should_encode_as_link(self, record, start, end) -> bool:
+        raise NotImplementedError()
+
+
+class SlidingWindowRecordStorage(AbstractRecordStorage):
+    def __init__(self, window_size=100) -> None:
+        super().__init__()
+        self.window_size = window_size
+
+    def store_record(self, record):
+        self.log_records.append(record)
+        if len(self.log_records) > self.window_size:
+            self.log_records.pop(0)
+
+
+class NaiveCoder(AbstractBaseCoder):
+    def __init__(self, max_storage_size):
+        self.super_symbol = '~'
+        self.window_size = max_storage_size
         self._byte_mask = (1 << 8) - 1
-        self.record_index_size = int(ceil(log2(window_size) / 8))
+        self.record_index_size = int(ceil(log2(max_storage_size) / 8))
         self.start_index_size = 2
         self.length_size = 2
         self.link_size = (1 +
@@ -15,27 +60,22 @@ class BaseCoder:
                           self.start_index_size +
                           self.length_size)
 
-    def _store_record(self, record):
-        self.log_records.append(record)
-        if len(self.log_records) > self.window_size:
-            self.log_records.pop(0)
+    def encode_link(self, record_index, start_index, length):
+        return (self.encode_int(ord(self.super_symbol), 1) +
+                self.encode_int(record_index, self.record_index_size) +
+                self.encode_int(start_index, self.start_index_size) +
+                self.encode_int(length, self.length_size))
 
-    def _encode_link(self, record_index, start_index, length):
-        return (self._to_bytes(ord(self.super_symbol), 1) +
-                self._to_bytes(record_index, self.record_index_size) +
-                self._to_bytes(start_index, self.start_index_size) +
-                self._to_bytes(length, self.length_size))
-
-    def _decode_link(self, record, i):
+    def decode_link(self, record, i):
         assert(len(record) - i >= self.link_size)
         decoded = []
         cur = i + 1
         for size in [self.record_index_size, self.start_index_size, self.length_size]:
-            decoded.append(self._from_bytes(record[cur:cur+size]))
+            decoded.append(self.decode_int(record, cur, size)[0])
             cur += size
-        return decoded
+        return *decoded, cur
 
-    def _to_bytes(self, value, size):
+    def encode_int(self, value, size) -> List[int]:
         encoded = []
         cur = value
         for _ in range(size):
@@ -43,17 +83,30 @@ class BaseCoder:
             cur >>= 8
         return encoded
 
-    def _from_bytes(self, encoded):
+    def decode_int(self, record, i, size):
         cur = 0
-        for char in reversed(encoded):
+        for char in reversed(record[i:i+size]):
             cur <<= 8
             cur |= char
-        return cur
+        return cur, i + size
+
+    def encode_char(self, char) -> List[int]:
+        return [ord(char)]
+
+    def decode_char(self, record, i) -> Tuple[int, int]:
+        return chr(record[i]), i + 1
+
+    def should_decode_as_link(self, record, i) -> bool:
+        return chr(record[i]) == self.super_symbol
+
+    def should_encode_as_link(self, record, start, end) -> bool:
+        return end - start + 1 > self.link_size
 
 
-class Compressor(BaseCoder):
+class Compressor:
     def __init__(self, window_size=100):
-        super().__init__(window_size)
+        self.coder = NaiveCoder(window_size)
+        self.storage = SlidingWindowRecordStorage(window_size)
 
     def compress(self, line: str) -> str:
         res = []
@@ -61,48 +114,49 @@ class Compressor(BaseCoder):
         while start < len(line):
             length = 1
             record_index = record_start_index = None
-            for r, record in enumerate(self.log_records):
+            for r, record in enumerate(self.storage.log_records):
                 while length < len(line) - start and (index := record.find(line[start:start + length])) != -1:
                     record_index = r
                     record_start_index = index
                     length += 1
-            if length > self.link_size and record_index is not None and record_start_index is not None:
+            if self.coder.should_encode_as_link(line, start, start + length) and record_index is not None and record_start_index is not None:
                 length -= 1
-                res += self._encode_link(record_index,
-                                         record_start_index, length)
+                res += self.coder.encode_link(record_index,
+                                              record_start_index, length)
             else:
                 for i in range(length):
-                    res.append(ord(line[start + i]))
+                    res += self.coder.encode_char(line[start + i])
             start += length
-        self._store_record(line)
+        self.storage.store_record(line)
         return res
 
     def compress_lines(self, lines):
         compressed = []
         for line in lines:
             encoded = self.compress(line[:-1])  # remove eol tokens
-            compressed += self._to_bytes(len(encoded) + 2, 2) + encoded
+            compressed += self.coder.encode_int(len(encoded) + 2, 2) + encoded
         return bytes(compressed)
 
 
-class Decompressor(BaseCoder):
+class Decompressor:
     def __init__(self, window_size=100):
-        super().__init__(window_size)
+        self.coder = NaiveCoder(window_size)
+        self.storage = SlidingWindowRecordStorage(window_size)
 
     def decompress(self, line: str) -> str:
         i = 0
         cur = []
         while i < len(line):
-            if chr(line[i]) == self.super_symbol:
-                record_index, start_index, length = self._decode_link(line, i)
-                parsed_link = self.log_records[record_index][start_index:start_index + length]
+            if self.coder.should_decode_as_link(line, i):
+                record_index, start_index, length, i = self.coder.decode_link(
+                    line, i)
+                parsed_link = self.storage.log_records[record_index][start_index:start_index + length]
                 cur.append(parsed_link)
-                i += self.link_size
             else:
-                cur.append(chr(line[i]))
-                i += 1
+                decoded_char, i = self.coder.decode_char(line, i)
+                cur.append(decoded_char)
         decoded = ''.join(cur)
-        self._store_record(decoded)
+        self.storage.store_record(decoded)
         return decoded
 
     def decompress_lines(self, lines):
@@ -110,13 +164,13 @@ class Decompressor(BaseCoder):
         text = lines
         i = 0
         while i < len(text):
-            cur_length = self._from_bytes(text[i:i+2])
+            cur_length, _ = self.coder.decode_int(text, i, 2)
             decompressed.append(self.decompress(text[i+2:i+cur_length]))
             i += cur_length
         return '\n'.join(decompressed)
 
 
-window_size = 1500
+window_size = 150
 
 compressor = Compressor(window_size)
 with open('in.txt', mode='r') as f:
