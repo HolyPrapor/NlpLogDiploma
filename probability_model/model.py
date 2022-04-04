@@ -9,14 +9,14 @@ class ModelInterface:
     def preprocess(self, text: str) -> List[Token]:
         raise NotImplementedError()
 
-    def get_probabilities(self, tokens: List[Token]) -> List[Tuple[Token, float]]:
+    def feed(self, next_tokens: List[Token]):
+        raise NotImplementedError()
+
+    def get_probabilities(self) -> List[List[float]]:
         raise NotImplementedError()
 
     def postprocess(self, tokens: List[Token]) -> str:
         raise NotImplementedError()
 
     def get_eof_token(self) -> Token:
-        raise NotImplementedError()
-
-    def get_left_padding(self, tokens: List[Token], window_size: int) -> List[Token]:
         raise NotImplementedError()

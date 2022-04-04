@@ -9,6 +9,9 @@ class AbstractRecordStorage:
     def store_record(self, record):
         raise NotImplementedError()
 
+    def drop(self):
+        raise NotImplementedError()
+
 
 class AbstractBaseCoder:
     def encode_link(self, record_index, start_index, length) -> List[int]:
@@ -45,6 +48,9 @@ class SlidingWindowRecordStorage(AbstractRecordStorage):
         self.log_records.append(record)
         if len(self.log_records) > self.window_size:
             self.log_records.pop(0)
+
+    def drop(self):
+        self.log_records = []
 
 
 class NaiveCoder(AbstractBaseCoder):
@@ -154,9 +160,9 @@ class SmartCoder(AbstractBaseCoder):
 
 
 class Compressor:
-    def __init__(self, window_size=100):
-        self.coder = SmartCoder()
-        self.storage = SlidingWindowRecordStorage(window_size)
+    def __init__(self, coder, storage):
+        self.coder = coder
+        self.storage = storage
 
     def compress(self, line: str) -> str:
         res = []
@@ -189,9 +195,9 @@ class Compressor:
 
 
 class Decompressor:
-    def __init__(self, window_size=100):
-        self.coder = SmartCoder()
-        self.storage = SlidingWindowRecordStorage(window_size)
+    def __init__(self, coder, storage):
+        self.coder = coder
+        self.storage = storage
 
     def decompress(self, line: str) -> str:
         i = 0
@@ -221,15 +227,19 @@ class Decompressor:
         return '\n'.join(decompressed)
 
 
-window_size = 1500
+window_size = 20
+coder = SmartCoder()
+storage = SlidingWindowRecordStorage(window_size)
 
-compressor = Compressor(window_size)
+compressor = Compressor(coder, storage)
 with open('in.txt', mode='r') as f:
     text = f.readlines()
 with open('out.txt', mode='wb') as f:
     f.write(compressor.compress_lines(text))
 
-decompressor = Decompressor(window_size)
+storage.drop()
+
+decompressor = Decompressor(coder, storage)
 with open('out.txt', mode='rb') as f:
     text = f.read()
 with open('decoded.txt', mode='w') as f:
