@@ -1,9 +1,10 @@
+from probability_model.lstm_log_model.lstm_log_model import LstmLogModel
 import utils.find_subarray as fs
 from typing import *
 from arithmetic_encoder.v2.encoder import ArithmeticEncoder
 from probability_model.model import ModelInterface
 from iostream.output_stream import BitOutputStream
-from log_model.log_compresser import AbstractRecordStorage, AbstractBaseCoder
+from log_model.log_compresser import AbstractRecordStorage, AbstractBaseCoder, SlidingWindowRecordStorage, SmartCoder
 from main import probabilities_to_frequencies
 import pyximport
 pyximport.install()
@@ -56,3 +57,21 @@ class ArithmeticLogEncoder:
             if start < len(line):
                 self.probability_model.feed(line[start])
         self.storage.store_record(line)
+
+
+if __name__ == '__main__':
+    window_size = 30
+    coder = SmartCoder()
+    storage = SlidingWindowRecordStorage(window_size)
+    model = LstmLogModel()
+    with open('in.txt', mode='r') as f:
+        input_text = f.readlines()
+    output_stream = BitOutputStream(open('out.txt', mode='wb'))
+    encoder = ArithmeticEncoder(32, output_stream)
+    arithmetic_log_coder = ArithmeticLogEncoder(
+        encoder, model, coder, storage, output_stream)
+    for line in input_text:
+        tokens = model.preprocess(line)
+        arithmetic_log_coder.encode(tokens)
+    encoder.finish()
+    output_stream.close()
