@@ -17,10 +17,10 @@ class AbstractBaseCoder:
     def decode_link(self, record, i) -> Tuple[int, int, int, int]:
         raise NotImplementedError()
 
-    def encode_int(self, value, size) -> List[int]:
+    def encode_int(self, value, size=None) -> List[int]:
         raise NotImplementedError()
 
-    def decode_int(self, record, i, size) -> Tuple[int, int]:
+    def decode_int(self, record, i, size=None) -> Tuple[int, int]:
         raise NotImplementedError()
 
     def encode_char(self, char) -> List[int]:
@@ -32,7 +32,7 @@ class AbstractBaseCoder:
     def should_decode_as_link(self, record, i) -> bool:
         raise NotImplementedError()
 
-    def should_encode_as_link(self, record, start, end) -> bool:
+    def should_encode_as_link(self, record, start, record_index, start_index, length) -> bool:
         raise NotImplementedError()
 
 
@@ -75,7 +75,7 @@ class NaiveCoder(AbstractBaseCoder):
             cur += size
         return *decoded, cur
 
-    def encode_int(self, value, size) -> List[int]:
+    def encode_int(self, value, size=None) -> List[int]:
         encoded = []
         cur = value
         for _ in range(size):
@@ -83,7 +83,7 @@ class NaiveCoder(AbstractBaseCoder):
             cur >>= 8
         return encoded
 
-    def decode_int(self, record, i, size):
+    def decode_int(self, record, i, size=None):
         cur = 0
         for char in reversed(record[i:i+size]):
             cur <<= 8
@@ -99,13 +99,63 @@ class NaiveCoder(AbstractBaseCoder):
     def should_decode_as_link(self, record, i) -> bool:
         return chr(record[i]) == self.super_symbol
 
-    def should_encode_as_link(self, record, start, end) -> bool:
-        return end - start + 1 > self.link_size
+    def should_encode_as_link(self, record, start, record_index, start_index, length) -> bool:
+        return length > self.link_size and record_index is not None and start_index is not None
+
+
+class SmartCoder(AbstractBaseCoder):
+    def __init__(self):
+        pass
+
+    def encode_int(self, value, size=None) -> List[int]:
+        encoded = []
+        while value >= 127:
+            encoded.append(255)
+            value -= 127
+        encoded.append(128 + value)
+        return encoded
+
+    def decode_int(self, record, i, size=None) -> Tuple[int, int]:
+        value = 0
+        while record[i] == 255:
+            value += 127
+            i += 1
+        value += record[i] - 128
+        i += 1
+        return value, i
+
+    def encode_char(self, char) -> List[int]:
+        if ord(char) < 127:
+            return [ord(char)]
+        return [127, ord(char)]
+
+    def decode_char(self, record, i) -> Tuple[int, int]:
+        if i + 1 < len(record) and record[i] == 127 and record[i + 1] >= 127:
+            return chr(record[i + 1]), i + 2
+        return chr(record[i]), i + 1
+
+    def should_decode_as_link(self, record, i) -> bool:
+        return record[i] >= 128
+
+    def _count_space_for_int_encoding(self, value):
+        return value // 127 + 1
+
+    def should_encode_as_link(self, record, start, record_index, start_index, length) -> bool:
+        return record_index is not None and start_index is not None and self._count_space_for_int_encoding(record_index) + self._count_space_for_int_encoding(start_index) + self._count_space_for_int_encoding(length) < length
+
+    def encode_link(self, record_index, start_index, length) -> List[int]:
+        return self.encode_int(record_index) + self.encode_int(start_index) + self.encode_int(length)
+
+    def decode_link(self, record, i) -> Tuple[int, int, int, int]:
+        record_index, i = self.decode_int(record, i)
+        start_index, i = self.decode_int(record, i)
+        length, i = self.decode_int(record, i)
+        return record_index, start_index, length, i
 
 
 class Compressor:
     def __init__(self, window_size=100):
-        self.coder = NaiveCoder(window_size)
+        self.coder = SmartCoder()
         self.storage = SlidingWindowRecordStorage(window_size)
 
     def compress(self, line: str) -> str:
@@ -119,7 +169,7 @@ class Compressor:
                     record_index = r
                     record_start_index = index
                     length += 1
-            if self.coder.should_encode_as_link(line, start, start + length) and record_index is not None and record_start_index is not None:
+            if self.coder.should_encode_as_link(line, start, record_index, record_start_index, length):
                 length -= 1
                 res += self.coder.encode_link(record_index,
                                               record_start_index, length)
@@ -134,13 +184,13 @@ class Compressor:
         compressed = []
         for line in lines:
             encoded = self.compress(line[:-1])  # remove eol tokens
-            compressed += self.coder.encode_int(len(encoded) + 2, 2) + encoded
+            compressed += self.coder.encode_int(len(encoded), 2) + encoded
         return bytes(compressed)
 
 
 class Decompressor:
     def __init__(self, window_size=100):
-        self.coder = NaiveCoder(window_size)
+        self.coder = SmartCoder()
         self.storage = SlidingWindowRecordStorage(window_size)
 
     def decompress(self, line: str) -> str:
@@ -164,13 +214,14 @@ class Decompressor:
         text = lines
         i = 0
         while i < len(text):
-            cur_length, _ = self.coder.decode_int(text, i, 2)
-            decompressed.append(self.decompress(text[i+2:i+cur_length]))
+            cur_length, i = self.coder.decode_int(text, i, 2)
+            decompressed.append(self.decompress(text[i:i+cur_length]))
             i += cur_length
+        # append eol tokens since we removed them during compression
         return '\n'.join(decompressed)
 
 
-window_size = 150
+window_size = 1500
 
 compressor = Compressor(window_size)
 with open('in.txt', mode='r') as f:
