@@ -1,9 +1,19 @@
+from math import log2, ceil
+
+
 class BaseCoder:
     def __init__(self, window_size):
-        self.link_size = len(self._encode_link(0, 0, 0))
         self.super_symbol = '~'
         self.window_size = window_size
         self.log_records = []
+        self._byte_mask = (1 << 8) - 1
+        self.record_index_size = int(ceil(log2(window_size) / 8))
+        self.start_index_size = 2
+        self.length_size = 2
+        self.link_size = (1 +
+                          self.record_index_size +
+                          self.start_index_size +
+                          self.length_size)
 
     def _store_record(self, record):
         self.log_records.append(record)
@@ -11,21 +21,25 @@ class BaseCoder:
             self.log_records.pop(0)
 
     def _encode_link(self, record_index, start_index, length):
-        return self._to_bytes(ord(self.super_symbol), 1) + self._to_bytes(record_index, 1) + self._to_bytes(start_index, 2) + self._to_bytes(length, 2)
+        return (self._to_bytes(ord(self.super_symbol), 1) +
+                self._to_bytes(record_index, self.record_index_size) +
+                self._to_bytes(start_index, 2) +
+                self._to_bytes(length, 2))
 
     def _decode_link(self, record, i):
         assert(len(record) - i >= self.link_size)
-        record_index = self._from_bytes(record[i+1:i+2])
-        start_index = self._from_bytes(record[i+2:i+4])
-        length = self._from_bytes(record[i+4:i+6])
-        return record_index, start_index, length
+        decoded = []
+        cur = i + 1
+        for size in [self.record_index_size, self.start_index_size, self.length_size]:
+            decoded.append(self._from_bytes(record[cur:cur+size]))
+            cur += size
+        return decoded
 
     def _to_bytes(self, value, size):
         encoded = []
         cur = value
-        mask = (1 << 8) - 1
         for _ in range(size):
-            encoded.append(cur & mask)
+            encoded.append(cur & self._byte_mask)
             cur >>= 8
         return encoded
 
@@ -102,7 +116,7 @@ class Decompressor(BaseCoder):
         return '\n'.join(decompressed)
 
 
-window_size = 255
+window_size = 1500
 
 compressor = Compressor(window_size)
 with open('in.txt', mode='r') as f:
