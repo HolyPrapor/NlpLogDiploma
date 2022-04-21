@@ -1,10 +1,9 @@
+import numpy as np
+from math import log2, ceil
+from typing import *
+import utils.find_subarray as fs
 import pyximport
 pyximport.install()
-
-import utils.find_subarray as fs
-from typing import *
-from math import log2, ceil
-import numpy as np
 
 
 class AbstractRecordStorage:
@@ -84,7 +83,7 @@ class NaiveCoder(AbstractBaseCoder):
         for size in [self.record_index_size, self.start_index_size, self.length_size]:
             decoded.append(self.decode_int(record, cur, size)[0])
             cur += size
-        return *decoded, cur
+        return decoded[0], decoded[1], decoded[2], cur
 
     def encode_int(self, value, size=None) -> List[int]:
         encoded = []
@@ -169,27 +168,27 @@ class Compressor:
         self.coder = coder
         self.storage = storage
 
-    def compress(self, line: List[int]) -> List[int]:
-        res = []
-        start = 0
-        while start < len(line):
-            length = 1
-            record_index = record_start_index = None
-            for r, record in enumerate(self.storage.log_records):
-                while length < len(line) - start and (index := fs.find_subarray(record, line[start:start + length])) != -1:
-                    record_index = r
-                    record_start_index = index
-                    length += 1
-            if self.coder.should_encode_as_link(line, start, record_index, record_start_index, length):
-                length -= 1
-                res += self.coder.encode_link(record_index,
-                                              record_start_index, length)
-            else:
-                for i in range(length):
-                    res += self.coder.encode_token(line[start + i])
-            start += length
-        self.storage.store_record(line)
-        return res
+#     def compress(self, line: List[int]) -> List[int]:
+#         res = []
+#         start = 0
+#         while start < len(line):
+#             length = 1
+#             record_index = record_start_index = None
+#             for r, record in enumerate(self.storage.log_records):
+#                 while length < len(line) - start and (index := fs.find_subarray(record, line[start:start + length])) != -1:
+#                     record_index = r
+#                     record_start_index = index
+#                     length += 1
+#             if self.coder.should_encode_as_link(line, start, record_index, record_start_index, length):
+#                 length -= 1
+#                 res += self.coder.encode_link(record_index,
+#                                               record_start_index, length)
+#             else:
+#                 for i in range(length):
+#                     res += self.coder.encode_token(line[start + i])
+#             start += length
+#         self.storage.store_record(line)
+#         return res
 
     def compress_lines(self, lines: List[List[int]]) -> List[int]:
         compressed = []

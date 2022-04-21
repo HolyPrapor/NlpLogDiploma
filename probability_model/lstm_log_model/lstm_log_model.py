@@ -6,6 +6,8 @@ from probability_model.model import ModelInterface, Token
 from utils.rolling_hash import RollingHash
 import youtokentome as yttm
 import tensorflow as tf
+import logging
+tf.get_logger().setLevel(logging.ERROR)
 
 # Do we really have to store tokens? Maybe just ints?
 
@@ -21,13 +23,15 @@ class LstmLogModel(ModelInterface):
         self.bpe = yttm.BPE(model=yttm_model_path)
         self.model = tf.keras.models.load_model(lstm_model_path)
         self.context = np.array([0 for _ in range(19)])
-        self.hash = RollingHash(2500, 19)
+#         self.hash = RollingHash(2500, 19)
 
     def feed(self, next_tokens: List[Token]):
-        for next_token in next_tokens[-19:]:
-            self.hash.roll(next_token.value, self.context[0])
-            self.context = np.roll(self.context, -1)
-            self.context[-1] = next_token.value
+        self.context = np.roll(self.context, -len(next_tokens))
+        self.context[-len(next_tokens):] = next_tokens[-len(self.context):]
+#         for next_token in next_tokens[-19:]:
+#             self.hash.roll(next_token, self.context[0])
+#             self.context = np.roll(self.context, -1)
+#             self.context[-1] = next_token
 
     def preprocess(self, text: str) -> List[Token]:
         tokens = self.bpe.encode(text, output_type=yttm.OutputType.ID)
@@ -48,5 +52,5 @@ class LstmLogModel(ModelInterface):
     def __decode_tokens(self, tokens: List[Token]) -> List[int]:
         return list(x.value for x in tokens)
 
-    def __hash__(self):
-        return hash(self.hash)
+#     def __hash__(self):
+#         return hash(self.hash)

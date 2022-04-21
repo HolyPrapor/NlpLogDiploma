@@ -1,6 +1,5 @@
 from typing import List
 
-
 class ArithmeticCoderBase:
     def __init__(self, num_bits: int = 32):
         if num_bits < 1:
