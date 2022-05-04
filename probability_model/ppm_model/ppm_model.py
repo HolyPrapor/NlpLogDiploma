@@ -4,9 +4,10 @@ from iostream.output_stream import BitOutputStream
 from iostream.input_stream import BitInputStream
 from arithmetic_encoder.v2.encoder import ArithmeticEncoder
 from arithmetic_encoder.v2.decoder import ArithmeticDecoder
+from utils.bwt_coder import BwtCoder
 from typing import *
 import os
-os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
+# os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
 
 
 class Node:
@@ -163,11 +164,22 @@ class PPMModelDecoder(PPMBaseModel):
         return self._get_uniform_frequencies()
 
 
+def fix_file_paths(files):
+    cwd = os.getcwd()
+    return [os.path.join(cwd, file) for file in files]
+
+
 if __name__ == '__main__':
-    with open('encode.txt', mode='r') as f:
+    bwt = BwtCoder()
+
+    to_encode, bwt_encoded, encoded, bwt_decoded, decoded = fix_file_paths(
+        ['encode.txt', 'bwt_encoded', 'out', 'bwt_decoded', 'decoded.txt'])
+    bwt.encode(to_encode, bwt_encoded)
+
+    with open(bwt_encoded, mode='r') as f:
         input_text = f.read()
 
-    output_stream = BitOutputStream(open("out", mode='wb'))
+    output_stream = BitOutputStream(open(encoded, mode='wb'))
     encoder = ArithmeticEncoder(32, output_stream)
     model = PPMEncoderModel(encoder, 5)
     tokens = model.preprocess(input_text)
@@ -180,7 +192,7 @@ if __name__ == '__main__':
     encoder.finish()
     output_stream.close()
 
-    input_stream = BitInputStream(open("out", mode='rb'))
+    input_stream = BitInputStream(open(encoded, mode='rb'))
     decoder = ArithmeticDecoder(32, input_stream)
     tokens = []
     model = PPMModelDecoder(decoder, 5, tokens)
@@ -197,5 +209,7 @@ if __name__ == '__main__':
             break
     input_stream.close()
     text = model.postprocess(tokens)
-    with open("decoded.txt", mode='w') as f:
+    with open(bwt_decoded, mode='w') as f:
         f.write(text)
+
+    bwt.decode(bwt_decoded, decoded)

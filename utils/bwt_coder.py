@@ -6,19 +6,17 @@ import subprocess
 
 class BwtCoder:
     def __init__(self, path_to_binary=None) -> None:
-        self.dir = os.path.dirname(os.path.realpath(__file__))
         if path_to_binary is not None:
             self.binary = path_to_binary
         else:
-            self.binary = os.path.join(self.dir, "bwt")
+            filedir = os.path.dirname(os.path.realpath(__file__))
+            self.binary = os.path.join(filedir, "bwt")
 
-    def encode(self, filepath, out_name="bwt_encoded") -> str:
-        out = os.path.join(self.dir, out_name)
-        self._call(["encode", filepath, out])
-        return out
+    def encode(self, encode, bwt_encoded):
+        self._call(["encode", encode, bwt_encoded])
 
-    def decode(self, encoded, decoded):
-        self._call(["decode", encoded, decoded])
+    def decode(self, bwt_encoded, bwt_decoded):
+        self._call(["decode", bwt_encoded, bwt_decoded])
 
     def _call(self, args):
         process = subprocess.Popen([f"./{self.binary}", *args], shell=False)
