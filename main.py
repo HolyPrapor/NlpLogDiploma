@@ -42,12 +42,6 @@ def main(args: Namespace) -> None:
         decode(model, args.input, args.output, args.num_bits, args.encoding)
 
 
-def probabilities_to_frequencies(probabilities: List[float], num_bits: int) -> Tuple[List[int],
-                                                                                     List[Token],
-                                                                                     Dict[Token, int]]:
-    return np.cumsum(np.ceil(probabilities * (2 ** num_bits - 3)) + 2).astype(int).tolist(), None, None
-
-
 def encode(model: ModelInterface, input_file: str, output_file: str, num_bits: int, encoding: str) -> None:
     with open(input_file, mode='r', encoding=encoding) as f:
         input_text = '\n'.join(f.readlines())
@@ -56,8 +50,7 @@ def encode(model: ModelInterface, input_file: str, output_file: str, num_bits: i
     tokens = model.preprocess(input_text)
     tokens.append(model.get_eof_token())
     for i in range(len(tokens)):
-        probs = model.get_probabilities()
-        frequencies, _, _ = probabilities_to_frequencies(probs, num_bits)
+        frequencies = model.get_frequencies()
         encoder.write(frequencies, tokens[i].value)
         model.feed([tokens[i].value])
     encoder.finish()
@@ -69,8 +62,7 @@ def decode(model: ModelInterface, input_file: str, output_file: str, num_bits: i
     decoder = ArithmeticDecoder(num_bits, input_stream)
     tokens = []
     while True:
-        frequencies, _, _ = probabilities_to_frequencies(
-            model.get_probabilities(), num_bits)
+        frequencies = model.get_frequencies()
         current_token = Token(decoder.read(frequencies))
         if current_token == model.get_eof_token():
             break
