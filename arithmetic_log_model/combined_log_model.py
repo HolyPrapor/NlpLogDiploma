@@ -1,5 +1,4 @@
 import numpy as np
-from probability_model.lstm_log_model.lstm_log_model import LstmLogModel
 from typing import *
 from arithmetic_encoder.v2.encoder import ArithmeticEncoder
 from arithmetic_encoder.v2.decoder import ArithmeticDecoder
@@ -7,7 +6,6 @@ from probability_model.model import ModelInterface, Token
 from iostream.output_stream import BitOutputStream
 from iostream.input_stream import BitInputStream
 from log_model.log_compresser import AbstractRecordStorage, AbstractBaseCoder, SlidingWindowRecordStorage, SmartCoder
-from main import probabilities_to_frequencies
 from probability_model.ppm_model.ppm_model import encode as encode_ppm
 import pyximport
 pyximport.install()
@@ -56,8 +54,8 @@ class ArithmeticLogEncoder:
             for bit in operations:
                 self.auxillary_output_stream.write(bit)
         self.arithmetic_encoder.finish()
-        self.integer_stream.finish()
-        encode_ppm(input_file, output_file, 3)
+        self.integer_stream.close()
+        encode_ppm(input_file, output_file, 1)
 
     def encode(self, line: List[int]) -> List[int]:
         operations = [0] * len(line)
