@@ -19,7 +19,7 @@ class BwtCoder:
         self._call(["decode", bwt_encoded, bwt_decoded])
 
     def _call(self, args):
-        process = subprocess.Popen([f"./{self.binary}", *args], shell=False)
+        process = subprocess.Popen([self.binary, *args], shell=False)
         errcode = process.wait()
         if errcode != 0:
             out, err = process.communicate()

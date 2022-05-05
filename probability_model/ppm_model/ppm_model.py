@@ -90,8 +90,14 @@ class PPMBaseModel(ModelInterface):
     def preprocess(self, text: str) -> List[Token]:
         return [Token(ord(ch)) for ch in text]
 
+    def preprocess_bytes(self, text: bytes) -> List[Token]:
+        return [Token(int(b)) for b in text]
+
     def postprocess(self, tokens: List[Token]) -> str:
         return ''.join(chr(token.value) for token in tokens)
+
+    def postprocess_bytes(self, tokens: List[Token]) -> bytes:
+        return bytes([t.value for t in tokens])
 
     def get_eof_token(self) -> Token:
         return Token(self._get_eof_token())
@@ -164,41 +170,41 @@ class PPMModelDecoder(PPMBaseModel):
         return self._get_uniform_frequencies()
 
 
-def fix_file_paths(files):
-    cwd = os.getcwd()
-    return [os.path.join(cwd, file) for file in files]
-
-
-if __name__ == '__main__':
+def encode(input_filename, output_filename, context_size=5):
     bwt = BwtCoder()
 
-    to_encode, bwt_encoded, encoded, bwt_decoded, decoded = fix_file_paths(
-        ['encode.txt', 'bwt_encoded', 'out', 'bwt_decoded', 'decoded.txt'])
+    to_encode, bwt_encoded, encoded = fix_file_paths(
+        [input_filename, 'bwt_encoded', output_filename])
     bwt.encode(to_encode, bwt_encoded)
 
-    with open(bwt_encoded, mode='r') as f:
+    with open(bwt_encoded, mode='rb') as f:
         input_text = f.read()
 
     output_stream = BitOutputStream(open(encoded, mode='wb'))
     encoder = ArithmeticEncoder(32, output_stream)
-    model = PPMEncoderModel(encoder, 5)
-    tokens = model.preprocess(input_text)
+    model = PPMEncoderModel(encoder, context_size)
+    tokens = model.preprocess_bytes(input_text)
     tokens.append(model.get_eof_token())
     for i, token in enumerate(tokens):
-        print(i, len(tokens))
         model.feed([token.value])
         frequencies = model.get_frequencies()
         encoder.write(frequencies, token.value)
     encoder.finish()
     output_stream.close()
 
+
+def decode(encoded_filename, output_filename, context_size=5):
+    bwt = BwtCoder()
+
+    encoded, bwt_decoded, decoded = fix_file_paths(
+        [encoded_filename, 'bwt_decoded', output_filename])
+
     input_stream = BitInputStream(open(encoded, mode='rb'))
     decoder = ArithmeticDecoder(32, input_stream)
     tokens = []
-    model = PPMModelDecoder(decoder, 5, tokens)
+    model = PPMModelDecoder(decoder, context_size, tokens)
 
     while True:
-        print(len(tokens))
         frequencies = model.get_frequencies()
         current_token = Token(decoder.read(frequencies))
         if current_token == model.get_eof_token():
@@ -208,8 +214,18 @@ if __name__ == '__main__':
             tokens.pop()
             break
     input_stream.close()
-    text = model.postprocess(tokens)
-    with open(bwt_decoded, mode='w') as f:
+    text = model.postprocess_bytes(tokens)
+    with open(bwt_decoded, mode='wb') as f:
         f.write(text)
 
     bwt.decode(bwt_decoded, decoded)
+
+
+def fix_file_paths(files):
+    cwd = os.getcwd()
+    return [os.path.join(cwd, file) for file in files]
+
+
+if __name__ == '__main__':
+    encode("encode.txt", "out", 0)
+    decode("out", "decoded.txt", 0)
