@@ -14,7 +14,6 @@ pyximport.install()
 import utils.find_subarray as fs
 
 
-
 def bitfield(n: int) -> List[int]:
     return [int((n & (1 << (7 - i))) == (1 << (7 - i))) for i in range(8)]
 
@@ -161,7 +160,7 @@ if __name__ == '__main__':
     window_size = 30
     coder = SmartCoder()
     storage = SlidingWindowRecordStorage(window_size)
-    model = LstmLogModel()
+    # model = LstmLogModel()
     with open('untitled2.txt', mode='r') as f:
         input_text = f.readlines()
 
@@ -169,23 +168,23 @@ if __name__ == '__main__':
         open(f"out_{i}", mode='wb')) for i in range(3)]
     encoder = ArithmeticEncoder(32, output_streams[0])
     arithmetic_log_coder = ArithmeticLogEncoder(
-        encoder, model, coder, storage, output_streams[1], output_streams[2])
-    arithmetic_log_coder.encode_text(input_text)
+        encoder, coder, storage, output_streams[1], output_streams[2], output_streams[0])
+    arithmetic_log_coder.encode_text(input_text, "out_0", "out_final")
 
     for stream in output_streams:
         stream.close()
 
-    model = LstmLogModel()
-    storage.drop()
+    # model = LstmLogModel()
+    # storage.drop()
 
-    input_streams = [BitInputStream(
-        open(f"out_{i}", mode='rb')) for i in range(3)]
-    decoder = ArithmeticDecoder(32, input_streams[0])
-    arithmetic_log_decoder = ArithmeticLogDecoder(
-        decoder, model, coder, storage, input_streams[1], input_streams[2])
+    # input_streams = [BitInputStream(
+    #     open(f"out_{i}", mode='rb')) for i in range(3)]
+    # decoder = ArithmeticDecoder(32, input_streams[0])
+    # arithmetic_log_decoder = ArithmeticLogDecoder(
+    #     decoder, model, coder, storage, input_streams[1], input_streams[2])
 
-    with open('decoded.txt', mode='w') as f:
-        f.write('\n'.join(arithmetic_log_decoder.decode_text()))
+    # with open('decoded.txt', mode='w') as f:
+    #     f.write('\n'.join(arithmetic_log_decoder.decode_text()))
 
-    for stream in input_streams:
-        stream.close()
+    # for stream in input_streams:
+    #     stream.close()
