@@ -4,6 +4,7 @@ import utils.find_subarray as fs
 # fmt: on
 import numpy as np
 from typing import *
+from probability_model.model import ModelInterface
 from arithmetic_encoder.v2.encoder import ArithmeticEncoder
 from arithmetic_encoder.v2.decoder import ArithmeticDecoder
 from iostream.output_stream import BitOutputStream
@@ -11,10 +12,12 @@ from iostream.input_stream import BitInputStream
 from log_model.log_compresser import (
     AbstractRecordStorage,
     AbstractBaseCoder,
+    NaiveCoder,
     SlidingWindowRecordStorage,
     SmartCoder,
 )
 from probability_model.ppm_model.ppm_model import encode as encode_ppm
+from tqdm import tqdm
 
 
 def bitfield(n: int) -> List[int]:
@@ -49,11 +52,13 @@ class ArithmeticPPMEncoder(SecondaryEncoder):
         input_file: str,
         output_file: str,
         context_size=5,
+        use_bwt=True,
     ) -> None:
         self.integer_stream = integer_stream
         self.input_file = input_file
         self.output_file = output_file
         self.context_size = context_size
+        self.use_bwt = use_bwt
 
     def write(self, token: int):
         for bit in bitfield(token):
@@ -61,7 +66,26 @@ class ArithmeticPPMEncoder(SecondaryEncoder):
 
     def finish(self):
         self.integer_stream.close()
-        encode_ppm(self.input_file, self.output_file, self.context_size)
+        encode_ppm(self.input_file, self.output_file, self.context_size, self.use_bwt)
+
+
+class ArithmeticLSTMEncoder(SecondaryEncoder):
+    def __init__(
+        self, arithmetic_encoder: ArithmeticEncoder, model: ModelInterface
+    ) -> None:
+        self.arithmetic_encoder = arithmetic_encoder
+        self.model = model
+
+    def on_main_encode(self, encoded: List[int]):
+        self.model.feed(encoded)
+
+    def write(self, token: int):
+        freqs = self.model.get_frequencies()
+        self.arithmetic_encoder.write(freqs, token)
+        self.model.feed([token])
+
+    def finish(self):
+        self.arithmetic_encoder.finish()
 
 
 class CombinedLogEncoder:
@@ -70,33 +94,31 @@ class CombinedLogEncoder:
         log_encoder: AbstractBaseCoder,
         storage: AbstractRecordStorage,
         lz_output_stream: BitOutputStream,
-        auxillary_output_stream: BitOutputStream,
+        auxiliary_output_stream: BitOutputStream,
         secondary_encoder: SecondaryEncoder,
     ) -> None:
         self.log_encoder = log_encoder
         self.storage = storage
         self.lz_output_stream = lz_output_stream
-        self.auxillary_output_stream = auxillary_output_stream
+        self.auxiliary_output_stream = auxiliary_output_stream
         self.secondary_encoder = secondary_encoder
 
     def _write_to_stream(self, elements: List[int], stream: BitOutputStream) -> None:
         for bit in get_bits(elements):
             stream.write(bit)
 
-    def encode_text(self, lines: List[str]) -> None:
+    def encode_lines(self, lines: List[List[int]]) -> None:
         self._write_to_stream(
-            self.log_encoder.encode_int(len(lines)), self.auxillary_output_stream
+            self.log_encoder.encode_int(len(lines), 4), self.auxiliary_output_stream
         )
-        for line in lines:
-            tokens = np.array([ord(ch) for ch in line], dtype=np.int32)
+        for tokens in tqdm(lines, desc="Combined encoding"):
             operations = self.encode(tokens)
             self._write_to_stream(
-                self.log_encoder.encode_int(len(operations)),
-                self.auxillary_output_stream,
+                self.log_encoder.encode_int(len(operations), 2),
+                self.auxiliary_output_stream,
             )
             for bit in operations:
-                self.auxillary_output_stream.write(bit)
-        self.arithmetic_encoder.finish()
+                self.auxiliary_output_stream.write(bit)
         self.secondary_encoder.finish()
 
     def encode(self, line: List[int]) -> List[int]:
@@ -114,7 +136,7 @@ class CombinedLogEncoder:
                     record_length = length
                     length += 1
                     index = fs.find_subarray(record, line[start : start + length])
-            if record_length is not None and record_length > 6:
+            if record_length is not None and record_length > 4:
                 length = record_length
                 operations[iterations] = 0
                 encoded = self.log_encoder.encode_link(
@@ -133,6 +155,60 @@ class CombinedLogEncoder:
         return operations[:iterations]
 
 
+def create_output_streams(output_prefix):
+    return [
+        BitOutputStream(open(f"{output_prefix}_{suffix}", mode="wb"))
+        for suffix in ["main", "secondary", "auxiliary"]
+    ]
+
+
+def encode(
+    input_file: str,
+    output_file_prefix: str,
+    log_encoder: AbstractBaseCoder = None,
+    storage: AbstractRecordStorage = None,
+    secondary_encoder: Callable[[BitOutputStream, str], SecondaryEncoder] = None,
+    use_arithmetic_for_every_file=True,
+):
+    main, secondary, auxiliary = create_output_streams(output_file_prefix)
+
+    if log_encoder is None:
+        log_encoder = NaiveCoder(100)
+        # log_encoder = SmartCoder()
+    if storage is None:
+        storage = SlidingWindowRecordStorage()
+    if secondary_encoder is None:
+        secondary_encoder = ArithmeticPPMEncoder(
+            secondary,
+            f"{output_file_prefix}_secondary",
+            f"{output_file_prefix}_secondary_final",
+        )
+    else:
+        secondary_encoder = secondary_encoder(
+            secondary, f"{output_file_prefix}_secondary"
+        )
+
+    with open(input_file, mode="r") as f:
+        input_tokens = [
+            np.array([ord(ch) for ch in line], dtype=np.int32) for line in f.readlines()
+        ]
+
+    combined_log_coder = CombinedLogEncoder(
+        log_encoder, storage, main, auxiliary, secondary_encoder
+    )
+
+    combined_log_coder.encode_lines(input_tokens)
+
+    main.close()
+    secondary.close()
+    auxiliary.close()
+    if use_arithmetic_for_every_file:
+        encode_ppm(f"{output_file_prefix}_main", f"{output_file_prefix}_main_final")
+        encode_ppm(
+            f"{output_file_prefix}_auxiliary", f"{output_file_prefix}_auxiliary_final"
+        )
+
+
 # class ArithmeticLogDecoder:
 #     def __init__(
 #         self,
@@ -141,14 +217,14 @@ class CombinedLogEncoder:
 #         log_encoder: AbstractBaseCoder,
 #         storage: AbstractRecordStorage,
 #         lz_input_stream: BitInputStream,
-#         auxillary_input_stream: BitInputStream,
+#         auxiliary_input_stream: BitInputStream,
 #     ) -> None:
 #         self.arithmetic_decoder = arithmetic_decoder
 #         self.probability_model = probability_model
 #         self.log_encoder = log_encoder
 #         self.storage = storage
 #         self.lz_input_stream = lz_input_stream
-#         self.auxillary_input_stream = auxillary_input_stream
+#         self.auxiliary_input_stream = auxiliary_input_stream
 
 #     def _read_byte(self, stream: BitInputStream):
 #         cur = 0
@@ -165,7 +241,7 @@ class CombinedLogEncoder:
 
 #     def decode_text(self) -> List[str]:
 #         res = []
-#         length = self._get_next_int(self.auxillary_input_stream)
+#         length = self._get_next_int(self.auxiliary_input_stream)
 #         for i in range(length):
 #             tokens = self.decode()
 #             res.append(
@@ -175,10 +251,10 @@ class CombinedLogEncoder:
 #         return res
 
 #     def decode(self) -> List[int]:
-#         iterations = self._get_next_int(self.auxillary_input_stream)
+#         iterations = self._get_next_int(self.auxiliary_input_stream)
 #         line = []
 #         while iterations > 0:
-#             mode = self.auxillary_input_stream.read()
+#             mode = self.auxiliary_input_stream.read()
 #             if mode == 0:
 #                 record_index = self._get_next_int(self.lz_input_stream)
 #                 start_index = self._get_next_int(self.lz_input_stream)
@@ -200,22 +276,23 @@ class CombinedLogEncoder:
 
 
 if __name__ == "__main__":
-    window_size = 30
-    coder = SmartCoder()
-    storage = SlidingWindowRecordStorage(window_size)
-    # model = LstmLogModel()
-    with open("untitled2.txt", mode="r") as f:
-        input_text = f.readlines()
+    encode("encode.txt", "out")
+    # window_size = 30
+    # coder = SmartCoder()
+    # storage = SlidingWindowRecordStorage(window_size)
+    # # model = LstmLogModel()
+    # with open("untitled2.txt", mode="r") as f:
+    #     input_text = f.readlines()
 
-    output_streams = [BitOutputStream(open(f"out_{i}", mode="wb")) for i in range(3)]
-    encoder = ArithmeticEncoder(32, output_streams[0])
-    arithmetic_log_coder = CombinedLogEncoder(
-        encoder, coder, storage, output_streams[1], output_streams[2], output_streams[0]
-    )
-    arithmetic_log_coder.encode_text(input_text, "out_0", "out_final")
+    # output_streams = [BitOutputStream(open(f"out_{i}", mode="wb")) for i in range(3)]
+    # encoder = ArithmeticEncoder(32, output_streams[0])
+    # arithmetic_log_coder = CombinedLogEncoder(
+    #     encoder, coder, storage, output_streams[1], output_streams[2], output_streams[0]
+    # )
+    # arithmetic_log_coder.encode_text(input_text, "out_0", "out_final")
 
-    for stream in output_streams:
-        stream.close()
+    # for stream in output_streams:
+    #     stream.close()
 
     # model = LstmLogModel()
     # storage.drop()
