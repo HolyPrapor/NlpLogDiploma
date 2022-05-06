@@ -57,7 +57,7 @@ class ArithmeticPPMEncoder(SecondaryEncoder):
         integer_stream: BitOutputStream,
         input_file: str,
         output_file: str,
-        context_size=5,
+        context_size=3,
         use_bwt=True,
     ) -> None:
         self.integer_stream = integer_stream
@@ -179,10 +179,10 @@ def encode(
     main, secondary, auxiliary = create_output_streams(output_file_prefix)
 
     if log_encoder is None:
-        log_encoder = NaiveCoder(50)
-        # log_encoder = SmartCoder()
+        # log_encoder = NaiveCoder(100)
+        log_encoder = SmartCoder()
     if storage is None:
-        storage = SlidingWindowRecordStorage(50)
+        storage = SlidingWindowRecordStorage(100)
     if secondary_encoder is None:
         secondary_encoder = ArithmeticPPMEncoder(
             secondary,
@@ -196,7 +196,11 @@ def encode(
 
     with open(input_file, mode="r") as f:
         input_tokens = [
-            np.array([ord(ch) for ch in line], dtype=np.int32) for line in f.readlines()
+            np.array(
+                [ord(ch) for ch in (line[:-1] if line[-1] == "\n" else line)],
+                dtype=np.int32,
+            )
+            for line in f.readlines()
         ]
 
     combined_log_coder = CombinedLogEncoder(
@@ -231,7 +235,7 @@ class SecondaryDecoder:
 
 class ArithmeticPPMDecoder(SecondaryDecoder):
     def __init__(
-        self, encoded: str, decoded: str, context_size=5, use_bwt=True
+        self, encoded: str, decoded: str, context_size=3, use_bwt=True
     ) -> None:
         decode_ppm(encoded, decoded, context_size, use_bwt)
         with open(decoded, mode="rb") as f:
@@ -276,17 +280,18 @@ class CombinedLogDecoder:
         self.secondary_decoder.finish()
         return res
 
+    # TODO: Remove supersymbol from naive coder?
     def decode(self) -> List[int]:
         iterations = self._get_next_int(self.auxiliary_input_stream, 2)
         line = []
         while iterations > 0:
             mode = self.auxiliary_input_stream.read()
-            if (
-                mode == 0
-            ):  # TODO: To "Decode link from stream", also should remove supersymbol from naive coder
-                record_index = self._get_next_int(self.lz_input_stream)
-                start_index = self._get_next_int(self.lz_input_stream)
-                length = self._get_next_int(self.lz_input_stream)
+            if mode == 0:
+                (
+                    record_index,
+                    start_index,
+                    length,
+                ) = self.log_encoder.decode_link_from_stream(self.lz_input_stream)
                 parsed_link = self.storage.log_records[record_index][
                     start_index : start_index + length
                 ]
@@ -328,10 +333,10 @@ def decode(
         main, auxiliary = create_input_streams(encoded_file_prefix)
 
     if log_encoder is None:
-        # log_encoder = SmartCoder()
-        log_encoder = NaiveCoder(50)
+        log_encoder = SmartCoder()
+        # log_encoder = NaiveCoder(100)
     if storage is None:
-        storage = SlidingWindowRecordStorage(50)
+        storage = SlidingWindowRecordStorage(100)
     if secondary_decoder is None:
         secondary_decoder = ArithmeticPPMDecoder(
             f"{encoded_file_prefix}_secondary_final", f"{decoded_prefix}_secondary"
@@ -348,7 +353,7 @@ def decode(
         lines = [
             "".join(chr(c) for c in line) for line in combined_log_decoder.decode_text()
         ]
-        f.write("".join(lines))
+        f.write("\n".join(lines))
 
     main.close()
     auxiliary.close()
@@ -356,4 +361,4 @@ def decode(
 
 if __name__ == "__main__":
     encode("encode.txt", "out", use_arithmetic_for_every_file=True)
-    decode("out", "decoded.txt", use_arithmetic_for_every_file=True)
+    # decode("out", "decoded.txt", use_arithmetic_for_every_file=False)

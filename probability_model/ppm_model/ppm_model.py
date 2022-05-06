@@ -177,7 +177,7 @@ class PPMModelDecoder(PPMBaseModel):
         return self._get_uniform_frequencies()
 
 
-def encode(input_filename, output_filename, context_size=5, use_bwt=True):
+def encode(input_filename, output_filename, context_size=3, use_bwt=True):
     to_encode, bwt_encoded, encoded = fix_file_paths(
         [input_filename, "bwt_encoded", output_filename]
     )
@@ -203,7 +203,7 @@ def encode(input_filename, output_filename, context_size=5, use_bwt=True):
     output_stream.close()
 
 
-def decode(encoded_filename, output_filename, context_size=5, use_bwt=True):
+def decode(encoded_filename, output_filename, context_size=3, use_bwt=True):
     encoded, bwt_decoded, decoded = fix_file_paths(
         [encoded_filename, "bwt_decoded", output_filename]
     )

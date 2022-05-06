@@ -43,6 +43,9 @@ class AbstractBaseCoder:
     def decode_int_from_stream(self, stream: BitInputStream, size: int) -> int:
         raise NotImplementedError()
 
+    def decode_link_from_stream(self, stream) -> Tuple[int, int, int]:
+        raise NotImplementedError()
+
     def encode_token(self, char) -> List[int]:
         raise NotImplementedError()
 
@@ -119,6 +122,11 @@ class NaiveCoder(AbstractBaseCoder):
     def decode_int_from_stream(self, stream: BitInputStream, size: int) -> int:
         return self.decode_int([read_byte(stream) for _ in range(size)], 0, size)[0]
 
+    def decode_link_from_stream(self, stream) -> Tuple[int, int, int]:
+        buffer = [read_byte(stream) for _ in range(self.link_size)]
+        record_index, start_index, length, _ = self.decode_link(buffer, 0)
+        return record_index, start_index, length
+
     def encode_token(self, token) -> List[int]:
         return [token]
 
@@ -164,6 +172,9 @@ class SmartCoder(AbstractBaseCoder):
         while decoded[-1] == 255:
             decoded.append(read_byte(stream))
         return self.decode_int(decoded, 0)[0]
+
+    def decode_link_from_stream(self, stream) -> Tuple[int, int, int]:
+        return [self.decode_int_from_stream(stream) for _ in range(3)]
 
     def encode_token(self, token) -> List[int]:
         if token < 127:
