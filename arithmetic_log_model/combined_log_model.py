@@ -1,4 +1,7 @@
 # fmt: off
+import os
+os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
+
 import pyximport; pyximport.install()
 import utils.find_subarray as fs
 # fmt: on
@@ -176,10 +179,10 @@ def encode(
     main, secondary, auxiliary = create_output_streams(output_file_prefix)
 
     if log_encoder is None:
-        log_encoder = NaiveCoder(100)
+        log_encoder = NaiveCoder(50)
         # log_encoder = SmartCoder()
     if storage is None:
-        storage = SlidingWindowRecordStorage()
+        storage = SlidingWindowRecordStorage(50)
     if secondary_encoder is None:
         secondary_encoder = ArithmeticPPMEncoder(
             secondary,
@@ -261,34 +264,26 @@ class CombinedLogDecoder:
         self.auxiliary_input_stream = auxiliary_input_stream
         self.secondary_decoder = secondary_decoder
 
-    def _read_byte(self, stream: BitInputStream):
-        cur = 0
-        for _ in range(8):
-            cur <<= 1
-            cur |= stream.read()
-        return cur
-
-    def _get_next_int(self, stream: BitInputStream):
-        decoded = [self._read_byte(stream)]
-        while decoded[-1] == 255:
-            decoded.append(self._read_byte(stream))
-        return self.log_encoder.decode_int(decoded, 0)[0]
+    def _get_next_int(self, stream: BitInputStream, size=1):
+        return self.log_encoder.decode_int_from_stream(stream, size)
 
     def decode_text(self) -> List[List[int]]:
         res = []
-        length = self._get_next_int(self.auxiliary_input_stream)
-        for _ in tqdm(length, desc="Combined decoding"):
+        length = self._get_next_int(self.auxiliary_input_stream, 4)
+        for _ in tqdm(range(length), desc="Combined decoding"):
             tokens = self.decode()
             res.append(tokens)
         self.secondary_decoder.finish()
         return res
 
     def decode(self) -> List[int]:
-        iterations = self._get_next_int(self.auxiliary_input_stream)
+        iterations = self._get_next_int(self.auxiliary_input_stream, 2)
         line = []
         while iterations > 0:
             mode = self.auxiliary_input_stream.read()
-            if mode == 0:
+            if (
+                mode == 0
+            ):  # TODO: To "Decode link from stream", also should remove supersymbol from naive coder
                 record_index = self._get_next_int(self.lz_input_stream)
                 start_index = self._get_next_int(self.lz_input_stream)
                 length = self._get_next_int(self.lz_input_stream)
@@ -307,36 +302,58 @@ class CombinedLogDecoder:
 
 def create_input_streams(encoded_prefix):
     return [
-        BitInputStream(open(f"{encoded_prefix}_{suffix}", mode="wb"))
-        for suffix in [f"main", f"auxiliary"]
+        BitInputStream(open(f"{encoded_prefix}_{suffix}", mode="rb"))
+        for suffix in ["main", "auxiliary"]
     ]
 
 
 def decode(
     encoded_file_prefix: str,
     output: str,
-    log_encoder: AbstractBaseCoder,
-    storage: AbstractRecordStorage,
-    secondary_decoder: Callable[[str], SecondaryDecoder],
-    use_bwt=True,
+    log_encoder: AbstractBaseCoder = None,
+    storage: AbstractRecordStorage = None,
+    secondary_decoder: Callable[[str, str], SecondaryDecoder] = None,
+    use_arithmetic_for_every_file=True,
+    decoded_prefix=None,
 ):
-    # TODO: if use bwt
-    main, auxiliary = create_input_streams(encoded_file_prefix)
-    
-    pass
+    if decoded_prefix is None:
+        decoded_prefix = "decoded"
+    if use_arithmetic_for_every_file:
+        decode_ppm(f"{encoded_file_prefix}_main_final", f"{decoded_prefix}_main")
+        decode_ppm(
+            f"{encoded_file_prefix}_auxiliary_final", f"{decoded_prefix}_auxiliary"
+        )
+        main, auxiliary = create_input_streams(decoded_prefix)
+    else:
+        main, auxiliary = create_input_streams(encoded_file_prefix)
+
+    if log_encoder is None:
+        # log_encoder = SmartCoder()
+        log_encoder = NaiveCoder(50)
+    if storage is None:
+        storage = SlidingWindowRecordStorage(50)
+    if secondary_decoder is None:
+        secondary_decoder = ArithmeticPPMDecoder(
+            f"{encoded_file_prefix}_secondary_final", f"{decoded_prefix}_secondary"
+        )
+    else:
+        secondary_decoder = secondary_decoder(
+            f"{encoded_file_prefix}_secondary_final", f"{decoded_prefix}_secondary"
+        )
+
+    combined_log_decoder = CombinedLogDecoder(
+        log_encoder, storage, main, auxiliary, secondary_decoder
+    )
+    with open(output, mode="w") as f:
+        lines = [
+            "".join(chr(c) for c in line) for line in combined_log_decoder.decode_text()
+        ]
+        f.write("".join(lines))
+
+    main.close()
+    auxiliary.close()
 
 
 if __name__ == "__main__":
-    encode("encode.txt", "out")
-
-    # input_streams = [BitInputStream(
-    #     open(f"out_{i}", mode='rb')) for i in range(3)]
-    # decoder = ArithmeticDecoder(32, input_streams[0])
-    # arithmetic_log_decoder = ArithmeticLogDecoder(
-    #     decoder, model, coder, storage, input_streams[1], input_streams[2])
-
-    # with open('decoded.txt', mode='w') as f:
-    #     f.write('\n'.join(arithmetic_log_decoder.decode_text()))
-
-    # for stream in input_streams:
-    #     stream.close()
+    encode("encode.txt", "out", use_arithmetic_for_every_file=True)
+    decode("out", "decoded.txt", use_arithmetic_for_every_file=True)

@@ -23,6 +23,6 @@ class BwtCoder:
         errcode = process.wait()
         if errcode != 0:
             out, err = process.communicate()
-            print("Failed to use bwt.")
+            print(f"Failed to use bwt. Error code: {errcode}")
             print(str(out))
             print(str(err))

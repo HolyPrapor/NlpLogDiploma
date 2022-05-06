@@ -2,9 +2,18 @@ import numpy as np
 from math import log2, ceil
 from typing import *
 import pyximport
+from iostream.input_stream import BitInputStream
 
 pyximport.install()
 import utils.find_subarray as fs
+
+
+def read_byte(stream: BitInputStream):
+    cur = 0
+    for _ in range(8):
+        cur <<= 1
+        cur |= stream.read()
+    return cur
 
 
 class AbstractRecordStorage:
@@ -29,6 +38,9 @@ class AbstractBaseCoder:
         raise NotImplementedError()
 
     def decode_int(self, record, i, size=None) -> Tuple[int, int]:
+        raise NotImplementedError()
+
+    def decode_int_from_stream(self, stream: BitInputStream, size: int) -> int:
         raise NotImplementedError()
 
     def encode_token(self, char) -> List[int]:
@@ -104,6 +116,9 @@ class NaiveCoder(AbstractBaseCoder):
             cur |= char
         return cur, i + size
 
+    def decode_int_from_stream(self, stream: BitInputStream, size: int) -> int:
+        return self.decode_int([read_byte(stream) for _ in range(size)], 0, size)[0]
+
     def encode_token(self, token) -> List[int]:
         return [token]
 
@@ -143,6 +158,12 @@ class SmartCoder(AbstractBaseCoder):
         value += record[i] - 128
         i += 1
         return value, i
+
+    def decode_int_from_stream(self, stream, size=None) -> int:
+        decoded = [read_byte(stream)]
+        while decoded[-1] == 255:
+            decoded.append(read_byte(stream))
+        return self.decode_int(decoded, 0)[0]
 
     def encode_token(self, token) -> List[int]:
         if token < 127:
