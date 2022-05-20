@@ -1,6 +1,6 @@
 # fmt: off
 import os
-os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
+# os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
 
 import pyximport; pyximport.install()
 import utils.find_subarray as fs
@@ -182,7 +182,7 @@ def encode(
         # log_encoder = NaiveCoder(100)
         log_encoder = SmartCoder()
     if storage is None:
-        storage = SlidingWindowRecordStorage(100)
+        storage = SlidingWindowRecordStorage(200)
     if secondary_encoder is None:
         secondary_encoder = ArithmeticPPMEncoder(
             secondary,
@@ -333,10 +333,10 @@ def decode(
         main, auxiliary = create_input_streams(encoded_file_prefix)
 
     if log_encoder is None:
-        log_encoder = SmartCoder()
-        # log_encoder = NaiveCoder(100)
+        # log_encoder = SmartCoder()
+        log_encoder = NaiveCoder(200)
     if storage is None:
-        storage = SlidingWindowRecordStorage(100)
+        storage = SlidingWindowRecordStorage(200)
     if secondary_decoder is None:
         secondary_decoder = ArithmeticPPMDecoder(
             f"{encoded_file_prefix}_secondary_final", f"{decoded_prefix}_secondary"
@@ -360,5 +360,5 @@ def decode(
 
 
 if __name__ == "__main__":
-    encode("encode.txt", "out", use_arithmetic_for_every_file=True)
-    # decode("out", "decoded.txt", use_arithmetic_for_every_file=False)
+    encode("encode.txt", "out/out", use_arithmetic_for_every_file=True)
+    # decode("out", "decoded.txt", use_arithmetic_for_every_file=True)

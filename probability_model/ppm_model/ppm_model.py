@@ -241,5 +241,5 @@ def fix_file_paths(files):
 
 
 if __name__ == "__main__":
-    encode("out_auxiliary", "out_auxillary_final", 5)
-    # decode("out", "decoded.txt", 0)
+    # encode("out_main", "out", 3)
+    decode("out_main_final", "bwt_decoded", 3, use_bwt=False)

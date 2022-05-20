@@ -67,6 +67,9 @@ class SlidingWindowRecordStorage(AbstractRecordStorage):
         self.window_size = window_size
 
     def store_record(self, record):
+        for kept in self.log_records:
+            if (kept[-10:] == record[-10:]).all():
+                return
         self.log_records.append(record)
         if len(self.log_records) > self.window_size:
             self.log_records.pop(0)
@@ -76,7 +79,7 @@ class SlidingWindowRecordStorage(AbstractRecordStorage):
 
 
 class NaiveCoder(AbstractBaseCoder):
-    def __init__(self, max_storage_size):
+    def __init__(self, max_storage_size, ignore_super_symbol=True):
         self.super_symbol = "~"
         self.window_size = max_storage_size
         self._byte_mask = (1 << 8) - 1
