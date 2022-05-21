@@ -67,9 +67,6 @@ class SlidingWindowRecordStorage(AbstractRecordStorage):
         self.window_size = window_size
 
     def store_record(self, record):
-        for kept in self.log_records:
-            if (kept[-10:] == record[-10:]).all():
-                return
         self.log_records.append(record)
         if len(self.log_records) > self.window_size:
             self.log_records.pop(0)
@@ -226,33 +223,39 @@ class Compressor:
         self.coder = coder
         self.storage = storage
 
-    #     def compress(self, line: List[int]) -> List[int]:
-    #         res = []
-    #         start = 0
-    #         while start < len(line):
-    #             length = 1
-    #             record_index = record_start_index = None
-    #             for r, record in enumerate(self.storage.log_records):
-    #                 while length < len(line) - start and (index := fs.find_subarray(record, line[start:start + length])) != -1:
-    #                     record_index = r
-    #                     record_start_index = index
-    #                     length += 1
-    #             if self.coder.should_encode_as_link(line, start, record_index, record_start_index, length):
-    #                 length -= 1
-    #                 res += self.coder.encode_link(record_index,
-    #                                               record_start_index, length)
-    #             else:
-    #                 for i in range(length):
-    #                     res += self.coder.encode_token(line[start + i])
-    #             start += length
-    #         self.storage.store_record(line)
-    #         return res
+    def compress(self, line: List[int]) -> List[int]:
+        res = []
+        start = 0
+        while start < len(line):
+            length = 1
+            record_index = record_start_index = None
+            for r, record in enumerate(self.storage.log_records):
+                while (
+                    length < len(line) - start
+                    and (
+                        index := fs.find_subarray(record, line[start : start + length])
+                    )
+                    != -1
+                ):
+                    record_index = r
+                    record_start_index = index
+                    length += 1
+            if self.coder.should_encode_as_link(
+                line, start, record_index, record_start_index, length
+            ):
+                length -= 1
+                res += self.coder.encode_link(record_index, record_start_index, length)
+            else:
+                for i in range(length):
+                    res += self.coder.encode_token(line[start + i])
+            start += length
+        self.storage.store_record(line)
+        return res
 
     def compress_lines(self, lines: List[List[int]]) -> List[int]:
         compressed = []
         i = 0
         for line in lines:
-            # print(f"{i}/{len(lines)}")
             i += 1
             encoded = self.compress(line)
             compressed += self.coder.encode_int(len(encoded), 2) + encoded
@@ -303,21 +306,42 @@ def decompress(decompressor, bytetext):
     return "\n".join(["".join([chr(byte) for byte in line]) for line in decompressed])
 
 
-if __name__ == "__main__":
-    window_size = 20
-    coder = SmartCoder()
-    storage = SlidingWindowRecordStorage(window_size)
+def encode(
+    input_file: str,
+    output_file_prefix: str,
+    coder: AbstractBaseCoder = None,
+    storage: AbstractRecordStorage = None,
+):
+    if coder is None:
+        coder = SmartCoder()
+    if storage is None:
+        storage = SlidingWindowRecordStorage()
 
     compressor = Compressor(coder, storage)
-    with open("log_model/in.txt", mode="r") as f:
+    with open(input_file, mode="r") as f:
         text = f.readlines()
-    with open("log_model/out.txt", mode="wb") as f:
+    with open(output_file_prefix + "_final", mode="wb") as f:
         f.write(compress(compressor, text))
 
-    storage.drop()
+
+def decode(
+    encoded_file_prefix: str,
+    decoded_file: str,
+    coder: AbstractBaseCoder = None,
+    storage: AbstractRecordStorage = None,
+):
+    if coder is None:
+        coder = SmartCoder()
+    if storage is None:
+        storage = SlidingWindowRecordStorage()
 
     decompressor = Decompressor(coder, storage)
-    with open("log_model/out.txt", mode="rb") as f:
+    with open(encoded_file_prefix + "_final", mode="rb") as f:
         bytetext = f.read()
-    with open("log_model/decoded.txt", mode="w") as f:
+    with open(decoded_file, mode="w") as f:
         print(decompress(decompressor, bytetext), file=f)
+
+
+if __name__ == "__main__":
+    encode("encode.txt", "out")
+    decode("out", "decoded.txt")

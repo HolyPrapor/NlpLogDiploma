@@ -1,3 +1,4 @@
+from black import out
 import numpy as np
 from probability_model.model import ModelInterface, Token
 from iostream.output_stream import BitOutputStream
@@ -9,7 +10,7 @@ from typing import *
 import os
 from tqdm import tqdm
 
-# os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
+os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
 
 
 class Node:
@@ -183,7 +184,12 @@ def encode(input_filename, output_filename, context_size=3, use_bwt=True):
     )
     if use_bwt:
         bwt = BwtCoder()
-        bwt.encode(to_encode, bwt_encoded)
+        bwt.encode(
+            to_encode,
+            bwt_encoded,
+            output_filename + ".indices",
+            output_filename + ".eof",
+        )
     else:
         bwt_encoded = to_encode
 
@@ -232,7 +238,12 @@ def decode(encoded_filename, output_filename, context_size=3, use_bwt=True):
 
     if use_bwt:
         bwt = BwtCoder()
-        bwt.decode(bwt_decoded, decoded)
+        bwt.decode(
+            bwt_decoded,
+            encoded + ".indices",
+            encoded + ".eof",
+            decoded,
+        )
 
 
 def fix_file_paths(files):
@@ -241,5 +252,5 @@ def fix_file_paths(files):
 
 
 if __name__ == "__main__":
-    # encode("out_main", "out", 3)
-    decode("out_main_final", "bwt_decoded", 3, use_bwt=False)
+    encode("encode.txt", "out", 3)
+    decode("out", "decoded", 3)

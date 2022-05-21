@@ -1,6 +1,6 @@
 # fmt: off
 import os
-# os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
+os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
 
 import pyximport; pyximport.install()
 import utils.find_subarray as fs
@@ -173,14 +173,14 @@ def encode(
     output_file_prefix: str,
     log_encoder: AbstractBaseCoder = None,
     storage: AbstractRecordStorage = None,
-    secondary_encoder: Callable[[BitOutputStream, str], SecondaryEncoder] = None,
+    secondary_encoder: Callable[[BitOutputStream, str, str], SecondaryEncoder] = None,
     use_arithmetic_for_every_file=True,
 ):
     main, secondary, auxiliary = create_output_streams(output_file_prefix)
 
     if log_encoder is None:
-        # log_encoder = NaiveCoder(100)
-        log_encoder = SmartCoder()
+        log_encoder = NaiveCoder(200)
+        # log_encoder = SmartCoder()
     if storage is None:
         storage = SlidingWindowRecordStorage(200)
     if secondary_encoder is None:
@@ -191,7 +191,9 @@ def encode(
         )
     else:
         secondary_encoder = secondary_encoder(
-            secondary, f"{output_file_prefix}_secondary"
+            secondary,
+            f"{output_file_prefix}_secondary",
+            f"{output_file_prefix}_secondary_final",
         )
 
     with open(input_file, mode="r") as f:
@@ -215,6 +217,11 @@ def encode(
     if use_arithmetic_for_every_file:
         encode_ppm(f"{output_file_prefix}_main", f"{output_file_prefix}_main_final")
         encode_ppm(
+            f"{output_file_prefix}_auxiliary", f"{output_file_prefix}_auxiliary_final"
+        )
+    else:
+        os.rename(f"{output_file_prefix}_main", f"{output_file_prefix}_main_final")
+        os.rename(
             f"{output_file_prefix}_auxiliary", f"{output_file_prefix}_auxiliary_final"
         )
 
@@ -308,7 +315,7 @@ class CombinedLogDecoder:
 def create_input_streams(encoded_prefix):
     return [
         BitInputStream(open(f"{encoded_prefix}_{suffix}", mode="rb"))
-        for suffix in ["main", "auxiliary"]
+        for suffix in ["main_final", "auxiliary_final"]
     ]
 
 
@@ -324,9 +331,10 @@ def decode(
     if decoded_prefix is None:
         decoded_prefix = "decoded"
     if use_arithmetic_for_every_file:
-        decode_ppm(f"{encoded_file_prefix}_main_final", f"{decoded_prefix}_main")
+        decode_ppm(f"{encoded_file_prefix}_main_final", f"{decoded_prefix}_main_final")
         decode_ppm(
-            f"{encoded_file_prefix}_auxiliary_final", f"{decoded_prefix}_auxiliary"
+            f"{encoded_file_prefix}_auxiliary_final",
+            f"{decoded_prefix}_auxiliary_final",
         )
         main, auxiliary = create_input_streams(decoded_prefix)
     else:
@@ -360,5 +368,5 @@ def decode(
 
 
 if __name__ == "__main__":
-    encode("encode.txt", "out/out", use_arithmetic_for_every_file=True)
-    # decode("out", "decoded.txt", use_arithmetic_for_every_file=True)
+    encode("encode.txt", "out", use_arithmetic_for_every_file=True)
+    decode("out", "decoded.txt", use_arithmetic_for_every_file=True)
