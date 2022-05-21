@@ -1,11 +1,14 @@
+# fmt: off
+import os
+os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
+
+import pyximport; pyximport.install()
+import utils.find_subarray as fs
+# fmt: on
 import numpy as np
 from math import log2, ceil
 from typing import *
-import pyximport
 from iostream.input_stream import BitInputStream
-
-pyximport.install()
-import utils.find_subarray as fs
 
 
 def read_byte(stream: BitInputStream):
@@ -17,8 +20,9 @@ def read_byte(stream: BitInputStream):
 
 
 class AbstractRecordStorage:
-    def __init__(self) -> None:
+    def __init__(self, window_size=50) -> None:
         self.log_records = []
+        self.window_size = window_size
 
     def store_record(self, record):
         raise NotImplementedError()
@@ -74,9 +78,12 @@ class SlidingWindowRecordStorage(AbstractRecordStorage):
     def drop(self):
         self.log_records = []
 
+    def __str__(self) -> str:
+        return f"SlidingWindow({self.window_size})"
+
 
 class NaiveCoder(AbstractBaseCoder):
-    def __init__(self, max_storage_size, ignore_super_symbol=True):
+    def __init__(self, max_storage_size=100):
         self.super_symbol = "~"
         self.window_size = max_storage_size
         self._byte_mask = (1 << 8) - 1
@@ -86,6 +93,9 @@ class NaiveCoder(AbstractBaseCoder):
         self.link_size = (
             1 + self.record_index_size + self.start_index_size + self.length_size
         )
+
+    def __str__(self) -> str:
+        return "NaiveCoder"
 
     def encode_link(self, record_index, start_index, length):
         return (
@@ -149,6 +159,9 @@ class NaiveCoder(AbstractBaseCoder):
 class SmartCoder(AbstractBaseCoder):
     def __init__(self):
         pass
+
+    def __str__(self) -> str:
+        return "SmartCoder"
 
     def encode_int(self, value, size=None) -> List[int]:
         encoded = []

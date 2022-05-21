@@ -74,6 +74,9 @@ class ArithmeticPPMEncoder(SecondaryEncoder):
         self.integer_stream.close()
         encode_ppm(self.input_file, self.output_file, self.context_size, self.use_bwt)
 
+    def __str__(self) -> str:
+        return f"PPM(Context: {self.context_size}, BWT: {self.use_bwt})"
+
 
 class ArithmeticLSTMEncoder(SecondaryEncoder):
     def __init__(
