@@ -311,12 +311,12 @@ void moveToFront(char curr_index, char *list)
         record[i] = list[i];
     }
 
-    for (auto i = 1; i <= curr_index; ++i)
+    for (auto i = 1; i <= static_cast<unsigned char>(curr_index); ++i)
     {
         list[i] = record[i - 1];
     }
 
-    list[0] = record[curr_index];
+    list[0] = record[static_cast<unsigned char>(curr_index)];
 }
 
 vector<char> mtfEncode(char *input_text, int len_text, char *list)
