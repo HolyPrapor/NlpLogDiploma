@@ -52,19 +52,22 @@ class CombinedLogResult:
         self.res_size = res_size
         self.entropy = entropy
 
+    def __str__(self) -> str:
+        return f"Coder: {self.coder}, Storage: {self.storage}, SecCoder: {self.sec_coder}, ET: {self.enc_time:0.3f}, DT: {self.dec_time:0.3f}, Size: {self.res_size}, Entropy: {self.entropy:0.5f}"
+
 
 class CombinedLogGrid:
     def __init__(
         self,
-        base_coder_factories: List[Callable[[int], AbstractBaseCoder]],
-        storages: List[AbstractRecordStorage],
+        base_coder_factories: List[Callable[[int], AbstractBaseCoder]] = None,
+        storages: List[AbstractRecordStorage] = None,
         secondary_coder_factories: List[
             Tuple[
                 Callable[[BitOutputStream, str, str], SecondaryEncoder],
                 Callable[[str, str], SecondaryDecoder],
             ]
-        ],
-        use_arithmetics: List[bool],
+        ] = None,
+        use_arithmetics: List[bool] = None,
     ) -> None:
         self.base_coder_factories = base_coder_factories
         if self.base_coder_factories is None:
@@ -77,7 +80,7 @@ class CombinedLogGrid:
             self.storages = [SlidingWindowRecordStorage()]
         self.secondary_coder_factories = secondary_coder_factories
         if self.secondary_coder_factories is None:
-            self.secondary_encoder_factories = [
+            self.secondary_coder_factories = [
                 (
                     lambda os, i, o: ArithmeticPPMEncoder(os, i, o),
                     lambda i, o: ArithmeticPPMDecoder(i, o),
@@ -124,18 +127,26 @@ class CombinedLogGrid:
                             _check_sanity(
                                 input_file,
                                 decoded,
+                                self.format_name(
+                                    coder,
+                                    storage,
+                                    sec_encoder(None, None, None),
+                                    use_arithmetics,
+                                ),
                             )
                             yield CombinedLogResult(
                                 coder,
                                 storage,
-                                sec_encoder,
+                                sec_encoder(None, None, None),
                                 encode_time,
                                 decode_time,
                                 total,
                                 entropy,
                             )
+                            storage.drop()
 
     def format_name(
+        self,
         coder: AbstractBaseCoder,
         storage: AbstractRecordStorage,
         sec_coder: SecondaryEncoder,
@@ -149,23 +160,32 @@ class ArithmeticPPMResult:
         self,
         context_size: int,
         use_bwt: bool,
-        encode_time: float,
-        decode_time: float,
+        enc_time: float,
+        dec_time: float,
         entropy: float,
-        size: int,
+        res_size: int,
     ) -> None:
         self.context_size = context_size
         self.use_bwt = use_bwt
-        self.encode_time = encode_time
-        self.decode_time = decode_time
+        self.enc_time = enc_time
+        self.dec_time = dec_time
         self.entropy = entropy
-        self.size = size
+        self.res_size = res_size
+
+    def __str__(self) -> str:
+        return f"Context: {self.context_size}, BWT: {self.use_bwt}, ET: {self.enc_time:0.3f}, DT: {self.dec_time:0.3f}, Size: {self.res_size}, Entropy: {self.entropy:0.5f}"
 
 
 class ArithmeticPPMGrid:
-    def __init__(self, context_sizes: List[int], use_bwts: List[bool]) -> None:
+    def __init__(
+        self, context_sizes: List[int] = None, use_bwts: List[bool] = None
+    ) -> None:
         self.context_sizes = context_sizes
+        if self.context_sizes is None:
+            self.context_sizes = [1, 2, 3, 4]
         self.use_bwts = use_bwts
+        if self.use_bwts is None:
+            self.use_bwts = [False, True]
 
     def iterate(self, input_file: str) -> Generator[ArithmeticPPMResult, None, None]:
         with TemporaryDirectory() as tmp:
@@ -176,7 +196,7 @@ class ArithmeticPPMGrid:
                     start = time()
                     encode_ppm(input_file, out, context, use_bwt)
                     encode_time = time() - start
-                    entropy, total = get_stats(f"{out}*_final")
+                    entropy, total = get_stats(out)
                     start = time()
                     decode_ppm(out, decoded, context, use_bwt)
                     decode_time = time() - start
@@ -205,12 +225,15 @@ class LogResult:
         self.res_size = res_size
         self.entropy = entropy
 
+    def __str__(self) -> str:
+        return f"Coder: {self.coder}, Storage: {self.storage}, ET: {self.enc_time:0.3f}, DT: {self.dec_time:0.3f}, Size: {self.res_size}, Entropy: {self.entropy:0.5f}"
+
 
 class LogGrid:
     def __init__(
         self,
-        base_coder_factories: List[Callable[[int], AbstractBaseCoder]],
-        storages: List[AbstractRecordStorage],
+        base_coder_factories: List[Callable[[int], AbstractBaseCoder]] = None,
+        storages: List[AbstractRecordStorage] = None,
     ) -> None:
         self.base_coder_factories = base_coder_factories
         if self.base_coder_factories is None:
@@ -238,8 +261,7 @@ class LogGrid:
                     decode_log(out, decoded, coder, storage)
                     decode_time = time() - start
                     _check_sanity(
-                        input_file,
-                        decoded,
+                        input_file, decoded, f"Coder: {coder}, Storage: {storage}"
                     )
                     yield LogResult(
                         coder,
@@ -249,3 +271,13 @@ class LogGrid:
                         total,
                         entropy,
                     )
+                    storage.drop()
+
+
+if __name__ == "__main__":
+    for result in CombinedLogGrid().iterate("encode.txt"):
+        print(result)
+    # for result in ArithmeticPPMGrid().iterate("encode.txt"):
+    #     print(result)
+    # for result in LogGrid().iterate("encode.txt"):
+    #     print(result)
