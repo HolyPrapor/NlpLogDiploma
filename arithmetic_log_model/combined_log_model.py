@@ -218,9 +218,9 @@ def encode(
     secondary.close()
     auxiliary.close()
     if use_arithmetic_for_every_file:
-        encode_ppm(f"{output_file_prefix}_main", f"{output_file_prefix}_main_final")
+        encode_ppm(f"{output_file_prefix}_main", f"{output_file_prefix}_main_final", 1)
         encode_ppm(
-            f"{output_file_prefix}_auxiliary", f"{output_file_prefix}_auxiliary_final"
+            f"{output_file_prefix}_auxiliary", f"{output_file_prefix}_auxiliary_final", 1
         )
     else:
         os.rename(f"{output_file_prefix}_main", f"{output_file_prefix}_main_final")
@@ -371,5 +371,5 @@ def decode(
 
 
 if __name__ == "__main__":
-    encode("encode.txt", "out", use_arithmetic_for_every_file=True)
+    encode("test_files/logs/medium/android.log", "out", use_arithmetic_for_every_file=True)
     decode("out", "decoded.txt", use_arithmetic_for_every_file=True)

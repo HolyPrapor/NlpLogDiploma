@@ -79,18 +79,20 @@ class CombinedLogGrid:
             ]
         self.storages = storages
         if self.storages is None:
-            self.storages = [SlidingWindowRecordStorage()]
+            self.storages = [SlidingWindowRecordStorage(200)]
         self.secondary_coder_factories = secondary_coder_factories
         if self.secondary_coder_factories is None:
             self.secondary_coder_factories = [
                 (
-                    lambda os, i, o: ArithmeticPPMEncoder(os, i, o),
-                    lambda i, o: ArithmeticPPMDecoder(i, o),
+                    lambda os, i, o: ArithmeticPPMEncoder(os, i, o, context_size, use_bwt),
+                    lambda i, o: ArithmeticPPMDecoder(i, o, context_size, use_bwt),
                 )
+                for context_size in [1]
+                for use_bwt in [True]
             ]
         self.use_arithmetics = use_arithmetics
         if self.use_arithmetics is None:
-            self.use_arithmetics = [False, True]
+            self.use_arithmetics = [True]
 
     def iterate(self, input_file: str) -> Generator[CombinedLogResult, None, None]:
         with TemporaryDirectory() as tmp:
@@ -105,6 +107,7 @@ class CombinedLogGrid:
                     ) in self.secondary_coder_factories:
                         for use_arithmetics in self.use_arithmetics:
                             start = time()
+                            storage.drop()
                             encode_combined_log(
                                 input_file,
                                 out,
@@ -114,28 +117,28 @@ class CombinedLogGrid:
                                 use_arithmetics,
                             )
                             encode_time = time() - start
-                            storage.drop()
                             entropy, total = get_stats(f"{out}*_final")
                             start = time()
-                            decode_combined_log(
-                                out,
-                                decoded,
-                                coder,
-                                storage,
-                                sec_decoder,
-                                use_arithmetics,
-                            )
+                            storage.drop()
+                            # decode_combined_log(
+                            #     out,
+                            #     decoded,
+                            #     coder,
+                            #     storage,
+                            #     sec_decoder,
+                            #     use_arithmetics,
+                            # )
                             decode_time = time() - start
-                            _check_sanity(
-                                input_file,
-                                decoded,
-                                self.format_name(
-                                    coder,
-                                    storage,
-                                    sec_encoder(None, None, None),
-                                    use_arithmetics,
-                                ),
-                            )
+                            # _check_sanity(
+                            #     input_file,
+                            #     decoded,
+                            #     self.format_name(
+                            #         coder,
+                            #         storage,
+                            #         sec_encoder(None, None, None),
+                            #         use_arithmetics,
+                            #     ),
+                            # )
                             yield CombinedLogResult(
                                 coder,
                                 storage,
@@ -146,7 +149,6 @@ class CombinedLogGrid:
                                 total,
                                 entropy,
                             )
-                            storage.drop()
 
     def format_name(
         self,
@@ -201,11 +203,11 @@ class ArithmeticPPMGrid:
                     encode_time = time() - start
                     entropy, total = get_stats(out)
                     start = time()
-                    decode_ppm(out, decoded, context, use_bwt)
+                    # decode_ppm(out, decoded, context, use_bwt)
                     decode_time = time() - start
-                    _check_sanity(
-                        input_file, decoded, f"Context: {context}, UseBWT: {use_bwt}"
-                    )
+                    # _check_sanity(
+                    #     input_file, decoded, f"Context: {context}, UseBWT: {use_bwt}"
+                    # )
                     yield ArithmeticPPMResult(
                         context, use_bwt, encode_time, decode_time, entropy, total
                     )
@@ -277,13 +279,13 @@ class LogGrid:
 
 
 if __name__ == "__main__":
-    dir_names = ["small"]
+    dir_names = ["medium"]
     for dir_name in dir_names:
-        for file_name in ['android', 'bgl', 'hdfs', 'java']:
+        for file_name in ['android', 'bgl', 'hdfs', 'java', 'windows']:
             filepath = 'test_files/logs/' + dir_name + "/" + file_name + '.log'
             print(filepath)
-            # for result in CombinedLogGrid().iterate(filepath):
-            for result in LogGrid().iterate(filepath):
+            for result in CombinedLogGrid().iterate(filepath):
+            # for result in ArithmeticPPMGrid().iterate(filepath):
                 print(result)
 
     # for result in CombinedLogGrid().iterate("encode.txt"):
