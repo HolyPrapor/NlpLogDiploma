@@ -1,4 +1,4 @@
-from black import out
+# from black import out
 import numpy as np
 from probability_model.model import ModelInterface, Token
 from iostream.output_stream import BitOutputStream
@@ -10,7 +10,7 @@ from typing import *
 import os
 from tqdm import tqdm
 
-os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
+# os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
 
 
 class Node:

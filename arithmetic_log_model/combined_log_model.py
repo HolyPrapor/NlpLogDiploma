@@ -1,6 +1,6 @@
 # fmt: off
 import os
-os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
+# os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
 
 import pyximport; pyximport.install()
 import utils.find_subarray as fs

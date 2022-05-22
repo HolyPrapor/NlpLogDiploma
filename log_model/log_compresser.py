@@ -1,9 +1,10 @@
 # fmt: off
 import os
-os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
+# os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
 
 import pyximport; pyximport.install()
 import utils.find_subarray as fs
+import filecmp
 # fmt: on
 import numpy as np
 from math import log2, ceil
@@ -356,5 +357,12 @@ def decode(
 
 
 if __name__ == "__main__":
-    encode("encode.txt", "out")
-    decode("out", "decoded.txt")
+    # encode("test_files/logs/small/android.log", "out")
+    # decode("out", "decoded")
+    # if not filecmp.cmp("test_files/logs/small/android.log", "decoded", False):
+    #     print("NO")
+    for file in ["android"]:
+        encode(f"test_files/logs/small/{file}.log", f"out_{file}")
+        decode(f"out_{file}", f"decoded_{file}.txt")
+        if not filecmp.cmp(f"test_files/logs/small/{file}.log", f"decoded_{file}.txt", False):
+            print(f"test_files/logs/small/{file}.log", f"out_{file}")

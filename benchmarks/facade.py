@@ -29,7 +29,7 @@ from log_model.log_compresser import (
 
 
 def _check_sanity(i, o, fmt):
-    if not filecmp.cmp(i, o):
+    if not filecmp.cmp(i, o, False):
         print(f"Encode/decode sanity check has failed. {fmt}")
 
 
@@ -39,6 +39,7 @@ class CombinedLogResult:
         coder: AbstractBaseCoder,
         storage: AbstractRecordStorage,
         sec_coder: SecondaryEncoder,
+        bwt_for_all_files: bool,
         enc_time: float,
         dec_time: float,
         res_size: int,
@@ -47,13 +48,14 @@ class CombinedLogResult:
         self.coder = coder
         self.storage = storage
         self.sec_coder = sec_coder
+        self.bwt_for_all_files = bwt_for_all_files
         self.enc_time = enc_time
         self.dec_time = dec_time
         self.res_size = res_size
         self.entropy = entropy
 
     def __str__(self) -> str:
-        return f"Coder: {self.coder}, Storage: {self.storage}, SecCoder: {self.sec_coder}, ET: {self.enc_time:0.3f}, DT: {self.dec_time:0.3f}, Size: {self.res_size}, Entropy: {self.entropy:0.5f}"
+        return f"Coder: {self.coder}, Storage: {self.storage}, SecCoder: {self.sec_coder}, BwtForAll: {self.bwt_for_all_files}, ET: {self.enc_time:0.3f}, DT: {self.dec_time:0.3f}, Size: {self.res_size}, Entropy: {self.entropy:0.5f}"
 
 
 class CombinedLogGrid:
@@ -138,6 +140,7 @@ class CombinedLogGrid:
                                 coder,
                                 storage,
                                 sec_encoder(None, None, None),
+                                use_arithmetics,
                                 encode_time,
                                 decode_time,
                                 total,
@@ -253,9 +256,9 @@ class LogGrid:
                 for storage in self.storages:
                     coder = coder_factory(storage.window_size)
                     start = time()
+                    storage.drop()
                     encode_log(input_file, out, coder, storage)
                     encode_time = time() - start
-                    storage.drop()
                     entropy, total = get_stats(f"{out}*_final")
                     start = time()
                     decode_log(out, decoded, coder, storage)
@@ -271,12 +274,20 @@ class LogGrid:
                         total,
                         entropy,
                     )
-                    storage.drop()
 
 
 if __name__ == "__main__":
-    for result in CombinedLogGrid().iterate("encode.txt"):
-        print(result)
+    dir_names = ["small"]
+    for dir_name in dir_names:
+        for file_name in ['android', 'bgl', 'hdfs', 'java']:
+            filepath = 'test_files/logs/' + dir_name + "/" + file_name + '.log'
+            print(filepath)
+            # for result in CombinedLogGrid().iterate(filepath):
+            for result in LogGrid().iterate(filepath):
+                print(result)
+
+    # for result in CombinedLogGrid().iterate("encode.txt"):
+    #     print(result)
     # for result in ArithmeticPPMGrid().iterate("encode.txt"):
     #     print(result)
     # for result in LogGrid().iterate("encode.txt"):
