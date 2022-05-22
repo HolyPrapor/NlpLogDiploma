@@ -23,6 +23,7 @@ class BwtCoder:
             current_byte = bytes(i.to_bytes(1, "big"))
             if text.find(current_byte) == -1:
                 eof_byte = current_byte
+                break
         if not eof_byte:
             counter = Counter(text)
             eof_byte = bytes(counter.most_common()[-1][0].to_bytes(1, "big"))
@@ -33,7 +34,7 @@ class BwtCoder:
             result = b""
             prev_index = -1
             for index in indexes:
-                result += text[prev_index + 1 : index]
+                result += text[prev_index + 1: index]
                 prev_index = index
         else:
             result = text
@@ -70,7 +71,7 @@ class BwtCoder:
             result = b""
             prev_index = -1
             for index in indexes:
-                result += text[prev_index + 1 : index] + eof_byte
+                result += text[prev_index + 1: index] + eof_byte
                 prev_index = index
         else:
             result = text
