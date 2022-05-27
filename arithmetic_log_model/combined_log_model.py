@@ -2,7 +2,8 @@
 import os
 # os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
 
-import pyximport; pyximport.install()
+import pyximport
+from external.external import encode_bzip, encode_rar, encode_gzip; pyximport.install()
 import utils.find_subarray as fs
 # fmt: on
 import numpy as np
@@ -50,6 +51,9 @@ class SecondaryEncoder:
     def finish(self):
         raise NotImplementedError()
 
+    def encode(self, input, output):
+        raise NotImplementedError()
+
 
 class ArithmeticPPMEncoder(SecondaryEncoder):
     def __init__(
@@ -72,10 +76,13 @@ class ArithmeticPPMEncoder(SecondaryEncoder):
 
     def finish(self):
         self.integer_stream.close()
-        encode_ppm(self.input_file, self.output_file, self.context_size, self.use_bwt)
+        self.encode(self.input_file, self.output_file)
 
     def __str__(self) -> str:
         return f"PPM(Context: {self.context_size}, BWT: {self.use_bwt})"
+
+    def encode(self, input, output):
+        encode_ppm(input, output, self.context_size, self.use_bwt)
 
 
 class ArithmeticLSTMEncoder(SecondaryEncoder):
@@ -95,6 +102,75 @@ class ArithmeticLSTMEncoder(SecondaryEncoder):
 
     def finish(self):
         self.arithmetic_encoder.finish()
+
+
+class BzipEncoder(SecondaryEncoder):
+    def __init__(
+        self, integer_stream: BitOutputStream, input_file: str, output_file: str
+    ) -> None:
+        self.integer_stream = integer_stream
+        self.input_file = input_file
+        self.output_file = output_file
+
+    def write(self, token: int):
+        for bit in bitfield(token):
+            self.integer_stream.write(bit)
+
+    def finish(self):
+        self.integer_stream.close()
+        encode_bzip(self.input_file, self.output_file)
+
+    def __str__(self) -> str:
+        return f"BZIP"
+
+    def encode(self, input, output):
+        encode_bzip(input, output)
+
+
+class GzipEncoder(SecondaryEncoder):
+    def __init__(
+        self, integer_stream: BitOutputStream, input_file: str, output_file: str
+    ) -> None:
+        self.integer_stream = integer_stream
+        self.input_file = input_file
+        self.output_file = output_file
+
+    def write(self, token: int):
+        for bit in bitfield(token):
+            self.integer_stream.write(bit)
+
+    def finish(self):
+        self.integer_stream.close()
+        encode_gzip(self.input_file, self.output_file)
+
+    def __str__(self) -> str:
+        return f"GZIP"
+
+    def encode(self, input, output):
+        encode_gzip(input, output)
+
+
+class RarEncoder(SecondaryEncoder):
+    def __init__(
+        self, integer_stream: BitOutputStream, input_file: str, output_file: str
+    ) -> None:
+        self.integer_stream = integer_stream
+        self.input_file = input_file
+        self.output_file = output_file
+
+    def write(self, token: int):
+        for bit in bitfield(token):
+            self.integer_stream.write(bit)
+
+    def finish(self):
+        self.integer_stream.close()
+        encode_rar(self.input_file, self.output_file)
+
+    def __str__(self) -> str:
+        return f"RAR"
+
+    def encode(self, input, output):
+        encode_rar(input, output)
 
 
 class CombinedLogEncoder:
@@ -136,22 +212,21 @@ class CombinedLogEncoder:
         start = 0
         while start < len(line):
             length = 1
-            record_index = record_start_index = record_length = None
-            for r, record in enumerate(self.storage.log_records):
-                index = fs.find_subarray(record, line[start : start + length])
-                while length < len(line) - start and index != -1:
-                    record_index = r
-                    record_start_index = index
-                    record_length = length
-                    length += 1
-                    index = fs.find_subarray(record, line[start : start + length])
-            if record_length is not None and record_length > 4:
+            record_index, record_start_index, record_length = self.storage.get_link(
+                line, start
+            )
+            if record_length is not None and record_length > 6:
                 length = record_length
                 operations[iterations] = 0
                 encoded = self.log_encoder.encode_link(
                     record_index, record_start_index, length
                 )
-                self._write_to_stream(encoded, self.lz_output_stream)
+                self.storage.move_to_front(record_index)
+                if self.log_encoder.is_binary:
+                    for bit in encoded:
+                        self.lz_output_stream.write(bit)
+                else:
+                    self._write_to_stream(encoded, self.lz_output_stream)
                 self.secondary_encoder.on_main_encode(line[start : start + length])
             else:
                 operations[iterations] = 1
@@ -177,7 +252,7 @@ def encode(
     log_encoder: AbstractBaseCoder = None,
     storage: AbstractRecordStorage = None,
     secondary_encoder: Callable[[BitOutputStream, str, str], SecondaryEncoder] = None,
-    use_arithmetic_for_every_file=True,
+    use_secondary_for_every_file=True,
 ):
     main, secondary, auxiliary = create_output_streams(output_file_prefix)
 
@@ -217,9 +292,11 @@ def encode(
     main.close()
     secondary.close()
     auxiliary.close()
-    if use_arithmetic_for_every_file:
-        encode_ppm(f"{output_file_prefix}_main", f"{output_file_prefix}_main_final")
-        encode_ppm(
+    if use_secondary_for_every_file:
+        secondary_encoder.encode(
+            f"{output_file_prefix}_main", f"{output_file_prefix}_main_final"
+        )
+        secondary_encoder.encode(
             f"{output_file_prefix}_auxiliary", f"{output_file_prefix}_auxiliary_final"
         )
     else:
@@ -242,11 +319,16 @@ class SecondaryDecoder:
     def finish(self):
         raise NotImplementedError()
 
+    def decode(self, input, output):
+        raise NotImplementedError()
+
 
 class ArithmeticPPMDecoder(SecondaryDecoder):
     def __init__(
         self, encoded: str, decoded: str, context_size=3, use_bwt=True
     ) -> None:
+        self.context_size = context_size
+        self.use_bwt = use_bwt
         decode_ppm(encoded, decoded, context_size, use_bwt)
         with open(decoded, mode="rb") as f:
             self.lines = f.read()
@@ -258,6 +340,9 @@ class ArithmeticPPMDecoder(SecondaryDecoder):
 
     def finish(self):
         pass
+
+    def decode(self, input, output):
+        decode_ppm(input, output, self.context_size, self.use_bwt)
 
 
 # TODO: Arithmetic lstm decoder
@@ -328,14 +413,24 @@ def decode(
     log_encoder: AbstractBaseCoder = None,
     storage: AbstractRecordStorage = None,
     secondary_decoder: Callable[[str, str], SecondaryDecoder] = None,
-    use_arithmetic_for_every_file=True,
+    use_secondary_for_every_file=True,
     decoded_prefix=None,
 ):
     if decoded_prefix is None:
         decoded_prefix = "decoded"
-    if use_arithmetic_for_every_file:
-        decode_ppm(f"{encoded_file_prefix}_main_final", f"{decoded_prefix}_main_final")
-        decode_ppm(
+    if secondary_decoder is None:
+        secondary_decoder = ArithmeticPPMDecoder(
+            f"{encoded_file_prefix}_secondary_final", f"{decoded_prefix}_secondary"
+        )
+    else:
+        secondary_decoder = secondary_decoder(
+            f"{encoded_file_prefix}_secondary_final", f"{decoded_prefix}_secondary"
+        )
+    if use_secondary_for_every_file:
+        secondary_decoder.decode(
+            f"{encoded_file_prefix}_main_final", f"{decoded_prefix}_main_final"
+        )
+        secondary_decoder.decode(
             f"{encoded_file_prefix}_auxiliary_final",
             f"{decoded_prefix}_auxiliary_final",
         )
@@ -348,14 +443,6 @@ def decode(
         log_encoder = NaiveCoder(200)
     if storage is None:
         storage = SlidingWindowRecordStorage(200)
-    if secondary_decoder is None:
-        secondary_decoder = ArithmeticPPMDecoder(
-            f"{encoded_file_prefix}_secondary_final", f"{decoded_prefix}_secondary"
-        )
-    else:
-        secondary_decoder = secondary_decoder(
-            f"{encoded_file_prefix}_secondary_final", f"{decoded_prefix}_secondary"
-        )
 
     combined_log_decoder = CombinedLogDecoder(
         log_encoder, storage, main, auxiliary, secondary_decoder
@@ -371,5 +458,5 @@ def decode(
 
 
 if __name__ == "__main__":
-    encode("encode.txt", "out", use_arithmetic_for_every_file=True)
-    decode("out", "decoded.txt", use_arithmetic_for_every_file=True)
+    encode("encode.txt", "out", use_secondary_for_every_file=True)
+    decode("out", "decoded.txt", use_secondary_for_every_file=True)

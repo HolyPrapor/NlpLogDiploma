@@ -11,7 +11,8 @@ using namespace std;
 const int alphabetSize = 256;
 const int chunkSize = 100000;
 
-array<char, alphabetSize> get_alphabet() {
+array<char, alphabetSize> get_alphabet()
+{
     array<char, alphabetSize> result{};
     for (auto i = 0; i < alphabetSize; ++i)
         result[i] = (char)i;
@@ -31,16 +32,20 @@ int compare_suffixes(const void *aIn, const void *bIn, void *eofIn)
     char a = *(char *)aIn;
     char b = *(char *)bIn;
     char eof = *(char *)eofIn;
-    if (a == eof && b == eof) {
+    if (a == eof && b == eof)
+    {
         return 0;
     }
-    if (a == eof) {
+    if (a == eof)
+    {
         return -1;
     }
-    if (b == eof) {
+    if (b == eof)
+    {
         return 1;
     }
-    return a < b ? -1 : a == b ? 0 : 1;
+    return a < b ? -1 : a == b ? 0
+                               : 1;
 }
 
 int compare_rotations(const void *x, const void *y, void *eofIn)
@@ -50,17 +55,22 @@ int compare_rotations(const void *x, const void *y, void *eofIn)
     auto i = 0;
     char eof = *(char *)eofIn;
 
-    while (true) {
-        if (firstSuffix[i] == eof && secondSuffix[i] == eof) {
+    while (true)
+    {
+        if (firstSuffix[i] == eof && secondSuffix[i] == eof)
+        {
             return 0;
         }
-        if (firstSuffix[i] == eof) {
+        if (firstSuffix[i] == eof)
+        {
             return -1;
         }
-        if (secondSuffix[i] == eof) {
+        if (secondSuffix[i] == eof)
+        {
             return 1;
         }
-        if (firstSuffix[i] != secondSuffix[i]) {
+        if (firstSuffix[i] != secondSuffix[i])
+        {
             return firstSuffix[i] < secondSuffix[i] ? -1 : 1;
         }
         i++;
@@ -154,7 +164,8 @@ void updateLeftShift(struct node **head, int index, int *leftShift)
 
 struct node *nodes[256] = {nullptr};
 
-void smartstrcpy(char old_array[], char* new_array, int length){
+void smartstrcpy(char old_array[], char *new_array, int length)
+{
     copy(old_array, old_array + length, new_array);
 }
 
@@ -192,8 +203,10 @@ vector<char> invert(char bwt_arr[], int len_bwt, char eof)
      * Проблема в том, что таких номеров всего chunks_count. Можно записывать в отдельный файл.
      */
     int x = 0;
-    for (auto i = x; i < len_bwt; ++i) {
-        if (bwt_arr[i] == eof) {
+    for (auto i = x; i < len_bwt; ++i)
+    {
+        if (bwt_arr[i] == eof)
+        {
             x = i;
             break;
         }
@@ -375,8 +388,8 @@ void encode(string input, string output, char eof)
         bwtResult.insert(bwtResult.end(), bwtVector.begin(), bwtVector.end());
     }
     auto mtfResult = mtfEncode(bwtResult.data(), bwtResult.size(), alphabet.data());
-    auto res = zleEncode(mtfResult.data(), mtfResult.size());
-    printTextToFile(output, res);
+    // auto res = zleEncode(mtfResult.data(), mtfResult.size());
+    printTextToFile(output, mtfResult);
 }
 
 void decode(string input, string output, char eof)
@@ -415,18 +428,22 @@ string to_lower(string str)
     return str;
 }
 
-void test(string input, string output) {
+void test(string input, string output)
+{
     auto eofToken = 'q';
     string inputText = readFromFile(input) + eofToken;
     char text[inputText.length()];
-    for (auto i = 0; i < inputText.length(); ++i) {
+    for (auto i = 0; i < inputText.length(); ++i)
+    {
         text[i] = inputText.at(i);
     }
     auto bwtResult = bwt(text, computeSuffixArray(text, inputText.length(), eofToken), inputText.length());
     char outputText[bwtResult.size()];
     auto decode = invert(outputText, bwtResult.size(), eofToken);
-    for (auto i = 0; i < inputText.length(); ++i) {
-        if (decode[i] != inputText.at(i)) {
+    for (auto i = 0; i < inputText.length(); ++i)
+    {
+        if (decode[i] != inputText.at(i))
+        {
             cout << i << " decoded: " << decode[i] << " encoded: " << inputText.at(i) << '\n';
         }
     };
@@ -438,9 +455,9 @@ int main(int argc, char *argv[])
         return 1;
     string type = to_lower(argv[1]);
     if (type == "encode")
-        encode(argv[2], argv[3],stoi(argv[4]));
+        encode(argv[2], argv[3], stoi(argv[4]));
     else if (type == "decode")
-        decode(argv[2], argv[3],stoi(argv[4]));
+        decode(argv[2], argv[3], stoi(argv[4]));
     else if (type == "test")
         test(argv[2], argv[3]);
     else

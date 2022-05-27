@@ -1,15 +1,21 @@
 # fmt: off
+from argparse import ArgumentError
 import os
-# os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
+
+import tqdm
+
+from arithmetic_log_model.lru_window import LRUWindow
+
 
 import pyximport; pyximport.install()
 import utils.find_subarray as fs
 import filecmp
 # fmt: on
 import numpy as np
-from math import log2, ceil
+from math import floor, log2, ceil
 from typing import *
 from iostream.input_stream import BitInputStream
+from arithmetic_log_model.trie import MTFNode
 
 
 def read_byte(stream: BitInputStream):
@@ -21,18 +27,50 @@ def read_byte(stream: BitInputStream):
 
 
 class AbstractRecordStorage:
-    def __init__(self, window_size=50) -> None:
+    def __init__(self, window_size) -> None:
         self.log_records = []
         self.window_size = window_size
 
     def store_record(self, record):
         raise NotImplementedError()
 
+    # index in sliding window, start index in record, length
+    def get_link(
+        self, line, index
+    ) -> Tuple[Optional[int], Optional[int], Optional[int]]:
+        raise NotImplementedError()
+
+    def move_to_front(self, record_index):
+        pass
+
     def drop(self):
         raise NotImplementedError()
 
 
+class GreedyAbstractRecordStorage(AbstractRecordStorage):
+    def __init__(self, window_size) -> None:
+        super().__init__(window_size)
+
+    def get_link(
+        self, line, start
+    ) -> Tuple[Optional[int], Optional[int], Optional[int]]:
+        length = 1
+        record_index = record_start_index = record_length = None
+        for r, record in enumerate(self.log_records):
+            index = fs.find_subarray(record, line[start : start + length])
+            while length < len(line) - start and index != -1:
+                record_index = r
+                record_start_index = index
+                record_length = length
+                length += 1
+                index = fs.find_subarray(record, line[start : start + length])
+        return record_index, record_start_index, record_length
+
+
 class AbstractBaseCoder:
+    def __init__(self, is_binary=False) -> None:
+        self.is_binary = is_binary
+
     def encode_link(self, record_index, start_index, length) -> List[int]:
         raise NotImplementedError()
 
@@ -66,15 +104,100 @@ class AbstractBaseCoder:
         raise NotImplementedError()
 
 
-class SlidingWindowRecordStorage(AbstractRecordStorage):
+class UnaryCoder(AbstractBaseCoder):
+    def __init__(self, is_binary=False) -> None:
+        super().__init__(True)
+
+    def encode_link(self, record_index, start_index, length) -> List[int]:
+        return (
+            self.encode_int(record_index)
+            + self.encode_int(start_index)
+            + self.encode_int(length)
+        )
+
+    def encode_int(self, value, size=None) -> List[int]:
+        return [1] * value + [0]
+
+
+class EliasDeltaCoder(AbstractBaseCoder):
+    def __init__(self, is_binary=False) -> None:
+        super().__init__(True)
+
+    def encode_link(self, record_index, start_index, length) -> List[int]:
+        return (
+            self.encode_int(record_index)
+            + self.encode_int(start_index)
+            + self.encode_int(length)
+        )
+
+    def encode_int(self, value, size=None) -> List[int]:
+        l = 1 + int(floor(log2(value)) if value > 0 else 0)
+        ll = int(floor(log2(l)))
+        res = []
+        for i in range(ll):
+            res.append(0)
+        for i in range(ll, -1, -1):
+            res.append((l >> i) & 1)
+        for i in range(l - 2, -1, -1):
+            res.append((value >> i) & 1)
+        return res
+        # return super().encode_int(value, size)
+
+
+class TripleCoder(AbstractBaseCoder):
+    def __init__(self) -> None:
+        super().__init__(True)
+
+    def encode_link(self, record_index, start_index, length) -> List[int]:
+        return (
+            self.encode_int(record_index)
+            + self.encode_int(start_index)
+            + self.encode_int(length)
+        )
+
+    def encode_int(self, value, size=None) -> List[int]:
+        tripled = self._triple(value)
+        res = []
+        if len(tripled):
+            tripled[0] -= 1
+            res.append(tripled[0])
+        else:
+            return [1, 1]
+        for digit in tripled[1:]:
+            if digit == 0:
+                res.append(0)
+                res.append(0)
+            elif digit == 1:
+                res.append(0)
+                res.append(1)
+            else:
+                res.append(1)
+                res.append(0)
+        res.append(1)
+        res.append(1)
+        return res
+
+    def _triple(self, n: int):
+        res = []
+        while n > 0:
+            res.append(n % 3)
+            n //= 3
+        res.reverse()
+        return res
+
+
+class SlidingWindowRecordStorage(GreedyAbstractRecordStorage):
     def __init__(self, window_size=100) -> None:
-        super().__init__()
-        self.window_size = window_size
+        super().__init__(window_size)
 
     def store_record(self, record):
-        self.log_records.append(record)
+        if not len(record):
+            return
+        self.log_records = [record] + self.log_records
+        # self.log_records.append(record)
         if len(self.log_records) > self.window_size:
-            self.log_records.pop(0)
+            self.log_records.pop()
+            # self.log_records.pop(0)
 
     def drop(self):
         self.log_records = []
@@ -83,8 +206,114 @@ class SlidingWindowRecordStorage(AbstractRecordStorage):
         return f"SlidingWindow({self.window_size})"
 
 
+class SlidingWindowWithDifferentSuffixesRecordStorage(GreedyAbstractRecordStorage):
+    def __init__(self, window_size=100, reversed=False) -> None:
+        super().__init__(window_size)
+
+    def store_record(self, record):
+        if not len(record):
+            return
+        suffix = record[-10:]
+        for line in self.log_records:
+            if (line[-10:] == suffix).all():
+                return
+        self.log_records = [record] + self.log_records
+        # self.log_records.append(record)
+        if len(self.log_records) > self.window_size:
+            self.log_records.pop()
+            # self.log_records.pop(0)
+
+    def drop(self):
+        self.log_records = []
+
+    def __str__(self) -> str:
+        return f"SlidingWindowWithDifferentSuffixes({self.window_size})"
+
+
+class MoveToFrontStorage(GreedyAbstractRecordStorage):
+    def __init__(self, window_size=100, reversed=False) -> None:
+        super().__init__(window_size)
+
+    def store_record(self, record):
+        if not len(record):
+            return
+        # suffix = record[-10:]
+        # for line in self.log_records:
+        #     if (line[-10:] == suffix).all():
+        #         return
+        self.log_records = [record] + self.log_records
+        # self.log_records.append(record)
+        if len(self.log_records) > self.window_size:
+            self.log_records.pop()
+            # self.log_records.pop(0)
+
+    def move_to_front(self, record_index):
+        self.log_records = (
+            [self.log_records[record_index]]
+            + self.log_records[:record_index]
+            + self.log_records[record_index + 1 :]
+        )
+
+    def drop(self):
+        self.log_records = []
+
+    def __str__(self) -> str:
+        return f"MoveToFrontStorage({self.window_size})"
+
+
+class MoveToFrontTrieStorage(AbstractRecordStorage):
+    def __init__(self, window_size=30) -> None:
+        self.window_size = window_size
+        self.root = MTFNode()
+        self.index_window = LRUWindow()
+        self.log_records = []
+
+    def get_link(
+        self, line, start
+    ) -> Tuple[Optional[int], Optional[int], Optional[int]]:
+        cur = self.root
+        i = 0
+        while start + i < len(line) and line[start + i] in cur.children:
+            cur = cur.children[line[start + i]]
+            i += 1
+        if i == 0:
+            return None, None, None
+        # TODO: Track start index somehow
+        return min(cur.indices), 0, i
+
+    def store_record(self, record):
+        if len(self.log_records) < self.window_size:
+            self.index_window.append(len(self.log_records))
+            self._add_to_trie(record, len(self.log_records))
+            self.log_records.append(record)
+        else:
+            index = self.index_window.pop()
+            self._remove_from_trie(self.log_records[index], index)
+            self.index_window.append(index)
+            self._add_to_trie(record, index)
+            self.log_records[index] = record
+
+    def move_to_front(self, record_index):
+        self.index_window.move_to_front(record_index)
+
+    def drop(self):
+        self.log_records = []
+        self.index_window = LRUWindow()
+        self.root = MTFNode()
+
+    def _add_to_trie(self, record, index):
+        for i in range(len(record)):
+            self.root.add(record, i, index)
+
+    def _remove_from_trie(self, record, index):
+        for i in range(len(record)):
+            self.root.remove(record, i, index)
+
+
 class NaiveCoder(AbstractBaseCoder):
-    def __init__(self, max_storage_size=100):
+    def __init__(self, max_storage_size=100, ignore_super_symbol=False):
+        super().__init__(False)
+        self.ignore_super_symbol = ignore_super_symbol
         self.super_symbol = "~"
         self.window_size = max_storage_size
         self._byte_mask = (1 << 8) - 1
@@ -92,16 +321,24 @@ class NaiveCoder(AbstractBaseCoder):
         self.start_index_size = 2
         self.length_size = 2
         self.link_size = (
-            1 + self.record_index_size + self.start_index_size + self.length_size
+            self.record_index_size + self.start_index_size + self.length_size
         )
+        if not ignore_super_symbol:
+            self.link_size += 1
 
     def __str__(self) -> str:
-        return "NaiveCoder"
+        return f"NaiveCoder(IgnoreSuperSymbol: {self.ignore_super_symbol})"
 
     def encode_link(self, record_index, start_index, length):
+        if not self.ignore_super_symbol:
+            return (
+                self.encode_int(ord(self.super_symbol), 1)
+                + self.encode_int(record_index, self.record_index_size)
+                + self.encode_int(start_index, self.start_index_size)
+                + self.encode_int(length, self.length_size)
+            )
         return (
-            self.encode_int(ord(self.super_symbol), 1)
-            + self.encode_int(record_index, self.record_index_size)
+            self.encode_int(record_index, self.record_index_size)
             + self.encode_int(start_index, self.start_index_size)
             + self.encode_int(length, self.length_size)
         )
@@ -158,26 +395,29 @@ class NaiveCoder(AbstractBaseCoder):
 
 
 class SmartCoder(AbstractBaseCoder):
-    def __init__(self):
-        pass
+    def __init__(self, max_value: int = 127):
+        super().__init__(False)
+        if max_value <= 0 or max_value > 255:
+            raise ArgumentError(f"{max_value} is not supported")
+        self.max_value = max_value
 
     def __str__(self) -> str:
-        return "SmartCoder"
+        return f"SmartCoder({self.max_value})"
 
     def encode_int(self, value, size=None) -> List[int]:
         encoded = []
-        while value >= 127:
+        while value >= self.max_value:
             encoded.append(255)
-            value -= 127
-        encoded.append(128 + value)
+            value -= self.max_value
+        encoded.append(255 - self.max_value + value)
         return encoded
 
     def decode_int(self, record, i, size=None) -> Tuple[int, int]:
         value = 0
         while record[i] == 255:
-            value += 127
+            value += self.max_value
             i += 1
-        value += record[i] - 128
+        value += record[i] - (255 - self.max_value)
         i += 1
         return value, i
 
@@ -191,20 +431,24 @@ class SmartCoder(AbstractBaseCoder):
         return [self.decode_int_from_stream(stream) for _ in range(3)]
 
     def encode_token(self, token) -> List[int]:
-        if token < 127:
+        if token < self.max_value:
             return [token]
-        return [127, token]
+        return [self.max_value, token]
 
     def decode_token(self, record, i) -> Tuple[int, int]:
-        if i + 1 < len(record) and record[i] == 127 and record[i + 1] >= 127:
+        if (
+            i + 1 < len(record)
+            and record[i] == self.max_value
+            and record[i + 1] >= self.max_value
+        ):
             return record[i + 1], i + 2
         return record[i], i + 1
 
     def should_decode_as_link(self, record, i) -> bool:
-        return record[i] >= 128
+        return record[i] >= 255 - self.max_value
 
     def _count_space_for_int_encoding(self, value):
-        return value // 127 + 1
+        return value // self.max_value + 1
 
     def should_encode_as_link(
         self, record, start, record_index, start_index, length
@@ -241,35 +485,28 @@ class Compressor:
         res = []
         start = 0
         while start < len(line):
-            length = 1
-            record_index = record_start_index = None
-            for r, record in enumerate(self.storage.log_records):
-                while (
-                    length < len(line) - start
-                    and (
-                        index := fs.find_subarray(record, line[start : start + length])
-                    )
-                    != -1
-                ):
-                    record_index = r
-                    record_start_index = index
-                    length += 1
+            record_index, record_start_index, record_length = self.storage.get_link(
+                line, start
+            )
+            record_length = record_length or 1
             if self.coder.should_encode_as_link(
-                line, start, record_index, record_start_index, length
+                line, start, record_index, record_start_index, record_length
             ):
-                length -= 1
-                res += self.coder.encode_link(record_index, record_start_index, length)
+                res += self.coder.encode_link(
+                    record_index, record_start_index, record_length
+                )
+                self.storage.move_to_front(record_index)
             else:
-                for i in range(length):
+                for i in range(record_length):
                     res += self.coder.encode_token(line[start + i])
-            start += length
+            start += record_length
         self.storage.store_record(line)
         return res
 
     def compress_lines(self, lines: List[List[int]]) -> List[int]:
         compressed = []
         i = 0
-        for line in lines:
+        for line in tqdm.tqdm(lines, desc="Log compressing"):
             i += 1
             encoded = self.compress(line)
             compressed += self.coder.encode_int(len(encoded), 2) + encoded
@@ -310,7 +547,10 @@ class Decompressor:
 
 def compress(compressor, text):
     # crop line endings
-    lines = [np.array([ord(ch) for ch in line[:-1]], dtype=np.int32) for line in text]
+    lines = [
+        np.array([ord(ch) for ch in line[:-1] if ord(ch) < 256], dtype=np.int32)
+        for line in text
+    ]
     return compressor.compress_lines(lines)
 
 
@@ -357,12 +597,22 @@ def decode(
 
 
 if __name__ == "__main__":
+    import sys
+
+    sys.setrecursionlimit(5000)
     # encode("test_files/logs/small/android.log", "out")
     # decode("out", "decoded")
     # if not filecmp.cmp("test_files/logs/small/android.log", "decoded", False):
     #     print("NO")
-    for file in ["android"]:
-        encode(f"test_files/logs/small/{file}.log", f"out_{file}")
-        decode(f"out_{file}", f"decoded_{file}.txt")
-        if not filecmp.cmp(f"test_files/logs/small/{file}.log", f"decoded_{file}.txt", False):
-            print(f"test_files/logs/small/{file}.log", f"out_{file}")
+    for file in ["windows"]:
+        encode(
+            f"test_files/logs/small/{file}.log",
+            f"out_{file}",
+            NaiveCoder(30),
+            MoveToFrontStorage(30),
+        )
+        # decode(f"out_{file}", f"decoded_{file}.txt")
+        # if not filecmp.cmp(
+        #     f"test_files/logs/small/{file}.log", f"decoded_{file}.txt", False
+        # ):
+        #     print(f"test_files/logs/small/{file}.log", f"decoded_{file}.txt")
