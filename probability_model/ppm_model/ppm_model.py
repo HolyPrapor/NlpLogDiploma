@@ -126,17 +126,20 @@ class PPMEncoderModel(PPMBaseModel):
             -(self.context_size + 1) :
         ]
 
+    def update_trie(self):
+        self.trie.update(self.context, 0, len(self.context))
+
     def get_frequencies(self) -> List[int]:
         for size in range(min(self.context_size, len(self.context) - 1), -1, -1):
             ok, freqs = self.trie.try_path(
                 self.context, len(self.context) - size - 1, size
             )
             if ok:
-                self.trie.update(self.context, 0, len(self.context))
+                self.update_trie()
                 return freqs
             if freqs is not None:
                 self.coder.write(freqs, self._get_esc_token())
-        self.trie.update(self.context, 0, len(self.context))
+        self.update_trie()
         return self._get_uniform_frequencies()
 
 

@@ -7,7 +7,9 @@ import tqdm
 from arithmetic_log_model.lru_window import LRUWindow
 
 
-import pyximport; pyximport.install()
+import pyximport
+from external.external import encode_bzip, encode_gzip, encode_rar; pyximport.install()
+from probability_model.ppm_model.ppm_model import encode as encode_ppm
 import utils.find_subarray as fs
 import filecmp
 # fmt: on
@@ -64,6 +66,8 @@ class GreedyAbstractRecordStorage(AbstractRecordStorage):
                 record_length = length
                 length += 1
                 index = fs.find_subarray(record, line[start : start + length])
+            if length == len(line) - start:
+                break
         return record_index, record_start_index, record_length
 
 
@@ -261,6 +265,31 @@ class MoveToFrontStorage(GreedyAbstractRecordStorage):
         return f"MoveToFrontStorage({self.window_size})"
 
 
+class MoveToFrontCachingStorage(GreedyAbstractRecordStorage):
+    def __init__(self, window_size=100) -> None:
+        super().__init__(window_size)
+        self.index_window = LRUWindow()
+
+    def store_record(self, record):
+        if not len(record):
+            return
+
+        if len(self.log_records) < self.window_size:
+            self.index_window.append(len(self.log_records))
+            self.log_records.append(record)
+        else:
+            index = self.index_window.pop()
+            self.index_window.append(index)
+            self.log_records[index] = record
+
+    def move_to_front(self, record_index):
+        self.index_window.move_to_front(record_index)
+
+    def drop(self):
+        self.log_records = []
+        self.index_window = LRUWindow()
+
+
 class MoveToFrontTrieStorage(AbstractRecordStorage):
     def __init__(self, window_size=30) -> None:
         self.window_size = window_size
@@ -308,6 +337,57 @@ class MoveToFrontTrieStorage(AbstractRecordStorage):
     def _remove_from_trie(self, record, index):
         for i in range(len(record)):
             self.root.remove(record, i, index)
+
+
+class CompositeRecordStorage(AbstractRecordStorage):
+    def __init__(self, window_size) -> None:
+        if window_size % 2:
+            raise ArgumentError("Not even window size is not supported")
+        self.half = window_size // 2
+        self.global_storage = MoveToFrontCachingStorage(self.half)
+        self.local_storage = SlidingWindowRecordStorage(self.half)
+        super().__init__(window_size)
+
+    def store_record(self, record):
+        self.local_storage.store_record(record)
+        self.global_storage.store_record(record)
+
+    def move_to_front(self, record_index):
+        if record_index < self.half:
+            self.global_storage.move_to_front(record_index)
+        else:
+            self.local_storage.move_to_front(record_index - self.half)
+
+    def drop(self):
+        self.local_storage.drop()
+        self.global_storage.drop()
+
+    def get_link(
+        self, line, start
+    ) -> Tuple[Optional[int], Optional[int], Optional[int]]:
+        length = 1
+        record_index = record_start_index = record_length = None
+        for r, record in enumerate(self.local_storage.log_records):
+            index = fs.find_subarray(record, line[start : start + length])
+            while length < len(line) - start and index != -1:
+                record_index = r + self.half
+                record_start_index = index
+                record_length = length
+                length += 1
+                index = fs.find_subarray(record, line[start : start + length])
+            if length == len(line) - start:
+                break
+        for r, record in enumerate(self.global_storage.log_records):
+            index = fs.find_subarray(record, line[start : start + length])
+            while length < len(line) - start and index != -1:
+                record_index = r
+                record_start_index = index
+                record_length = length
+                length += 1
+                index = fs.find_subarray(record, line[start : start + length])
+            if length == len(line) - start:
+                break
+        return record_index, record_start_index, record_length
 
 
 class NaiveCoder(AbstractBaseCoder):
@@ -604,13 +684,17 @@ if __name__ == "__main__":
     # decode("out", "decoded")
     # if not filecmp.cmp("test_files/logs/small/android.log", "decoded", False):
     #     print("NO")
-    for file in ["windows"]:
+    for file in ["android"]:
         encode(
-            f"test_files/logs/small/{file}.log",
-            f"out_{file}",
-            NaiveCoder(30),
-            MoveToFrontStorage(30),
+            f"test_files/logs/medium/{file}.log",
+            f"out_log_{file}",
+            SmartCoder(),
+            CompositeRecordStorage(254),
         )
+        # encode_bzip(f"out_{file}_final", f"out_{file}.bzip")
+        # encode_gzip(f"out_{file}_final", f"out_{file}.gzip")
+        # encode_rar(f"out_{file}_final", f"out_{file}.rar")
+        # encode_ppm(f"out_{file}_final", f"out_{file}.ppm")
         # decode(f"out_{file}", f"decoded_{file}.txt")
         # if not filecmp.cmp(
         #     f"test_files/logs/small/{file}.log", f"decoded_{file}.txt", False

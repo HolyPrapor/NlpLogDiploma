@@ -1,9 +1,9 @@
 # fmt: off
 import os
-# os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
+os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
 
 import pyximport
-from external.external import encode_bzip, encode_rar, encode_gzip; pyximport.install()
+from external.external import encode_7z, encode_bzip, encode_rar, encode_gzip; pyximport.install()
 import utils.find_subarray as fs
 # fmt: on
 import numpy as np
@@ -16,11 +16,18 @@ from iostream.input_stream import BitInputStream
 from log_model.log_compresser import (
     AbstractRecordStorage,
     AbstractBaseCoder,
+    CompositeRecordStorage,
+    EliasDeltaCoder,
+    MoveToFrontCachingStorage,
+    MoveToFrontStorage,
     NaiveCoder,
     SlidingWindowRecordStorage,
     SmartCoder,
+    TripleCoder,
+    UnaryCoder,
 )
 from probability_model.ppm_model.ppm_model import (
+    PPMEncoderModel,
     encode as encode_ppm,
     decode as decode_ppm,
 )
@@ -59,6 +66,38 @@ class ArithmeticPPMEncoder(SecondaryEncoder):
     def __init__(
         self,
         integer_stream: BitOutputStream,
+        context_size=3,
+    ) -> None:
+        self.integer_stream = integer_stream
+        self.context_size = context_size
+        self.encoder = ArithmeticEncoder(32, integer_stream)
+        self.model = PPMEncoderModel(self.encoder, self.context_size)
+
+    def on_main_encode(self, encoded: List[int]):
+        for token in encoded:
+            self.model.feed([token])
+            self.model.update_trie()
+
+    def write(self, token: int):
+        self.model.feed([token])
+        frequencies = self.model.get_frequencies()
+        self.encoder.write(frequencies, token)
+
+    def finish(self):
+        self.encoder.finish()
+        self.integer_stream.close()
+
+    def __str__(self) -> str:
+        return f"PPM(Context: {self.context_size})"
+
+    def encode(self, input, output):
+        encode_ppm(input, output, self.context_size)
+
+
+class ArithmeticPPMDelayedEncoder(SecondaryEncoder):
+    def __init__(
+        self,
+        integer_stream: BitOutputStream,
         input_file: str,
         output_file: str,
         context_size=3,
@@ -79,7 +118,7 @@ class ArithmeticPPMEncoder(SecondaryEncoder):
         self.encode(self.input_file, self.output_file)
 
     def __str__(self) -> str:
-        return f"PPM(Context: {self.context_size}, BWT: {self.use_bwt})"
+        return f"PPM_Delayed(Context: {self.context_size}, BWT: {self.use_bwt})"
 
     def encode(self, input, output):
         encode_ppm(input, output, self.context_size, self.use_bwt)
@@ -230,8 +269,11 @@ class CombinedLogEncoder:
                 self.secondary_encoder.on_main_encode(line[start : start + length])
             else:
                 operations[iterations] = 1
-                self.secondary_encoder.write(line[start])
-                length = 1
+                length = min(4, len(line) - start)
+                for i in range(length):
+                    self.secondary_encoder.write(line[start + i])
+                # self.secondary_encoder.write(line[start])
+                # length = 1
             start += length
             iterations += 1
         self.storage.store_record(line)
@@ -257,12 +299,12 @@ def encode(
     main, secondary, auxiliary = create_output_streams(output_file_prefix)
 
     if log_encoder is None:
-        log_encoder = NaiveCoder(200)
+        log_encoder = NaiveCoder(254)
         # log_encoder = SmartCoder()
     if storage is None:
-        storage = SlidingWindowRecordStorage(200)
+        storage = CompositeRecordStorage(254)
     if secondary_encoder is None:
-        secondary_encoder = ArithmeticPPMEncoder(
+        secondary_encoder = ArithmeticPPMDelayedEncoder(
             secondary,
             f"{output_file_prefix}_secondary",
             f"{output_file_prefix}_secondary_final",
@@ -277,7 +319,11 @@ def encode(
     with open(input_file, mode="r") as f:
         input_tokens = [
             np.array(
-                [ord(ch) for ch in (line[:-1] if line[-1] == "\n" else line)],
+                [
+                    ord(ch)
+                    for ch in (line[:-1] if line[-1] == "\n" else line)
+                    if ord(ch) < 256
+                ],
                 dtype=np.int32,
             )
             for line in f.readlines()
@@ -458,5 +504,70 @@ def decode(
 
 
 if __name__ == "__main__":
-    encode("encode.txt", "out", use_secondary_for_every_file=True)
-    decode("out", "decoded.txt", use_secondary_for_every_file=True)
+    for file in ["android", "bgl", "hdfs", "java", "windows"]:
+        for name, window, storage, encoder in [
+            # ("sliding_smart_2", 2, SlidingWindowRecordStorage(254), SmartCoder()),
+            # ("sliding_naive_2", 2, SlidingWindowRecordStorage(254), NaiveCoder(254, True)),
+            # ("move_to_front_smart_2", 2, MoveToFrontStorage(100), SmartCoder()),
+            # ("move_to_front_naive_2", 2, MoveToFrontStorage(100), NaiveCoder(100, True)),
+            # ("sliding_smart_3", 3, SlidingWindowRecordStorage(254), SmartCoder()),
+            # ("sliding_naive_3", 3, SlidingWindowRecordStorage(254), NaiveCoder(254, True)),
+            # ("move_to_front_smart_3", 3, MoveToFrontStorage(250), SmartCoder()),
+            # # ("move_to_front_naive_3", 3, MoveToFrontStorage(100), NaiveCoder(100, True)),
+            # ("sliding_smart_4", 4, SlidingWindowRecordStorage(254), SmartCoder()),
+            # # ("sliding_naive_4", 4, SlidingWindowRecordStorage(254), NaiveCoder(254, True)),
+            # ("move_to_front_smart_4", 4, MoveToFrontStorage(250), SmartCoder()),
+            # # ("move_to_front_naive_4", 4, MoveToFrontStorage(100), NaiveCoder(100, True)),
+            ("sliding_smart_5", 5, SlidingWindowRecordStorage(255), SmartCoder(255)),
+            ("sliding_naive_5", 5, SlidingWindowRecordStorage(255), NaiveCoder(255)),
+            ("sliding_elias_5", 5, SlidingWindowRecordStorage(255), EliasDeltaCoder()),
+            ("sliding_unary_5", 5, SlidingWindowRecordStorage(255), UnaryCoder()),
+            ("sliding_triple_5", 5, SlidingWindowRecordStorage(255), TripleCoder()),
+            ("move_to_front_smart_5", 5, MoveToFrontStorage(255), SmartCoder(255)),
+            ("move_to_front_naive_5", 5, MoveToFrontStorage(255), NaiveCoder(255)),
+            ("move_to_front_elias_5", 5, MoveToFrontStorage(255), EliasDeltaCoder()),
+            ("move_to_front_unary_5", 5, MoveToFrontStorage(255), UnaryCoder()),
+            ("move_to_front_triple_5", 5, MoveToFrontStorage(255), TripleCoder()),
+            # (
+            #     "sliding_naive_5",
+            #     5,
+            #     SlidingWindowRecordStorage(254),
+            #     NaiveCoder(254, True),
+            # ),
+            # ("move_to_front_smart_6", 6, MoveToFrontStorage(255), SmartCoder()),
+            # (
+            #     "move_to_front_naive_6",
+            #     6,
+            #     MoveToFrontStorage(250),
+            #     NaiveCoder(250, True),
+            # ),
+        ]:
+            print(f"creating new_4_{file}_{name}")
+            os.mkdir(f"new_4_{file}_{name}")
+            encode(
+                f"test_files/logs/medium/{file}.log",
+                f"new_4_{file}_{name}/out",
+                use_secondary_for_every_file=False,
+                secondary_encoder=lambda os, _, __: ArithmeticPPMEncoder(os, window),
+                storage=storage,
+                log_encoder=encoder,
+            )
+            for file in [
+                f"new_4_{file}_{name}/out_main_final",
+                f"new_4_{file}_{name}/out_secondary",
+                f"new_4_{file}_{name}/out_auxiliary_final",
+            ]:
+                encode_bzip(file, f"{file}.bzip")
+                encode_gzip(file, f"{file}.gzip")
+                encode_7z(file, f"{file}_default.7z")
+                encode_7z(file, f"{file}_ppmd.7z", ["-m0=PPMd", "-mx=9"])
+                encode_rar(file, f"{file}.rar")
+            # encode(
+            #     "test_files/logs/medium/android.log",
+            #     "new_smart/out",
+            #     use_secondary_for_every_file=False,
+            #     secondary_encoder=lambda os, _, __: ArithmeticPPMEncoder(os, 5),
+            #     storage=MoveToFrontCachingStorage(254),
+            #     log_encoder=SmartCoder(),
+            # )
+        # decode("out", "decoded.txt", use_secondary_for_every_file=True)
