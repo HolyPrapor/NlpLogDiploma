@@ -11,14 +11,14 @@ def encode_bzip(input_file, output_file, args=[]):
 
 def encode_rar(input_file, output_file, args=[]):
     process = subprocess.Popen(
-        ["rar", "a", output_file, input_file] + args, stdout=os.devnull
+        ["rar", "a", output_file, input_file] + args, stdout=open(os.devnull, "w")
     )
     process.wait()
 
 
 def encode_7z(input_file, output_file, args=[]):
     process = subprocess.Popen(
-        ["7z", "a", output_file, input_file] + args, stdout=os.devnull
+        ["7z", "a", output_file, input_file] + args, stdout=open(os.devnull, "w")
     )
     process.wait()
 
