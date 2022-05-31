@@ -504,7 +504,7 @@ def decode(
 
 
 if __name__ == "__main__":
-    for file in ["android", "bgl", "hdfs", "java", "windows"]:
+    for log in ["android", "bgl", "hdfs", "java", "windows"]:
         for name, window, storage, encoder in [
             # ("sliding_smart_2", 2, SlidingWindowRecordStorage(254), SmartCoder()),
             # ("sliding_naive_2", 2, SlidingWindowRecordStorage(254), NaiveCoder(254, True)),
@@ -519,15 +519,15 @@ if __name__ == "__main__":
             # ("move_to_front_smart_4", 4, MoveToFrontStorage(250), SmartCoder()),
             # # ("move_to_front_naive_4", 4, MoveToFrontStorage(100), NaiveCoder(100, True)),
             ("sliding_smart_5", 5, SlidingWindowRecordStorage(255), SmartCoder(255)),
-            ("sliding_naive_5", 5, SlidingWindowRecordStorage(255), NaiveCoder(255)),
-            ("sliding_elias_5", 5, SlidingWindowRecordStorage(255), EliasDeltaCoder()),
-            ("sliding_unary_5", 5, SlidingWindowRecordStorage(255), UnaryCoder()),
-            ("sliding_triple_5", 5, SlidingWindowRecordStorage(255), TripleCoder()),
+            # ("sliding_naive_5", 5, SlidingWindowRecordStorage(255), NaiveCoder(255)),
+            # ("sliding_elias_5", 5, SlidingWindowRecordStorage(255), EliasDeltaCoder()),
+            # ("sliding_unary_5", 5, SlidingWindowRecordStorage(255), UnaryCoder()),
+            # ("sliding_triple_5", 5, SlidingWindowRecordStorage(255), TripleCoder()),
             ("move_to_front_smart_5", 5, MoveToFrontStorage(255), SmartCoder(255)),
-            ("move_to_front_naive_5", 5, MoveToFrontStorage(255), NaiveCoder(255)),
-            ("move_to_front_elias_5", 5, MoveToFrontStorage(255), EliasDeltaCoder()),
-            ("move_to_front_unary_5", 5, MoveToFrontStorage(255), UnaryCoder()),
-            ("move_to_front_triple_5", 5, MoveToFrontStorage(255), TripleCoder()),
+            # ("move_to_front_naive_5", 5, MoveToFrontStorage(255), NaiveCoder(255)),
+            # ("move_to_front_elias_5", 5, MoveToFrontStorage(255), EliasDeltaCoder()),
+            # ("move_to_front_unary_5", 5, MoveToFrontStorage(255), UnaryCoder()),
+            # ("move_to_front_triple_5", 5, MoveToFrontStorage(255), TripleCoder()),
             # (
             #     "sliding_naive_5",
             #     5,
@@ -542,20 +542,20 @@ if __name__ == "__main__":
             #     NaiveCoder(250, True),
             # ),
         ]:
-            print(f"creating new_4_{file}_{name}")
-            os.mkdir(f"new_4_{file}_{name}")
+            print(f"creating new_4_large_{log}_{name}")
+            os.mkdir(f"new_4_large_{log}_{name}")
             encode(
-                f"test_files/logs/medium/{file}.log",
-                f"new_4_{file}_{name}/out",
+                f"test_files/logs/large/{log}.log",
+                f"new_4_large_{log}_{name}/out",
                 use_secondary_for_every_file=False,
                 secondary_encoder=lambda os, _, __: ArithmeticPPMEncoder(os, window),
                 storage=storage,
                 log_encoder=encoder,
             )
             for file in [
-                f"new_4_{file}_{name}/out_main_final",
-                f"new_4_{file}_{name}/out_secondary",
-                f"new_4_{file}_{name}/out_auxiliary_final",
+                f"new_4_large_{file}_{name}/out_main_final",
+                f"new_4_large_{file}_{name}/out_secondary",
+                f"new_4_large_{file}_{name}/out_auxiliary_final",
             ]:
                 encode_bzip(file, f"{file}.bzip")
                 encode_gzip(file, f"{file}.gzip")
