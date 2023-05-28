@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.25)
+project(diploma)
+
+set(CMAKE_CXX_STANDARD 17)
+
+add_executable(diploma_copy main.cpp arithmetic_log_model/secondary_encoder.h arithmetic_log_model/combined_log_encoder.cpp arithmetic_log_model/combined_log_encoder.h arithmetic_log_model/combined_log_decoder.cpp arithmetic_log_model/combined_log_decoder.h)
