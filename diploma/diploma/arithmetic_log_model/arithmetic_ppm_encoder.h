@@ -6,6 +6,7 @@
 #include "secondary_encoder.h"
 #include "../arithmetic_coding/arithmetic_encoder.h"
 #include "../probability_model/ppm_model.h"
+#include "../bwt/bwt_coder.h"
 
 class ArithmeticPPMEncoder : public SecondaryEncoder {
 public:
@@ -42,17 +43,17 @@ private:
         std::string_view bwt_encoded = "bwt_encoded";
         std::string_view encoded = output_filename;
 
-//        if (use_bwt) {
-//            BwtCoder bwt;
-//            bwt.encode(
-//                    to_encode,
-//                    bwt_encoded,
-//                    output_filename + ".indices",
-//                    output_filename + ".eof"
-//            );
-//        } else {
-//            bwt_encoded = to_encode;
-//        }
+        if (use_bwt) {
+            BwtCoder bwt;
+            bwt.Encode(
+                    std::string(to_encode),
+                    std::string(bwt_encoded),
+                    std::string(output_filename) + ".indices",
+                    std::string(output_filename) + ".eof"
+            );
+        } else {
+            bwt_encoded = to_encode;
+        }
 
         std::ifstream f(bwt_encoded.data(), std::ios::binary);
         std::string input_text((std::istreambuf_iterator<char>(f)),

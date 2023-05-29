@@ -8,6 +8,7 @@
 #include "secondary_decoder.h"
 #include "../arithmetic_coding/arithmetic_decoder.h"
 #include "../probability_model/ppm_model.h"
+#include "../bwt/bwt_coder.h"
 
 class ArithmeticPPMDecoder: public SecondaryDecoder {
 private:
@@ -89,15 +90,15 @@ private:
         o.write(text.data(), text.size());
         o.close();
 
-//    if (use_bwt) {
-//        BwtCoder bwt;
-//        bwt.decode(
-//                bwt_decoded,
-//                encoded + ".indices",
-//                encoded + ".eof",
-//                decoded
-//        );
-//    }
+        if (use_bwt) {
+            BwtCoder bwt;
+            bwt.Decode(
+                    std::string(bwt_decoded),
+                    std::string(encoded.data()) + ".indices",
+                    std::string(encoded.data()) + ".eof",
+                    std::string(decoded)
+            );
+        }
     }
 };
 
