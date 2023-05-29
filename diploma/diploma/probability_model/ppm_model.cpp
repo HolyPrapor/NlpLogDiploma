@@ -67,16 +67,16 @@ public:
         }
         if (encode) {
             if (node->children_counts[buffer[offset + size]] > Node::minimum_count) {
-                return std::make_pair(true, preprocess_counts(node));
+                return std::make_pair(true, PreprocessCounts(node));
             } else if (node->seen > 0) {
-                return std::make_pair(false, preprocess_counts(node));
+                return std::make_pair(false, PreprocessCounts(node));
             }
             return std::make_pair(false, std::vector<int>());
         }
         if (node->seen == 0) {
             return std::make_pair(false, std::vector<int>());
         }
-        return std::make_pair(true, preprocess_counts(node));
+        return std::make_pair(true, PreprocessCounts(node));
     }
 
     void Update(std::vector<int>& buffer, int offset, int size) {
@@ -85,17 +85,17 @@ public:
         }
     }
 
-    static std::vector<int> preprocess_counts(Node* parent) {
+    static std::vector<int> PreprocessCounts(Node* parent) {
         std::vector<int> cum(parent->children_counts);
         std::partial_sum(cum.begin(), cum.end(), cum.begin());
         int total = cum.back();
-        double q = get_escape_probability(parent);
+        double q = GetEscapeProbability(parent);
         int y = (q < 1) ? static_cast<int>(std::ceil(q * total / (1 - q))) : (2 >> 30) - total;
         cum.back() = total + y;
         return cum;
     }
 
-    static double get_escape_probability(Node* parent) {
+    static double GetEscapeProbability(Node* parent) {
         return static_cast<double>(parent->different) / (parent->seen + parent->different);
     }
 
@@ -130,7 +130,7 @@ public:
         return Token(alphabet_size - 1);
     }
 
-    std::vector<int> get_uniform_frequencies() {
+    std::vector<int> GetUniformFrequencies() {
         return uniform_frequencies;
     }
 
@@ -156,7 +156,7 @@ public:
         }
     }
 
-    void update_trie() {
+    void UpdateTrie() {
         trie.Update(context, 0, static_cast<int>(context.size()));
     }
 
@@ -164,15 +164,15 @@ public:
         for (int size = std::min(context_size, static_cast<int>(context.size()) - 1); size >= 0; --size) {
             auto [ok, freqs] = trie.TryPath(context, static_cast<int>(context.size()) - size - 1, size);
             if (ok) {
-                update_trie();
+                UpdateTrie();
                 return freqs;
             }
             if (!freqs.empty()) {
                 coder.Write(freqs, alphabet_size);
             }
         }
-        update_trie();
-        return get_uniform_frequencies();
+        UpdateTrie();
+        return GetUniformFrequencies();
     }
 
 private:
@@ -215,7 +215,7 @@ public:
             }
             --current_context;
         }
-        return get_uniform_frequencies();
+        return GetUniformFrequencies();
     }
 
 private:
