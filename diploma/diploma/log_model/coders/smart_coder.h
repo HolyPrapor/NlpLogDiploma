@@ -4,7 +4,7 @@
 
 #include "../coder.h"
 
-class SmartCoder : Coder {
+class SmartCoder : public Coder {
 private:
     size_t max_value_;
 public:
