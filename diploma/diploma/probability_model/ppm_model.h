@@ -105,6 +105,8 @@ public:
 
 class PPMBaseModel : public Model {
 public:
+    int context_size, alphabet_size;
+
     explicit PPMBaseModel(int context_size, int alphabet_size = 256)
             : context_size(context_size), alphabet_size(alphabet_size + 1), trie(Trie(alphabet_size)), uniform_frequencies(alphabet_size, 2) {
         std::partial_sum(uniform_frequencies.begin(), uniform_frequencies.end(), uniform_frequencies.begin());
@@ -135,7 +137,6 @@ public:
     }
 
 protected:
-    int context_size, alphabet_size;
     Trie trie;
     std::vector<int> context;
     std::vector<int> uniform_frequencies;
