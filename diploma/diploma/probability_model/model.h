@@ -6,6 +6,8 @@
 
 struct Token {
     int value;
+
+    explicit Token(int v) : value(v) {}
 };
 
 class Model {
@@ -16,22 +18,14 @@ public:
     virtual Token GetEndOfFileToken() = 0;
 
     // NOTE(HolyPrapor): either one of these two functions has to be implemented
-    virtual std::vector<std::vector<double>> GetProbabilities() {
+    virtual std::vector<double> GetProbabilities() {
         auto frequencies = this->GetFrequencies();
-        std::vector<std::vector<double>> probabilities;
-        for (auto& freq: frequencies) {
-            probabilities.push_back(frequencies_to_probabilities(freq, 32));
-        }
-        return probabilities;
+        return frequencies_to_probabilities(frequencies, 32);
     }
 
-    virtual std::vector<std::vector<int>> GetFrequencies() {
+    virtual std::vector<int> GetFrequencies() {
         auto probabilities = this->GetProbabilities();
-        std::vector<std::vector<int>> frequencies(probabilities.size());
-        for (auto& prob: probabilities) {
-            frequencies.push_back(probabilities_to_frequencies(prob, 32));
-        }
-        return frequencies;
+        return probabilities_to_frequencies(probabilities, 32);
     }
 
 private:
