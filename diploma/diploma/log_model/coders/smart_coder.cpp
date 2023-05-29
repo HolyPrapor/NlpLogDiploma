@@ -2,7 +2,7 @@
 // Created by zeliboba on 5/29/23.
 //
 
-#include "coder.h"
+#include "../coder.h"
 
 class SmartCoder : Coder {
 private:

@@ -12,7 +12,7 @@
  * Но в идеале наверное перейти на структуры.
  */
 class Coder {
-private:
+protected:
     bool is_binary_ = false;
 public:
     explicit Coder(const bool& is_binary) : is_binary_{is_binary} {}

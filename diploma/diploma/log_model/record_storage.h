@@ -4,7 +4,7 @@
 #include <optional>
 
 class RecordStorage {
-private:
+protected:
     size_t window_size_;
 
 public:
