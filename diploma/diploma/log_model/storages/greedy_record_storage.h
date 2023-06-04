@@ -3,7 +3,6 @@
 //
 
 #include <algorithm>
-#include "../record_storage.h"
 
 class GreedyRecordStorage : public RecordStorage {
 protected:

@@ -8,7 +8,7 @@
 #include <numeric>
 #include <string>
 #include <stdexcept>
-#include "model.h"
+//#include "model.h"
 #include "../arithmetic_coding/arithmetic_encoder.h"
 #include "../arithmetic_coding/arithmetic_decoder.h"
 
@@ -17,7 +17,8 @@ public:
     static const int minimum_count = 0;
 
     explicit Node(int length) : length(length), seen(0), different(0) {
-        children_counts = std::vector<int>(length + 1, minimum_count);
+        // TODO: check undefined reference to `Node::minimum_count'
+        children_counts = std::vector<int>(length + 1, 0);
         children = std::vector<Node*>(length, nullptr);
     }
 

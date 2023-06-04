@@ -3,7 +3,6 @@
 //
 
 #include <iostream>
-#include "secondary_encoder.h"
 #include "../arithmetic_coding/arithmetic_encoder.h"
 #include "../probability_model/ppm_model.h"
 #include "../bwt/bwt_coder.h"

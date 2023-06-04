@@ -2,7 +2,7 @@
 #include <vector>
 #include <chrono>
 #include "arithmetic_coding/arithmetic_decoder.cpp"
-#include "arithmetic_log_model/combined_log_encoder.h"
+#include "arithmetic_log_model/combined_log_encoder.cpp"
 #include "log_model/coders/smart_coder.h"
 #include "log_model/storages/move_to_front_record_storage.h"
 #include "arithmetic_log_model/arithmetic_ppm_encoder.h"
@@ -21,9 +21,9 @@ std::vector<std::vector<size_t>> readFileIntoVector(const std::string& filename)
         std::vector<size_t> lineVector;
         std::istringstream lineStream(line);
 
-        size_t value;
+        char value;
         while (lineStream >> value) {
-            lineVector.push_back(value);
+            lineVector.push_back(static_cast<size_t>(value));
         }
 
         result.push_back(lineVector);
@@ -48,11 +48,17 @@ void encode(std::string &filepath) {
 }
 
 int main() {
-    std::vector<std::string> filenames{"android", "bgl", "hdfs", "java", "windows"};
-    std::vector<std::string> dir_names{"medium"};
+    std::vector<std::string> filenames{
+        "android"
+//        "bgl"
+//        "hdfs"
+//        "java"
+//        "windows"
+    };
+    std::vector<std::string> dir_names{"small"};
     for (auto dirname : dir_names) {
         for (auto filename : filenames) {
-            std::string filepath = "test_files/logs/" + dirname + "/" + filename + ".log";
+            std::string filepath = "/home/lexlippi/PycharmProjects/NlpLogDiploma/diploma/diploma/test_files/logs/" + dirname + "/" + filename + ".log";
             std::cout << filepath << std::endl;
             auto start = std::chrono::high_resolution_clock::now();
             encode(filepath);

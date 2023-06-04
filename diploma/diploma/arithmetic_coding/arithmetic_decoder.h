@@ -1,5 +1,8 @@
 #pragma once
+
+#include <memory>
 #include "bit_input_stream.cpp"
+#include "base_coder.h"
 
 class ArithmeticDecoder : public BaseCoder {
 private:

@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include "base_coder.h"
 
 
