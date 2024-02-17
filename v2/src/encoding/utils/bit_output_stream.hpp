@@ -1,0 +1,8 @@
+//
+// Created by zeliboba on 2/17/24.
+//
+
+#ifndef NLPLOGDIPLOMA_BIT_OUTPUT_STREAM_H
+#define NLPLOGDIPLOMA_BIT_OUTPUT_STREAM_H
+
+#endif //NLPLOGDIPLOMA_BIT_OUTPUT_STREAM_H
