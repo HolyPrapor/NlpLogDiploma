@@ -7,7 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <optional>
-#include <encoding/utils/bit_input_stream.hpp>
+#include <encoding/utils/bit_output_stream.hpp>
 
 namespace fs = std::filesystem;
 
@@ -15,24 +15,23 @@ static void writeAndTestBits(const fs::path& tempFilePath, unsigned char written
     {
         std::ofstream out(tempFilePath, std::ios::binary);
         REQUIRE(out.is_open());
-        out.write(reinterpret_cast<const char*>(&writtenByte), sizeof(writtenByte));
+        BitOutputStream bitOutputStream(out);
+        for (int i = 7; i >= 0; --i) {
+            bool bit = (writtenByte >> i) & 1;
+            bitOutputStream.Write(bit);
+        }
         REQUIRE(out.good());
+        bitOutputStream.Close();
     }
 
     std::ifstream inputFile(tempFilePath, std::ios::binary);
     REQUIRE(inputFile.is_open());
-
-    BitInputStream bitInputStream(inputFile);
-
-    for (int i = 7; i >= 0; --i) {
-        std::optional<bool> bit = bitInputStream.Read();
-        REQUIRE(bit.has_value());
-        bool expectedBit = (writtenByte >> i) & 1;
-        REQUIRE(bit.value() == expectedBit);
-    }
+    auto byte = inputFile.get();
+    REQUIRE(byte == writtenByte);
+    inputFile.close();
 }
 
-TEST_CASE("BitInputStream correctly reads bits from a file", "[BitInputStream]") {
+TEST_CASE("BitOutputStream correctly writes bits to a file", "[BitOutputStream]") {
     fs::path tempDir = fs::temp_directory_path() / "tmp";
     fs::create_directories(tempDir);
     auto tempFilePath = tempDir / "test.bin";
@@ -60,4 +59,4 @@ TEST_CASE("BitInputStream correctly reads bits from a file", "[BitInputStream]")
     fs::remove(tempFilePath);
 }
 
-// todo: add tests for non-byte-aligned reads
+// todo: add tests for non-byte-aligned writes
