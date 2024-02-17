@@ -4,7 +4,7 @@
 
 #include "arithmetic_encoder.hpp"
 
-ArithmeticEncoder::ArithmeticEncoder(const size_t &num_bits,
+ArithmeticEncoder::ArithmeticEncoder(const std::uint64_t &num_bits,
                                             std::unique_ptr<BitOutputStream> output_stream)
         : BaseCoder(num_bits), num_underflow_(0) {
     output_stream_ = std::move(output_stream);

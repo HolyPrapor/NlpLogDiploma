@@ -12,14 +12,14 @@
 class ArithmeticEncoder : public BaseCoder {
 private:
     std::unique_ptr<BitOutputStream> output_stream_;
-    size_t num_underflow_;
+    std::uint64_t num_underflow_;
 
 protected:
     void Shift() override;
     void Underflow() override;
 
 public:
-    ArithmeticEncoder(const size_t &num_bits, std::unique_ptr<BitOutputStream> output_stream);
+    ArithmeticEncoder(const std::uint64_t &num_bits, std::unique_ptr<BitOutputStream> output_stream);
 
     void Write(const std::vector<int> &frequencies, const unsigned char &symbol);
     void Finish();
