@@ -2,10 +2,13 @@
 // Created by zeliboba on 2/17/24.
 //
 
-inline BaseCoder::BaseCoder() : BaseCoder(32) {
+#include <stdexcept>
+#include "base_coder.hpp"
+
+BaseCoder::BaseCoder() : BaseCoder(32) {
 }
 
-inline BaseCoder::BaseCoder(const size_t& num_bits) {
+BaseCoder::BaseCoder(const size_t& num_bits) {
     if (num_bits < 1) {
         throw std::runtime_error("State size out of range");
     }
@@ -20,7 +23,7 @@ inline BaseCoder::BaseCoder(const size_t& num_bits) {
     high_ = state_mask_;
 }
 
-inline void BaseCoder::Update(const std::vector<int> &frequencies, const unsigned char &symbol) {
+void BaseCoder::Update(const std::vector<int> &frequencies, const unsigned char &symbol) {
     const auto range_length = high_ - low_ + 1;
     const auto total = frequencies.back();
     const auto symbol_code = static_cast<size_t>(symbol);
