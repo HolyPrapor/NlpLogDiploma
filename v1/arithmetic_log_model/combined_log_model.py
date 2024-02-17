@@ -4,29 +4,23 @@ os.chdir("/home/zeliboba/diploma/NlpLogDiploma")
 
 import pyximport
 from external.external import encode_7z, encode_bzip, encode_rar, encode_gzip; pyximport.install()
-import utils.find_subarray as fs
 # fmt: on
 import numpy as np
 from typing import *
 from probability_model.model import ModelInterface
-from arithmetic_encoder.v2.encoder import ArithmeticEncoder
-from arithmetic_encoder.v2.decoder import ArithmeticDecoder
+from v1.arithmetic_encoder import ArithmeticEncoder
 from iostream.output_stream import BitOutputStream
 from iostream.input_stream import BitInputStream
 from log_model.log_compresser import (
     AbstractRecordStorage,
     AbstractBaseCoder,
     CompositeRecordStorage,
-    EliasDeltaCoder,
-    MoveToFrontCachingStorage,
     MoveToFrontStorage,
     NaiveCoder,
     SlidingWindowRecordStorage,
     SmartCoder,
-    TripleCoder,
-    UnaryCoder,
 )
-from probability_model.ppm_model.ppm_model import (
+from v1.probability_model.ppm_model import (
     PPMEncoderModel,
     encode as encode_ppm,
     decode as decode_ppm,

@@ -1,4 +1,4 @@
-from arithmetic_encoder.v2.base_coder import ArithmeticCoderBase
+from v1.arithmetic_encoder.v2.base_coder import ArithmeticCoderBase
 from iostream.output_stream import BitOutputStream
 from typing import List
 

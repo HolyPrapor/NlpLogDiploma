@@ -16,7 +16,7 @@ from arithmetic_log_model.combined_log_model import (
 )
 from benchmarks.evaluator import get_stats
 from iostream.output_stream import BitOutputStream
-from probability_model.ppm_model.ppm_model import (
+from v1.probability_model.ppm_model import (
     encode as encode_ppm,
     decode as decode_ppm,
 )

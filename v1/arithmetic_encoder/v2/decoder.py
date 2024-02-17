@@ -1,6 +1,6 @@
 from typing import List
 
-from arithmetic_encoder.v2.base_coder import ArithmeticCoderBase
+from v1.arithmetic_encoder.v2.base_coder import ArithmeticCoderBase
 from iostream.input_stream import BitInputStream
 
 

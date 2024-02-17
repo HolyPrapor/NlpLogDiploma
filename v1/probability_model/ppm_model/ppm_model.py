@@ -3,8 +3,8 @@ import numpy as np
 from probability_model.model import ModelInterface, Token
 from iostream.output_stream import BitOutputStream
 from iostream.input_stream import BitInputStream
-from arithmetic_encoder.v2.encoder import ArithmeticEncoder
-from arithmetic_encoder.v2.decoder import ArithmeticDecoder
+from v1.arithmetic_encoder import ArithmeticEncoder
+from v1.arithmetic_encoder.v2.decoder import ArithmeticDecoder
 from utils.bwt_coder import BwtCoder
 from typing import *
 import os

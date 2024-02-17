@@ -1,6 +1,5 @@
 # fmt: off
 from argparse import ArgumentError
-import os
 
 import tqdm
 
@@ -8,10 +7,9 @@ from arithmetic_log_model.lru_window import LRUWindow
 
 
 import pyximport
-from external.external import encode_bzip, encode_gzip, encode_rar; pyximport.install()
-from probability_model.ppm_model.ppm_model import encode as encode_ppm
+
+pyximport.install()
 import utils.find_subarray as fs
-import filecmp
 # fmt: on
 import numpy as np
 from math import floor, log2, ceil
