@@ -15,12 +15,12 @@ static std::vector<int> GetUniformFrequencies() {
 NaiveModel::NaiveModel() : NaiveModel(GetUniformFrequencies()) {
 }
 
-NaiveModel::NaiveModel(std::vector<int> frequencies) : distribution_(frequencies) {
+NaiveModel::NaiveModel(const std::vector<int>& frequencies) : frequencies_(frequencies) {
 }
 
 void NaiveModel::Feed(const Token& next_token) {
 }
 
-const Distribution& NaiveModel::GetCurrentDistribution() {
-    return distribution_;
+Distribution NaiveModel::GetCurrentDistribution() {
+    return Distribution(std::make_unique<std::vector<int>>(frequencies_));
 }

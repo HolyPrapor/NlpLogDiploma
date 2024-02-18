@@ -9,7 +9,7 @@
 TEST_CASE("Distribution correctly converts to probabilities", "[Distribution]") {
     std::vector<int> frequencies = {1, 3, 6, 10};
     const double total = frequencies.back();
-    Distribution distribution(frequencies);
+    Distribution distribution(std::make_unique<std::vector<int>>(frequencies));
     auto probabilities = distribution.Probabilities();
     REQUIRE(probabilities.size() == frequencies.size());
     auto prev = 0;
@@ -21,7 +21,7 @@ TEST_CASE("Distribution correctly converts to probabilities", "[Distribution]") 
 
 TEST_CASE("Distribution correctly converts to frequencies", "[Distribution]") {
     std::vector<double> probabilities = {0.1, 0.2, 0.3, 0.4};
-    Distribution distribution(probabilities);
+    Distribution distribution(std::make_unique<std::vector<double>>(probabilities));
     auto frequencies = distribution.Frequencies();
     const auto total = frequencies.back();
     REQUIRE(frequencies.size() == probabilities.size());

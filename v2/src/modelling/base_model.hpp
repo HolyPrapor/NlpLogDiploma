@@ -43,7 +43,7 @@ public:
     }
 
     virtual void Feed(const Token& next_token) = 0;
-    virtual const Distribution& GetCurrentDistribution() = 0;
+    virtual Distribution GetCurrentDistribution() = 0;
 };
 
 #endif //DIPLOMA_BASE_MODEL_HPP

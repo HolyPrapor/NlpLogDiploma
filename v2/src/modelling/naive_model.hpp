@@ -10,12 +10,12 @@
 class NaiveModel : public BaseModel {
 public:
     NaiveModel();
-    explicit NaiveModel(std::vector<int> frequencies);
+    explicit NaiveModel(const std::vector<int>& frequencies);
 
     void Feed(const Token& next_token) override;
-    const Distribution& GetCurrentDistribution() override;
+    Distribution GetCurrentDistribution() override;
 private:
-    Distribution distribution_;
+    std::vector<int> frequencies_;
 };
 
 #endif //DIPLOMA_NAIVE_MODEL_HPP

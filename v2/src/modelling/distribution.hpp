@@ -10,32 +10,32 @@
 #include <complex>
 #include <algorithm>
 #include <numeric>
+#include <memory>
 
-// TODO(HolyPrapor): avoid copying of vectors
 class Distribution {
 public:
-    explicit Distribution(const std::vector<int>& frequencies) : frequencies(frequencies) {}
-    explicit Distribution(const std::vector<double>& probabilities) : probabilities(probabilities) {}
+    explicit Distribution(std::unique_ptr<const std::vector<int>>&& frequencies) : frequencies(std::move(frequencies)) {}
+    explicit Distribution(std::unique_ptr<const std::vector<double>>&& probabilities) : probabilities(std::move(probabilities)) {}
 
     const std::vector<int>& Frequencies() {
-        if (!frequencies.has_value()) {
-            frequencies = probabilities_to_frequencies(probabilities.value());
+        if (frequencies == nullptr) {
+            frequencies = std::make_unique<std::vector<int>>(probabilities_to_frequencies(*probabilities));
         }
-        return frequencies.value();
+        return *frequencies;
     }
 
     const std::vector<double>& Probabilities() {
-        if (!probabilities.has_value()) {
-            probabilities = frequencies_to_probabilities(frequencies.value());
+        if (probabilities == nullptr) {
+            probabilities = std::make_unique<std::vector<double>>(frequencies_to_probabilities(*frequencies));
         }
-        return probabilities.value();
+        return *probabilities;
     }
 
 private:
-    std::optional<std::vector<int>> frequencies;
-    std::optional<std::vector<double>> probabilities;
+    std::unique_ptr<const std::vector<int>> frequencies;
+    std::unique_ptr<const std::vector<double>> probabilities;
 
-    static std::vector<int> probabilities_to_frequencies(const std::vector<double> &probabilities) {
+    static std::vector<int> probabilities_to_frequencies(const std::vector<double>& probabilities) {
         std::vector<int> frequencies(probabilities.size(), 0);
         // 2 is added to each frequency to avoid zero frequencies, 1 is added to avoid ceiling errors
         int factor = INT32_MAX - 3 * probabilities.size();
