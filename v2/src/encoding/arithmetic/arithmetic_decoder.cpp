@@ -12,10 +12,10 @@ ArithmeticDecoder::ArithmeticDecoder(const std::uint64_t &num_bits,
     }
 }
 
-unsigned char ArithmeticDecoder::Read(const std::vector<int> &frequencies) {
+Token ArithmeticDecoder::Read(const std::vector<int> &frequencies) {
     const auto value = ((code_ - low_ + 1) * frequencies.back() - 1) / (high_ - low_ + 1);
-    std::uint64_t start = 0;
-    auto end = frequencies.size();
+    int start = 0;
+    int end = static_cast<int>(frequencies.size());
     while (end - start > 1) {
         auto middle = (start + end) >> 1;
         auto low = middle > 0 ? frequencies[middle - 1] : 0;
@@ -26,7 +26,7 @@ unsigned char ArithmeticDecoder::Read(const std::vector<int> &frequencies) {
         }
     }
     Update(frequencies, start);
-    return static_cast<unsigned char>(start);
+    return start;
 }
 
 void ArithmeticDecoder::Shift() {

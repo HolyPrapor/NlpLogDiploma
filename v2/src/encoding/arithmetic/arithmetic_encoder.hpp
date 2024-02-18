@@ -21,7 +21,7 @@ protected:
 public:
     ArithmeticEncoder(const std::uint64_t &num_bits, std::unique_ptr<BitOutputStream> output_stream);
 
-    void Write(const std::vector<int> &frequencies, const unsigned char &symbol);
+    void Write(const std::vector<int> &frequencies, const Token &symbol);
     void Finish();
 };
 

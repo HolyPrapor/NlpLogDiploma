@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <cstdint>
+#include "defs.hpp"
 
 class BaseCoder {
 protected:
@@ -25,7 +26,7 @@ protected:
 public:
     BaseCoder();
     explicit BaseCoder(const std::uint64_t& num_bits);
-    void Update(const std::vector<int>& frequencies, const unsigned char& symbol);
+    void Update(const std::vector<int>& frequencies, const Token& symbol);
 };
 
 #endif //NLPLOGDIPLOMA_BASE_CODER_H

@@ -21,7 +21,7 @@ protected:
 
 public:
     ArithmeticDecoder(const std::uint64_t& num_bits, std::unique_ptr<BitInputStream> input_stream);
-    unsigned char Read(const std::vector<int>& frequencies);
+    Token Read(const std::vector<int>& frequencies);
 };
 
 #endif //DIPLOMA_ARITHMETIC_DECODER_HPP

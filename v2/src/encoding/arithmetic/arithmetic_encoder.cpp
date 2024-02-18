@@ -10,7 +10,7 @@ ArithmeticEncoder::ArithmeticEncoder(const std::uint64_t &num_bits,
     output_stream_ = std::move(output_stream);
 }
 
-void ArithmeticEncoder::Write(const std::vector<int> &frequencies, const unsigned char &symbol) {
+void ArithmeticEncoder::Write(const std::vector<int> &frequencies, const Token &symbol) {
     Update(frequencies, symbol);
 }
 
