@@ -9,6 +9,8 @@
 #include <string>
 #include "distribution.hpp"
 #include "defs.hpp"
+#include "encoding/arithmetic/arithmetic_encoder.hpp"
+#include "encoding/arithmetic/arithmetic_decoder.hpp"
 
 class BaseModel {
 public:
@@ -21,10 +23,6 @@ public:
         return tokens;
     };
 
-    virtual std::vector<Token> EndTokenization() {
-        return {};
-    }
-
     virtual std::vector<unsigned char> DetokenizeChunk(const std::vector<Token>& tokens) {
         std::vector<unsigned char> result;
         result.reserve(tokens.size());
@@ -34,12 +32,18 @@ public:
         return result;
     }
 
-    virtual std::vector<unsigned char> EndDetokenization() {
-        return {};
-    }
-
     virtual Token GetEndOfFileToken() {
         return BinaryAlphabetSize - 1;
+    }
+
+    virtual void EncodeNextToken(ArithmeticEncoder& encoder, const Token& token) {
+        auto distribution = GetCurrentDistribution();
+        encoder.Write(distribution.Frequencies(), token);
+    }
+
+    virtual Token DecodeNextToken(ArithmeticDecoder& decoder) {
+        auto distribution = GetCurrentDistribution();
+        return decoder.Read(distribution.Frequencies());
     }
 
     virtual void Feed(const Token& next_token) = 0;

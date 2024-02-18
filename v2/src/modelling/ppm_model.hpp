@@ -7,42 +7,41 @@
 
 #include <vector>
 #include "base_model.hpp"
-#include "encoding/arithmetic/arithmetic_encoder.hpp"
-#include "encoding/arithmetic/arithmetic_decoder.hpp"
 
 class PPMBaseModel : public BaseModel {
+private:
+    std::vector<int> GetUniformFrequencies();
+    void UpdateTrie();
+
 protected:
     struct Impl;
     std::unique_ptr<Impl> impl;
 
-    std::vector<int> GetUniformFrequencies();
-    Token GetEscapeToken();
+    Token GetEscapeToken() const;
 
 public:
     int context_size, alphabet_size;
     explicit PPMBaseModel(int context_size, int alphabet_size = BinaryAlphabetSize);
+    ~PPMBaseModel();
     Token GetEndOfFileToken() override;
+    Distribution GetCurrentDistribution() override;
+    void Feed(const Token& next_token) override;
 };
 
 class PPMEncoderModel : public PPMBaseModel {
 public:
-    PPMEncoderModel(ArithmeticEncoder& coder, int context_size, int alphabet_size = BinaryAlphabetSize);
-    void Feed(const Token& next_token) override;
-    void UpdateTrie();
-    Distribution GetCurrentDistribution() override;
-
-private:
-    ArithmeticEncoder& coder;
+    explicit PPMEncoderModel(int context_size, int alphabet_size = BinaryAlphabetSize);
+    void EncodeNextToken(ArithmeticEncoder& encoder, const Token& token) override;
+    Token DecodeNextToken(ArithmeticDecoder& decoder) override;
 };
 
 class PPMModelDecoder : public PPMBaseModel {
 public:
-    PPMModelDecoder(ArithmeticDecoder& decoder, int context_size, int alphabet_size = BinaryAlphabetSize);
-    void Feed(const Token& next_token) override;
-    Distribution GetCurrentDistribution() override;
+    explicit PPMModelDecoder(int context_size, int alphabet_size = BinaryAlphabetSize);
+    void EncodeNextToken(ArithmeticEncoder& encoder, const Token& token) override;
+    Token DecodeNextToken(ArithmeticDecoder& decoder) override;
 
 private:
-    ArithmeticDecoder& decoder;
     int current_context_size = 0;
 };
 

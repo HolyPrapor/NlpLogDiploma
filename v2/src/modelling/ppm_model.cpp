@@ -85,12 +85,13 @@ public:
 
     std::unique_ptr<std::vector<int>> PreprocessCounts(Node* parent) const {
         std::unique_ptr<std::vector<int>> result = std::make_unique<std::vector<int>>(length + 1, 2);
+        result->back() = 0;
         auto prev = 0;
         for (int i = 0; i < length; ++i) {
             result->at(i) += parent->children_counts[i] + prev;
             prev = result->at(i);
         }
-        int total = result->back();
+        int total = prev;
         double q = GetEscapeProbability(parent);
         int y = /*(q < 1) ?*/ static_cast<int>(std::ceil(q * total / (1 - q))) /*: (2 >> 30) - total*/;
         result->back() = total + y;
@@ -120,73 +121,78 @@ PPMBaseModel::PPMBaseModel(int context_size, int alphabet_size)
         : context_size(context_size), alphabet_size(alphabet_size), impl(std::make_unique<Impl>(context_size, alphabet_size)) {
 }
 
+PPMBaseModel::~PPMBaseModel() = default;
+
 Token PPMBaseModel::GetEndOfFileToken() {
     return Token(alphabet_size - 1);
+}
+
+Token PPMBaseModel::GetEscapeToken() const {
+    return Token(alphabet_size);
 }
 
 std::vector<int> PPMBaseModel::GetUniformFrequencies() {
     return impl->uniform_frequencies;
 }
 
-PPMEncoderModel::PPMEncoderModel(ArithmeticEncoder& coder, int context_size, int alphabet_size)
-        : PPMBaseModel(context_size, alphabet_size), coder(coder) {
+PPMEncoderModel::PPMEncoderModel(int context_size, int alphabet_size)
+        : PPMBaseModel(context_size, alphabet_size) {
 }
 
 // todo: avoid erasing from the beginning of the vector
-void PPMEncoderModel::Feed(const Token& next_token) {
+void PPMBaseModel::Feed(const Token& next_token) {
     impl->context.push_back(next_token);
     if (static_cast<int>(impl->context.size()) > context_size + 1) {
         impl->context.erase(impl->context.begin());
     }
+    UpdateTrie();
 }
 
-void PPMEncoderModel::UpdateTrie() {
-    impl->trie.Update(impl->context, 0, static_cast<int>(impl->context.size()));
-}
-
-Distribution PPMEncoderModel::GetCurrentDistribution() {
+void PPMEncoderModel::EncodeNextToken(ArithmeticEncoder& encoder, const Token& token) {
     for (int size = std::min(context_size, static_cast<int>(impl->context.size()) - 1); size >= 0; --size) {
         auto result = impl->trie.TryPath(impl->context, static_cast<int>(impl->context.size()) - size - 1, size);
         if (result.character_exists_in_context) {
-            UpdateTrie();
+            encoder.Write(*result.frequencies, token);
+            return;
+        }
+        encoder.Write(*result.frequencies, GetEscapeToken());
+    }
+    encoder.Write(impl->uniform_frequencies, token);
+}
+
+Token PPMEncoderModel::DecodeNextToken(ArithmeticDecoder& decoder) {
+    throw std::runtime_error("PPMEncoderModel::DecodeNextToken is not implemented");
+}
+
+void PPMBaseModel::UpdateTrie() {
+    impl->trie.Update(impl->context, 0, static_cast<int>(impl->context.size()));
+}
+
+Distribution PPMBaseModel::GetCurrentDistribution() {
+    for (int size = std::min(context_size, static_cast<int>(impl->context.size()) - 1); size >= 0; --size) {
+        auto result = impl->trie.TryPath(impl->context, static_cast<int>(impl->context.size()) - size - 1, size);
+        if (result.character_exists_in_context) {
             auto distribution = Distribution(std::move(result.frequencies));
             return distribution;
         }
-        if (result.frequencies != nullptr) {
-            coder.Write(*result.frequencies, GetEscapeToken());
-        }
     }
-    UpdateTrie();
     return Distribution(std::make_unique<std::vector<int>>(GetUniformFrequencies()));
 }
 
-PPMModelDecoder::PPMModelDecoder(ArithmeticDecoder& decoder, int context_size, int alphabet_size)
-        : PPMBaseModel(context_size, alphabet_size), decoder(decoder) {
+PPMModelDecoder::PPMModelDecoder(int context_size, int alphabet_size)
+        : PPMBaseModel(context_size, alphabet_size) {
 }
 
-void PPMModelDecoder::Feed(const Token& next_token) {
-    auto escaped_next_token = next_token;
-    while (current_context_size >= 0 && escaped_next_token == GetEscapeToken()) {
-        --current_context_size;
-        auto result = GetCurrentDistribution();
-        escaped_next_token = decoder.Read(result.Frequencies());
-    }
-    impl->context.push_back(escaped_next_token);
-    if (static_cast<int>(impl->context.size()) > context_size) {
-        impl->context.erase(impl->context.begin());
-    }
-    impl->trie.Update(impl->context, 0, static_cast<int>(impl->context.size()));
-    current_context_size = std::min(context_size, static_cast<int>(impl->context.size()));
+void PPMModelDecoder::EncodeNextToken(ArithmeticEncoder& encoder, const Token& token) {
+    throw std::runtime_error("PPMModelDecoder::EncodeNextToken is not implemented");
 }
 
-Distribution PPMModelDecoder::GetCurrentDistribution() {
-    while (current_context_size >= 0) {
-        auto result = impl->trie.TryPath(impl->context, static_cast<int>(impl->context.size()) - current_context_size,
-                                        current_context_size, false);
+Token PPMModelDecoder::DecodeNextToken(ArithmeticDecoder& decoder) {
+    for (int size = std::min(context_size, static_cast<int>(impl->context.size()) - 1); size >= 0; --size) {
+        auto result = impl->trie.TryPath(impl->context, static_cast<int>(impl->context.size()) - size - 1, size, false);
         if (result.character_exists_in_context) {
-            return Distribution(std::move(result.frequencies));
+            return decoder.Read(*result.frequencies);
         }
-        --current_context_size;
     }
-    return Distribution(std::make_unique<std::vector<int>>(GetUniformFrequencies()));
+    return decoder.Read(impl->uniform_frequencies);
 }
