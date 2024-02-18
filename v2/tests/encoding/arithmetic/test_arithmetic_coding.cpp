@@ -18,7 +18,6 @@ static std::vector<int> generate_frequencies() {
         frequencies[i] += frequencies[i - 1];
     }
     return frequencies;
-
 }
 
 static const std::uint64_t num_bits = 32;

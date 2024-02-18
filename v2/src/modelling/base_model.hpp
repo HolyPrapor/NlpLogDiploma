@@ -39,12 +39,11 @@ public:
     }
 
     virtual Token GetEndOfFileToken() {
-        // NOTE(HolyPrapor) For byte encoding, 0-255 are the only valid tokens, so we can use 256 as a special token
-        return 256;
+        return BinaryAlphabetSize - 1;
     }
 
     virtual void Feed(const Token& next_token) = 0;
-    virtual Distribution GetCurrentDistribution() = 0;
+    virtual const Distribution& GetCurrentDistribution() = 0;
 };
 
 #endif //DIPLOMA_BASE_MODEL_HPP
