@@ -10,23 +10,12 @@
 #include "encoding/utils/bit_output_stream.hpp"
 #include "defs.hpp"
 
-template <typename T>
-class DecodeResult {
-    T link;
-    int NextIndex;
-};
-
 class LogEncoder {
-    virtual void EncodeLine(BitOutputStream& outputStream, const std::vector<Token>& line) = 0;
+    virtual void EncodeLine(const std::vector<Token>& line) = 0;
 };
 
 class LogDecoder {
-    // todo: add online decoding
-    // void DecodeLine(BitInputStream& inputStream, BitOutputStream& outputStream);
-    // void DecodeLine(const std::vector<Token>& line, BitOutputStream& outputStream);
-
-    virtual std::vector<Token> DecodeLine(BitInputStream& inputStream) = 0;
-    virtual std::vector<Token> DecodeLine(const std::vector<Token>& line) = 0;
+    virtual std::vector<Token> DecodeLine() = 0;
 };
 
 #endif //DIPLOMA_BASE_LOG_CODER_HPP
