@@ -19,16 +19,16 @@ struct LogLink {
 
 class LogLinkEncoder {
 public:
-    void EncodeLink(BitOutputStream& outputStream, const LogLink& link);
-    void EncodeToken(BitOutputStream& outputStream, Token token);
+    virtual void EncodeLink(BitOutputStream& outputStream, const LogLink& link) = 0;
+    virtual void EncodeToken(BitOutputStream& outputStream, Token token) = 0;
 };
 
 class LogLinkDecoder {
 public:
-    LogLink DecodeLink(BitInputStream& inputStream);
-    DecodeResult<LogLink> DecodeLink(const std::vector<Token>& tokens, const int& startIndex);
-    Token DecodeToken(BitInputStream& inputStream);
-    DecodeResult<Token> DecodeToken(const std::vector<Token>& tokens, const int& startIndex);
+    virtual LogLink DecodeLink(BitInputStream& inputStream) = 0;
+    virtual DecodeResult<LogLink> DecodeLink(const std::vector<Token>& tokens, const int& startIndex) = 0;
+    virtual Token DecodeToken(BitInputStream& inputStream) = 0;
+    virtual DecodeResult<Token> DecodeToken(const std::vector<Token>& tokens, const int& startIndex) = 0;
 };
 
 #endif //DIPLOMA_LOG_LINK_CODER_HPP

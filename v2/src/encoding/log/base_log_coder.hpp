@@ -17,7 +17,7 @@ class DecodeResult {
 };
 
 class LogEncoder {
-    void EncodeLine(BitOutputStream& outputStream, const std::vector<Token>& line);
+    virtual void EncodeLine(BitOutputStream& outputStream, const std::vector<Token>& line) = 0;
 };
 
 class LogDecoder {
@@ -25,8 +25,8 @@ class LogDecoder {
     // void DecodeLine(BitInputStream& inputStream, BitOutputStream& outputStream);
     // void DecodeLine(const std::vector<Token>& line, BitOutputStream& outputStream);
 
-    std::vector<Token> DecodeLine(BitInputStream& inputStream);
-    std::vector<Token> DecodeLine(const std::vector<Token>& line);
+    virtual std::vector<Token> DecodeLine(BitInputStream& inputStream) = 0;
+    virtual std::vector<Token> DecodeLine(const std::vector<Token>& line) = 0;
 };
 
 #endif //DIPLOMA_BASE_LOG_CODER_HPP
