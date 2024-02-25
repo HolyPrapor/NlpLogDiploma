@@ -4,8 +4,7 @@
 
 #include "bit_output_stream.hpp"
 
-BitOutputStream::BitOutputStream(std::ofstream &output_stream) : num_bits_filled_{0}, current_byte_{0}, is_closed_{false} {
-    output_stream_.swap(output_stream);
+BitOutputStream::BitOutputStream(std::ostream &output_stream) : output_stream_(output_stream), num_bits_filled_{0}, current_byte_{0}, is_closed_{false} {
 }
 
 void BitOutputStream::Write(const bool& bit) {
@@ -26,6 +25,5 @@ void BitOutputStream::Close() {
     while (num_bits_filled_ != 0) {
         Write(0);
     }
-    output_stream_.close();
     is_closed_ = true;
 }

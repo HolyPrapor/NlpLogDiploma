@@ -10,13 +10,18 @@
 
 class BitInputStream {
 private:
-    std::ifstream input_stream_;
+    std::istream& input_stream_;
     size_t num_bits_remaining_;
     unsigned char current_byte_;
     bool is_closed_;
 
 public:
-    explicit BitInputStream(std::ifstream& input_stream);
+    explicit BitInputStream(std::istream& input_stream);
+    ~BitInputStream() {
+        if (!is_closed_) {
+            Close();
+        }
+    }
     void Close();
     std::optional<bool> Read();
     bool ReadWithoutEOF();

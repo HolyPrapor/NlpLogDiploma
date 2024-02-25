@@ -4,11 +4,10 @@
 
 #include "bit_input_stream.hpp"
 
-BitInputStream::BitInputStream(std::ifstream &input_stream) : num_bits_remaining_{0},
+BitInputStream::BitInputStream(std::istream &input_stream) : num_bits_remaining_{0},
                                                                      current_byte_{0},
-                                                                     is_closed_{false} {
-    input_stream_.swap(input_stream);
-}
+                                                                     is_closed_{false},
+                                                                     input_stream_(input_stream) {}
 
 std::optional<bool> BitInputStream::Read() {
     if (is_closed_) {
@@ -37,7 +36,6 @@ bool BitInputStream::ReadWithoutEOF() {
 }
 
 void BitInputStream::Close() {
-    input_stream_.close();
     is_closed_ = true;
     num_bits_remaining_ = 0;
 }

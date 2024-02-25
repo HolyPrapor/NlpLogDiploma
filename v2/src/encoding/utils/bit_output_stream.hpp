@@ -8,13 +8,18 @@
 #include <fstream>
 
 class BitOutputStream {
-    std::ofstream output_stream_;
+    std::ostream& output_stream_;
     size_t num_bits_filled_;
     unsigned char current_byte_;
     bool is_closed_;
 
 public:
-    explicit BitOutputStream(std::ofstream& output_stream);
+    explicit BitOutputStream(std::ostream& output_stream);
+    ~BitOutputStream() {
+        if (!is_closed_) {
+            Close();
+        }
+    }
     void Write(const bool& bit);
     void Close();
 

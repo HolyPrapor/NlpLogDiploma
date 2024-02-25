@@ -1,0 +1,8 @@
+//
+// Created by zeliboba on 2/25/24.
+//
+
+#ifndef DIPLOMA_RESIDUE_LINK_CODER_HPP
+#define DIPLOMA_RESIDUE_LINK_CODER_HPP
+
+#endif //DIPLOMA_RESIDUE_LINK_CODER_HPP
