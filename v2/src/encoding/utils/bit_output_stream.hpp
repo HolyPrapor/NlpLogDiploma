@@ -17,6 +17,11 @@ public:
     explicit BitOutputStream(std::ofstream& output_stream);
     void Write(const bool& bit);
     void Close();
+
+    void WriteByte(const unsigned char& byte) {
+        for (auto i = 0; i < 8; i++)
+            Write((byte >> (7 - i)) & 1);
+    }
 };
 
 #endif //NLPLOGDIPLOMA_BIT_OUTPUT_STREAM_H

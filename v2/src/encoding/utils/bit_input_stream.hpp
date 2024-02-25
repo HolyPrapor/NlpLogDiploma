@@ -20,6 +20,13 @@ public:
     void Close();
     std::optional<bool> Read();
     bool ReadWithoutEOF();
+
+    unsigned char ReadByte() {
+        unsigned char buffer = 0;
+        for (auto i = 0; i < 8; i++)
+            buffer = buffer << 1 | ReadWithoutEOF();
+        return buffer;
+    }
 };
 
 #endif //NLPLOGDIPLOMA_BIT_INPUT_STREAM_H
