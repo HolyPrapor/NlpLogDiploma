@@ -20,9 +20,10 @@ void ArithmeticEncoder::Finish() {
 }
 
 void ArithmeticEncoder::Shift() {
-    output_stream_->Write(low_ >> (num_bits_ - 1));
+    auto bit = (low_ >> (num_bits_ - 1));
+    output_stream_->Write(bit);
     while (num_underflow_) {
-        output_stream_->Write(0);
+        output_stream_->Write(bit ^ 1);
         num_underflow_--;
     }
 }

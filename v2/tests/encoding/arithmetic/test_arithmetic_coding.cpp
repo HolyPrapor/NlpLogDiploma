@@ -12,8 +12,19 @@
 
 namespace fs = std::filesystem;
 
-static std::vector<int> generate_frequencies() {
+static std::vector<int> generate_uniform_frequencies() {
     std::vector<int> frequencies(256, 2);
+    for (int i = 1; i < 256; ++i) {
+        frequencies[i] += frequencies[i - 1];
+    }
+    return frequencies;
+}
+
+static std::vector<int> generate_non_uniform_frequencies() {
+    std::vector<int> frequencies(256, 2);
+    frequencies['a']++;
+    frequencies['b']++;
+    frequencies['c']++;
     for (int i = 1; i < 256; ++i) {
         frequencies[i] += frequencies[i - 1];
     }
@@ -22,9 +33,8 @@ static std::vector<int> generate_frequencies() {
 
 static const std::uint64_t num_bits = 32;
 static const unsigned char eof = '@';
-static std::vector<int> frequencies = generate_frequencies();
 
-static void encodeAndDecode(const std::string& originalString, const fs::path& tempFilePath) {
+static void encodeAndDecode(const std::string& originalString, const std::vector<int>& frequencies, const fs::path& tempFilePath) {
     {
         std::ofstream outputFileStream(tempFilePath, std::ios::binary);
         auto bitOutputStream = std::make_unique<BitOutputStream>(outputFileStream);
@@ -66,7 +76,12 @@ TEST_CASE("Arithmetic coding round-trip", "[ArithmeticCoder]") {
     SECTION("Test with a small string") {
         std::string smallString = "abc";
         smallString.append(1, static_cast<char>(eof));
-        encodeAndDecode(smallString, tempFilePath);
+        SECTION("with uniform frequencies") {
+            encodeAndDecode(smallString, generate_uniform_frequencies(), tempFilePath);
+        }
+        SECTION("with non-uniform frequencies") {
+            encodeAndDecode(smallString, generate_non_uniform_frequencies(), tempFilePath);
+        }
     }
 
     SECTION("Test with a large string") {
@@ -75,7 +90,12 @@ TEST_CASE("Arithmetic coding round-trip", "[ArithmeticCoder]") {
             largeString += "abc";
         }
         largeString.append(1, static_cast<char>(eof));
-        encodeAndDecode(largeString, tempFilePath);
+        SECTION("with uniform frequencies") {
+            encodeAndDecode(largeString, generate_uniform_frequencies(), tempFilePath);
+        }
+        SECTION("with non-uniform frequencies") {
+            encodeAndDecode(largeString, generate_non_uniform_frequencies(), tempFilePath);
+        }
     }
 
     fs::remove(tempFilePath);

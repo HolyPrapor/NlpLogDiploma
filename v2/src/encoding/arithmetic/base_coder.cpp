@@ -25,7 +25,7 @@ BaseCoder::BaseCoder(const std::uint64_t& num_bits) {
 }
 
 void BaseCoder::Update(const std::vector<int> &frequencies, const Token &symbol) {
-    const auto alphabet_size = frequencies.size();
+    const auto alphabet_size = static_cast<uint64_t>(frequencies.size());
 
     if (symbol >= alphabet_size || symbol < 0) {
         throw std::runtime_error("Symbol out of range " +
@@ -34,7 +34,7 @@ void BaseCoder::Update(const std::vector<int> &frequencies, const Token &symbol)
     }
 
     const auto range_length = high_ - low_ + 1;
-    const auto total = frequencies.back();
+    const auto total = static_cast<uint64_t>(frequencies.back());
     const auto symbol_code = static_cast<std::uint64_t>(symbol);
     const auto low = low_;
 
