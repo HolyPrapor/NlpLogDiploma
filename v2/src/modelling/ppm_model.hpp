@@ -11,13 +11,13 @@
 class PPMBaseModel : public BaseModel {
 private:
     std::vector<int> GetUniformFrequencies();
-    void UpdateTrie();
 
 protected:
     struct Impl;
     std::unique_ptr<Impl> impl;
 
     Token GetEscapeToken() const;
+    void UpdateTrie();
 
 public:
     int context_size, alphabet_size;

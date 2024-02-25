@@ -145,19 +145,23 @@ void PPMBaseModel::Feed(const Token& next_token) {
     if (static_cast<int>(impl->context.size()) > context_size + 1) {
         impl->context.erase(impl->context.begin());
     }
-    UpdateTrie();
 }
 
+// todo: remove current symbol from the context to eliminate implicit dependency between EncodeNextToken and Feed
 void PPMEncoderModel::EncodeNextToken(ArithmeticEncoder& encoder, const Token& token) {
     for (int size = std::min(context_size, static_cast<int>(impl->context.size()) - 1); size >= 0; --size) {
         auto result = impl->trie.TryPath(impl->context, static_cast<int>(impl->context.size()) - size - 1, size);
         if (result.character_exists_in_context) {
             encoder.Write(*result.frequencies, token);
+            UpdateTrie();
             return;
         }
-        encoder.Write(*result.frequencies, GetEscapeToken());
+        else if (result.frequencies != nullptr) {
+            encoder.Write(*result.frequencies, GetEscapeToken());
+        }
     }
     encoder.Write(impl->uniform_frequencies, token);
+    UpdateTrie();
 }
 
 Token PPMEncoderModel::DecodeNextToken(ArithmeticDecoder& decoder) {
@@ -188,10 +192,14 @@ void PPMModelDecoder::EncodeNextToken(ArithmeticEncoder& encoder, const Token& t
 }
 
 Token PPMModelDecoder::DecodeNextToken(ArithmeticDecoder& decoder) {
-    for (int size = std::min(context_size, static_cast<int>(impl->context.size()) - 1); size >= 0; --size) {
-        auto result = impl->trie.TryPath(impl->context, static_cast<int>(impl->context.size()) - size - 1, size, false);
+    UpdateTrie();
+    for (int size = std::min(context_size, static_cast<int>(impl->context.size())); size >= 0; --size) {
+        auto result = impl->trie.TryPath(impl->context, static_cast<int>(impl->context.size()) - size, size, false);
         if (result.character_exists_in_context) {
-            return decoder.Read(*result.frequencies);
+            auto token = decoder.Read(*result.frequencies);
+            if (token != GetEscapeToken()) {
+                return token;
+            }
         }
     }
     return decoder.Read(impl->uniform_frequencies);

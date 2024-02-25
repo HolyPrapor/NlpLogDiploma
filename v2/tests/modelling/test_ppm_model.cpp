@@ -26,11 +26,12 @@ static void encodeAndDecode(const std::string& originalString, const fs::path& t
         auto tokens = model.TokenizeChunk(std::vector<unsigned char>(originalString.begin(), originalString.end()));
 
         for (Token token : tokens) {
-            model.EncodeNextToken(encoder, token);
             model.Feed(token);
+            model.EncodeNextToken(encoder, token);
         }
 
         auto lastToken = model.GetEndOfFileToken();
+        model.Feed(lastToken);
         model.EncodeNextToken(encoder, lastToken);
 
         encoder.Finish();
