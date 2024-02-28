@@ -10,7 +10,7 @@
 
 class SecondaryLogCoder {
 public:
-    virtual void Feed(std::vector<Token> line, int start, int length) = 0;
+    virtual void Feed(const std::vector<Token>& line, const int& start, const int& length) = 0;
     virtual void FinishLine() {}
 };
 

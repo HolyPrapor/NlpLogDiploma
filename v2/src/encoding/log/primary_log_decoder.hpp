@@ -8,7 +8,7 @@
 #include <memory>
 #include "encoding/log/link/log_link_decoder.hpp"
 #include "encoding/log/link/storage/log_storage.hpp"
-#include "secondary_log_decoder.hpp"
+#include "encoding/log/secondary/secondary_log_decoder.hpp"
 
 class PrimaryLogDecoder {
 public:

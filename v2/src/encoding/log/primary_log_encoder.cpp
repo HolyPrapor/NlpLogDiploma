@@ -10,7 +10,9 @@ PrimaryLogEncoder::PrimaryLogEncoder(LogLinkEncoder& linkEncoder, LogStorage& st
 void PrimaryLogEncoder::EncodeLine(const std::vector<Token>& line) {
     // record the length of the line
     // todo: line length often fits in one byte, so we can optimize it
-    markupOutputStream->WriteBytes(int(line.size()), 32);
+    auto lineLength = int(line.size());
+    markupOutputStream->WriteByte(lineLength);
+    markupOutputStream->WriteByte(lineLength >> 8);
     for (auto i = 0; i < line.size();) {
         auto link = storage.TryLink(line, i);
         if (link.has_value() && link.value().Length >= minLinkLength) {

@@ -7,6 +7,8 @@
 #include "encoding/log/link/residue_link_decoder.hpp"
 #include "encoding/log/link/residue_link_encoder.hpp"
 
+// todo: fix
+
 TEST_CASE("ResidueLinkEncoder correctly encodes", "[ResidueLinkEncoder]") {
     std::stringstream stream;
     BitOutputStream outputStream(stream);

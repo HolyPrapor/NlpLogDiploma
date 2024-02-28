@@ -23,13 +23,10 @@ public:
     void Write(const bool& bit);
     void Close();
 
-    void WriteBytes(const int& value, const int& bitCount) {
-        for (auto i = bitCount - 1; i >= 0; i--)
-            Write((value >> i) & 1);
-    }
-
     void WriteByte(const unsigned char& byte) {
-        WriteBytes(byte, 8);
+        for (auto i = 0; i < 8; i++) {
+            Write((byte >> (7 - i)) & 1);
+        }
     }
 };
 

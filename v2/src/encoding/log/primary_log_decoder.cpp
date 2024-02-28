@@ -8,7 +8,7 @@ PrimaryLogDecoder::PrimaryLogDecoder(LogLinkDecoder& linkDecoder, LogStorage& st
 
 std::vector<Token> PrimaryLogDecoder::DecodeLine() {
     // todo: line length often fits in one byte, so we can optimize it
-    auto lineLength = markupInputStream->ReadBytes(32);
+    int lineLength = int(markupInputStream->ReadByte()) | int(markupInputStream->ReadByte()) << 8;
     std::vector<Token> line;
     line.reserve(lineLength);
     for (auto i = 0; i < lineLength;) {
