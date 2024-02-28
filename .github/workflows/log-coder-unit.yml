@@ -1,0 +1,25 @@
+name: Log Coder Unit Tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up C++ environment
+        uses: actions/setup-cpp@v2
+        with:
+          compiler-version: '17'
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcatch2-dev
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake ../v2/
+          make
+      - name: Run tests
+        run: ./build/tests
