@@ -4,7 +4,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include "modelling/naive_model.hpp"
-#include "encoding/log/link/residue_link_coder.hpp"
+#include "encoding/log/link/residue_link_decoder.hpp"
+#include "encoding/log/link/residue_link_encoder.hpp"
 
 TEST_CASE("ResidueLinkEncoder correctly encodes", "[ResidueLinkEncoder]") {
     std::stringstream stream;

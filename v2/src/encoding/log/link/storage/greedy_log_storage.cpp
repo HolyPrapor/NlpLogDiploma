@@ -37,3 +37,10 @@ std::optional<LogLink> GreedyLogStorage::TryLink(const std::vector<Token>& log, 
     }
     return std::nullopt;
 }
+
+// todo: this is probably not the most efficient way to get the log
+const std::vector<Token>& GreedyLogStorage::GetLog(int index) {
+    auto it = storage_.begin();
+    std::advance(it, index);
+    return *it;
+}

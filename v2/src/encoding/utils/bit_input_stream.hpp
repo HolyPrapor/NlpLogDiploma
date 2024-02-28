@@ -26,11 +26,15 @@ public:
     std::optional<bool> Read();
     bool ReadWithoutEOF();
 
-    unsigned char ReadByte() {
-        unsigned char buffer = 0;
-        for (auto i = 0; i < 8; i++)
+    int ReadBytes(const int& bitCount) {
+        int buffer = 0;
+        for (auto i = 0; i < bitCount; i++)
             buffer = buffer << 1 | ReadWithoutEOF();
         return buffer;
+    }
+
+    unsigned char ReadByte() {
+        return static_cast<unsigned char>(ReadBytes(8));
     }
 };
 
