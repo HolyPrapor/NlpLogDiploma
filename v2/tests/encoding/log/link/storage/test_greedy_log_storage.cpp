@@ -3,7 +3,6 @@
 //
 
 #include <catch2/catch_test_macros.hpp>
-#include <iostream>
 #include "modelling/naive_model.hpp"
 #include "encoding/log/link/storage/greedy_log_storage.hpp"
 

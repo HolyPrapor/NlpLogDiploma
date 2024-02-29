@@ -2,7 +2,6 @@
 // Created by zeliboba on 2/25/24.
 //
 
-#include <iostream>
 #include "greedy_log_storage.hpp"
 
 GreedyLogStorage::GreedyLogStorage(int maxLogSize) : maxLogSize_(maxLogSize) {}
