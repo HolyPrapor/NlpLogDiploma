@@ -7,12 +7,10 @@
 #include "encoding/log/link/residue_link_decoder.hpp"
 #include "encoding/log/link/residue_link_encoder.hpp"
 
-// todo: fix
-
 TEST_CASE("ResidueLinkEncoder correctly encodes", "[ResidueLinkEncoder]") {
     std::stringstream stream;
     BitOutputStream outputStream(stream);
-    ResidueLinkEncoder encoder;
+    ResidueLinkEncoder encoder(255);
     std::string expected;
 
     SECTION("Encodes link") {
@@ -32,7 +30,7 @@ TEST_CASE("ResidueLinkEncoder correctly encodes", "[ResidueLinkEncoder]") {
 
     SECTION("Encodes very big token") {
         encoder.EncodeToken(outputStream, 255 + 128 + 4);
-        expected = "\xff\x80\x04";
+        expected = "\xff\x84";
     }
 
     SECTION("Encodes very big link") {
@@ -47,7 +45,7 @@ TEST_CASE("ResidueLinkEncoder correctly encodes", "[ResidueLinkEncoder]") {
 TEST_CASE("ResidueLogDecoder correctly decodes", "[ResidueLogDecoder]") {
     std::stringstream stream;
     BitInputStream inputStream(stream);
-    ResidueLinkDecoder decoder;
+    ResidueLinkDecoder decoder(255);
     std::string input;
 
     SECTION("Decodes link") {
@@ -77,7 +75,7 @@ TEST_CASE("ResidueLogDecoder correctly decodes", "[ResidueLogDecoder]") {
     }
 
     SECTION("Decodes very big token") {
-        input = "\xff\x80\x04";
+        input = "\xff\x84";
         stream.write(input.c_str(), input.size());
         stream.seekg(0);
         auto token = decoder.DecodeToken(inputStream);
@@ -86,10 +84,24 @@ TEST_CASE("ResidueLogDecoder correctly decodes", "[ResidueLogDecoder]") {
 }
 
 TEST_CASE("Residue round trip", "[ResidueLinkCoder]") {
+    auto maxValue = -1;
+
+    SECTION("Residue coder 255") {
+        maxValue = 255;
+    }
+
+    SECTION("Residue coder 127") {
+        maxValue = 127;
+    }
+
+    SECTION("Residue coder 60") {
+        maxValue = 60;
+    }
+
     std::stringstream stream;
     BitOutputStream outputStream(stream);
-    ResidueLinkEncoder encoder;
-    ResidueLinkDecoder decoder;
+    ResidueLinkEncoder encoder(maxValue);
+    ResidueLinkDecoder decoder(maxValue);
     LogLink link = {1, 2, 3};
     Token token = 4;
 
@@ -98,7 +110,6 @@ TEST_CASE("Residue round trip", "[ResidueLinkCoder]") {
     outputStream.Close();
 
     std::string input = stream.str();
-    stream.seekg(0);
     BitInputStream inputStream(stream);
 
     auto decodedLink = decoder.DecodeLink(inputStream);

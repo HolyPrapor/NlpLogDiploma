@@ -130,6 +130,7 @@ dmypy.json
 
 # cmake
 cmake-build-debug
+cmake-build-debug-coverage
 CMakeLists.txt
 CMakeCache.txt
 CMakeFiles

@@ -9,8 +9,12 @@
 
 class ResidueLinkDecoder : public LogLinkDecoder {
 public:
+    explicit ResidueLinkDecoder(int maxValue = 127);
     LogLink DecodeLink(BitInputStream& inputStream) override;
     Token DecodeToken(BitInputStream& inputStream) override;
+
+private:
+    int maxValue;
 };
 
 #endif //DIPLOMA_RESIDUE_LINK_DECODER_HPP
