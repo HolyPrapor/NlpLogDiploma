@@ -15,6 +15,7 @@ public:
     void Store(const std::vector<Token>& log) override;
     std::optional<LogLink> TryLink(const std::vector<Token>& log, const int& startIndex) override;
     const std::vector<Token>& GetLog(int index) override;
+    int GetSize() override;
 private:
     std::list<std::vector<Token>> storage_;
     int maxLogSize_;

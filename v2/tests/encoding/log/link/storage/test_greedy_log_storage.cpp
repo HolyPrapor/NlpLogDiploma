@@ -3,6 +3,7 @@
 //
 
 #include <catch2/catch_test_macros.hpp>
+#include <iostream>
 #include "modelling/naive_model.hpp"
 #include "encoding/log/link/storage/greedy_log_storage.hpp"
 
@@ -32,6 +33,8 @@ TEST_CASE("Greedy log storage correctly finds logs", "[GreedyLogStorage]") {
     storage.Store({1, 2, 3, 4});
     storage.Store({1, 2, 3, 4, 5});
     storage.Store({1, 2, 3});
+
+    REQUIRE(storage.GetSize() == 3);
 
     SECTION("Finds the longest matching substring across all stored logs") {
         auto link = storage.TryLink({1, 2, 3, 4, 5, 6, 7, 8}, 0);

@@ -2,6 +2,7 @@
 // Created by zeliboba on 2/25/24.
 //
 
+#include <iostream>
 #include "greedy_log_storage.hpp"
 
 GreedyLogStorage::GreedyLogStorage(int maxLogSize) : maxLogSize_(maxLogSize) {}
@@ -19,7 +20,7 @@ std::optional<LogLink> GreedyLogStorage::TryLink(const std::vector<Token>& log, 
     auto logIndex = 0;
     for (auto &line : storage_) {
         for (auto i = 0; i < line.size(); i++) {
-            for (auto j = startIndex; j < log.size(); j++) {
+            for (auto j = startIndex; j < log.size() && i + j - startIndex < line.size(); j++) {
                 if (log[j] != line[i + j - startIndex]) {
                     break;
                 }
@@ -43,4 +44,8 @@ const std::vector<Token>& GreedyLogStorage::GetLog(int index) {
     auto it = storage_.begin();
     std::advance(it, index);
     return *it;
+}
+
+int GreedyLogStorage::GetSize() {
+    return storage_.size();
 }

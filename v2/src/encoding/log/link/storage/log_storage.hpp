@@ -15,6 +15,7 @@ public:
     virtual void Store(const std::vector<Token>& log) = 0;
     virtual std::optional<LogLink> TryLink(const std::vector<Token>& log, const int& startIndex) = 0;
     virtual const std::vector<Token>& GetLog(int index) = 0;
+    virtual int GetSize() = 0;
 };
 
 #endif //DIPLOMA_LOG_STORAGE_HPP
