@@ -41,5 +41,5 @@ bool ArithmeticDecoder::ReadCodeBit() {
     auto bit = input_stream_->Read();
     if (bit.has_value())
         return bit.value();
-    throw std::runtime_error("Unexpected end of input");
+    return 0;
 }
