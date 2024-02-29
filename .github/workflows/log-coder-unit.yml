@@ -1,25 +1,30 @@
-name: Log Coder Unit Tests
+name: C++ CI with Catch2
 
 on: [push, pull_request]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v2
-      - name: Set up C++ environment
-        uses: actions/setup-cpp@v2
-        with:
-          compiler-version: '17'
-      - name: Install dependencies
+
+      - name: Install CMake, g++, and make
+        run: sudo apt-get update && sudo apt-get install -y cmake g++ make
+
+      - name: Install Catch2 from source
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libcatch2-dev
+          git clone https://github.com/catchorg/Catch2.git
+          cd Catch2
+          cmake -Bbuild -H. -DBUILD_TESTING=OFF
+          sudo cmake --build build/ --target install
+
+      - name: Configure CMake
+        run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+
       - name: Build
-        run: |
-          mkdir build
-          cd build
-          cmake ../v2/
-          make
+        run: cmake --build build -- -j2
+
       - name: Run tests
         run: ./build/tests
+
