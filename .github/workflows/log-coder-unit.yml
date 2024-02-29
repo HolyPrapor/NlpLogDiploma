@@ -20,7 +20,9 @@ jobs:
           sudo cmake --build build/ --target install
 
       - name: Configure CMake
-        run: cmake -B build -S v2 -DCMAKE_BUILD_TYPE=Release
+        run: |
+          cd ../v2
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build -- -j2
