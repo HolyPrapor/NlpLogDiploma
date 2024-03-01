@@ -33,6 +33,10 @@ public:
         }
         return result;
     }
+
+    [[nodiscard]] bool IsEOF() const {
+        return input_stream_.eof();
+    }
 };
 
 #endif //NLPLOGDIPLOMA_BIT_INPUT_STREAM_H
