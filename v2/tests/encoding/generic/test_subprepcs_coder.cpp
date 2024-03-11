@@ -28,7 +28,14 @@ bool areFilesEqual(std::ifstream& file1, std::ifstream& file2) {
 }
 
 TEST_CASE("SubPrePCS sample coding", "[SubPrePCS]") {
-    const auto testFilePath = "../../test_files/logs/small/java.log";
+    std::string basePath;
+    if (const char* envBasePath = std::getenv("TEST_BASE_PATH")) {
+        basePath = envBasePath; // Use the environment variable if it's set
+    } else {
+        basePath = "../../"; // Default to local running path
+    }
+    std::string testFilePath = basePath + "test_files/logs/small/java.log";
+
     const std::string prefix = "temp_subprepcs";
 
     const auto tempDir = fs::temp_directory_path();

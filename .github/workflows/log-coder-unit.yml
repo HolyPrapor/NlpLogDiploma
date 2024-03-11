@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v2
@@ -26,6 +26,9 @@ jobs:
 
       - name: Build
         run: cmake --build build -- -j2
+
+      - name: Set Test Base Path
+        run: echo "TEST_BASE_PATH=./" >> $GITHUB_ENV
 
       - name: Run tests
         run: ./build/tests
