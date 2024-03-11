@@ -13,12 +13,13 @@
 #include "encoding/log/secondary/secondary_log_encoder.hpp"
 #include "encoding/log/primary_log_encoder.hpp"
 
-class SubPrePcsEncoder : GenericEncoder {
+class SubPrePcsEncoder : public GenericEncoder {
 public:
     explicit SubPrePcsEncoder(std::unique_ptr<PrimaryLogEncoder>&& primaryEncoder, std::unique_ptr<SecondaryLogEncoder>&& secondaryEncoder,
                               std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
                               std::unique_ptr<GenericEncoder>&& primaryGenericEncoder, std::unique_ptr<GenericEncoder>&& secondaryGenericEncoder, std::unique_ptr<GenericEncoder>&& markupGenericEncoder);
     void Encode(BitInputStream& inputStream) override;
+    void Finish() override;
 
     static SubPrePcsEncoder CreateDefault(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup);
 

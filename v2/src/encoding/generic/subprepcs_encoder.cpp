@@ -77,3 +77,9 @@ void SubPrePcsEncoder::Encode(BitInputStream& input) {
         markupGenericEncoder->Encode(*markup);
     }
 }
+
+void SubPrePcsEncoder::Finish() {
+    primaryGenericEncoder->Finish();
+    secondaryGenericEncoder->Finish();
+    markupGenericEncoder->Finish();
+}

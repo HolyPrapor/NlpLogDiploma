@@ -37,13 +37,21 @@ public:
     }
 
     void ReadAll(std::vector<unsigned char>& buffer) {
+        input_stream_->clear();
         while (!IsEOF()) {
             buffer.push_back(ReadByte());
         }
     }
 
     [[nodiscard]] bool IsEOF() const {
-        return input_stream_->eof();
+        // todo: optimize peeks and readings
+        // peak and then check eof to avoid reading from closed stream
+        input_stream_->peek();
+        auto eof = input_stream_->eof();
+        if (eof) {
+            input_stream_->clear();
+        }
+        return eof;
     }
 };
 

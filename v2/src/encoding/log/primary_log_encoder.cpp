@@ -35,4 +35,7 @@ void PrimaryLogEncoder::EncodeLine(const std::vector<Token>& line) {
     }
     storage->Store(line);
     secondaryLogEncoder->FinishLine();
+
+    mainOutputStream->Flush();
+    markupOutputStream->Flush();
 }

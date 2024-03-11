@@ -29,6 +29,9 @@ public:
             Write((byte >> (7 - i)) & 1);
         }
     }
+    void Flush() {
+        output_stream_->flush();
+    }
 };
 
 #endif //NLPLOGDIPLOMA_BIT_OUTPUT_STREAM_H

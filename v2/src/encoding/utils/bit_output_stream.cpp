@@ -26,4 +26,5 @@ void BitOutputStream::Close() {
         Write(0);
     }
     is_closed_ = true;
+    Flush();
 }
