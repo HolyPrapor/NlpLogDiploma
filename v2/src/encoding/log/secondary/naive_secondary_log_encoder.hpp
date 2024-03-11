@@ -18,6 +18,8 @@ public:
     void Feed(const std::vector<Token>& line, const int& start, const int& length) override;
 
     void FinishLine() override;
+
+    void Finish() override;
 private:
     std::shared_ptr<BitOutputStream> outputStream;
 };

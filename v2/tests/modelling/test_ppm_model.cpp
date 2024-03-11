@@ -14,7 +14,7 @@
 namespace fs = std::filesystem;
 
 static const std::uint64_t num_bits = 32;
-static const int context_size = 2;
+static const int context_size = 4;
 
 static void encodeAndDecode(const std::string& originalString, const fs::path& tempFilePath) {
     {
@@ -78,6 +78,21 @@ TEST_CASE("PPM arithmetic coding round-trip", "[PPMCoder]") {
             largeString += "abcalsdkjfhsakljdfhlaskdjfh";
         }
         encodeAndDecode(largeString, tempFilePath);
+    }
+
+    SECTION("Weird bug regression") {
+        // 84 byte, 0 byte, 255 byte, 255 byte, 255 byte, 255 byte
+        std::string weirdString = std::string{
+                static_cast<unsigned char>(84),
+                static_cast<unsigned char>(0),
+                static_cast<char>(255),
+                static_cast<char>(255),
+                static_cast<char>(255),
+                static_cast<char>(255),
+                static_cast<char>(255),
+                static_cast<char>(255)
+        };
+        encodeAndDecode(weirdString, tempFilePath);
     }
 
     fs::remove(tempFilePath);

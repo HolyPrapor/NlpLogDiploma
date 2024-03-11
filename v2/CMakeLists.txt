@@ -13,7 +13,7 @@ target_include_directories(${PROJECT_NAME}
 )
 
 find_package(Catch2 REQUIRED)
-add_executable(tests tests/encoding/utils/test_bit_input_stream.cpp tests/encoding/utils/test_bit_output_stream.cpp tests/encoding/arithmetic/test_arithmetic_coding.cpp tests/modelling/test_distribution.cpp tests/modelling/test_naive_model.cpp tests/modelling/test_ppm_model.cpp tests/encoding/log/link/storage/test_greedy_log_storage.cpp tests/encoding/log/link/test_residue_link_coder.cpp tests/encoding/log/test_primary_log_coder.cpp tests/encoding/generic/test_subprepcs_encoder.cpp)
+add_executable(tests tests/encoding/utils/test_bit_input_stream.cpp tests/encoding/utils/test_bit_output_stream.cpp tests/encoding/arithmetic/test_arithmetic_coding.cpp tests/modelling/test_distribution.cpp tests/modelling/test_naive_model.cpp tests/modelling/test_ppm_model.cpp tests/encoding/log/link/storage/test_greedy_log_storage.cpp tests/encoding/log/link/test_residue_link_coder.cpp tests/encoding/log/test_primary_log_coder.cpp tests/encoding/generic/test_subprepcs_coder.cpp)
 target_include_directories(tests
         PUBLIC
             tests/

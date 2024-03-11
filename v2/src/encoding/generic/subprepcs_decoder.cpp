@@ -60,12 +60,14 @@ void SubPrePcsDecoder::Decode(BitOutputStream& data) {
     secondaryGenericDecoder->Finish();
     markupGenericDecoder->Finish();
 
-    while (true) {
-        auto tokens = primaryDecoder->DecodeLine();
-        if (tokens.empty()) {
-            break;
+    auto i = 0;
+    while (primaryDecoder->HasNext()) {
+        if (i == 1999) {
+            i = 0;
         }
+        auto tokens = primaryDecoder->DecodeLine();
         writeLine(data, tokens);
+        i++;
     }
 
     data.Flush();

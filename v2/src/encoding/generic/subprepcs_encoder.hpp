@@ -15,7 +15,7 @@
 
 class SubPrePcsEncoder : public GenericEncoder {
 public:
-    explicit SubPrePcsEncoder(std::unique_ptr<PrimaryLogEncoder>&& primaryEncoder, std::unique_ptr<SecondaryLogEncoder>&& secondaryEncoder,
+    explicit SubPrePcsEncoder(std::unique_ptr<PrimaryLogEncoder>&& primaryEncoder,
                               std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
                               std::unique_ptr<GenericEncoder>&& primaryGenericEncoder, std::unique_ptr<GenericEncoder>&& secondaryGenericEncoder, std::unique_ptr<GenericEncoder>&& markupGenericEncoder);
     void Encode(BitInputStream& inputStream) override;
@@ -25,7 +25,6 @@ public:
 
 private:
     std::unique_ptr<PrimaryLogEncoder> primaryEncoder;
-    std::unique_ptr<SecondaryLogEncoder> secondaryEncoder;
     std::unique_ptr<GenericEncoder> primaryGenericEncoder;
     std::unique_ptr<GenericEncoder> secondaryGenericEncoder;
     std::unique_ptr<GenericEncoder> markupGenericEncoder;

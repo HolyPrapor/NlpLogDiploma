@@ -19,3 +19,7 @@ void NaiveSecondaryLogEncoder::Feed(const std::vector<Token>& line, const int& s
 void NaiveSecondaryLogEncoder::FinishLine() {
     outputStream->Flush();
 }
+
+void NaiveSecondaryLogEncoder::Finish() {
+    outputStream->Close();
+}

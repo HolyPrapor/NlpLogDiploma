@@ -12,6 +12,9 @@ PrimaryLogEncoder::PrimaryLogEncoder(std::unique_ptr<LogLinkEncoder>&& linkEncod
                                      markupOutputStream(std::move(markupOutputStream)), minLinkLength(minLinkLength) {}
 
 void PrimaryLogEncoder::EncodeLine(const std::vector<Token>& line) {
+    // todo: come up with a smarter way to check line presence
+    markupOutputStream->Write(1);
+
     // record the length of the line
     // todo: line length often fits in one byte, so we can optimize it
     auto lineLength = int(line.size());
@@ -38,4 +41,13 @@ void PrimaryLogEncoder::EncodeLine(const std::vector<Token>& line) {
 
     mainOutputStream->Flush();
     markupOutputStream->Flush();
+}
+
+void PrimaryLogEncoder::Finish() {
+    // no more lines
+    markupOutputStream->Write(0);
+
+    mainOutputStream->Close();
+    secondaryLogEncoder->Finish();
+    markupOutputStream->Close();
 }

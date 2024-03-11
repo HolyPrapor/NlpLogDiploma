@@ -10,6 +10,7 @@
 class SecondaryLogEncoder : public SecondaryLogCoder {
 public:
     virtual void EncodeToken(const Token& token) = 0;
+    virtual void Finish() = 0;
 };
 
 #endif //DIPLOMA_SECONDARY_LOG_ENCODER_HPP

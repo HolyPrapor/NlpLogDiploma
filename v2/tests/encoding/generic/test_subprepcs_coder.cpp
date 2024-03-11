@@ -13,7 +13,22 @@
 
 namespace fs = std::filesystem;
 
+bool areFilesEqual(std::ifstream& file1, std::ifstream& file2) {
+    std::istreambuf_iterator<char> iter1(file1), iter2(file2);
+    std::istreambuf_iterator<char> end;
+
+    while (iter1 != end && iter2 != end) {
+        if (*iter1 != *iter2) {
+            return false; // Files differ
+        }
+        ++iter1;
+        ++iter2;
+    }
+    return iter1 == end && iter2 == end; // Files are equal if both are at the end
+}
+
 TEST_CASE("SubPrePCS sample coding", "[SubPrePCS]") {
+    const auto testFilePath = "../../test_files/logs/small/java.log";
     const std::string prefix = "temp_subprepcs";
 
     const auto tempDir = fs::temp_directory_path();
@@ -31,7 +46,7 @@ TEST_CASE("SubPrePCS sample coding", "[SubPrePCS]") {
         auto tempBitMarkup = std::make_shared<BitOutputStream>(tempMarkup);
 
         auto subPrePcsEncoder = SubPrePcsEncoder::CreateDefault(tempBitPrimary, tempBitSecondary, tempBitMarkup);
-        auto logData = std::make_shared<std::ifstream>("/home/zeliboba/projects/University/NlpLogDiploma/test_files/logs/small/java.log");
+        auto logData = std::make_shared<std::ifstream>(testFilePath, std::ios::binary);
         auto logBitData = std::make_shared<BitInputStream>(logData);
         subPrePcsEncoder.Encode(*logBitData);
         subPrePcsEncoder.Finish();
@@ -52,6 +67,10 @@ TEST_CASE("SubPrePCS sample coding", "[SubPrePCS]") {
         subPrePcsDecoder.Finish();
     }
 
-//    fs::remove(tempFilePath);
-    std::cout << "tempFilePath: " << tempDir << std::endl;
+    SECTION("Are files equal") {
+        REQUIRE(areFilesEqual(*std::make_shared<std::ifstream>(testFilePath), *std::make_shared<std::ifstream>(decodedFilePath)));
+    }
+
+    // keep the files for debugging
+    //    fs::remove(tempFilePath);
 }

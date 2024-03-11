@@ -37,15 +37,14 @@ SubPrePcsEncoder SubPrePcsEncoder::CreateDefault(std::shared_ptr<BitOutputStream
     auto secondaryGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(secondary)));
     auto markupGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(markup)));
 
-    return SubPrePcsEncoder(std::move(primaryEncoder), std::move(secondaryEncoder), std::move(primaryInMemoryIn), std::move(secondaryInMemoryIn), std::move(markupInMemoryIn),
+    return SubPrePcsEncoder(std::move(primaryEncoder), std::move(primaryInMemoryIn), std::move(secondaryInMemoryIn), std::move(markupInMemoryIn),
                             std::move(primaryGenericEncoder), std::move(secondaryGenericEncoder), std::move(markupGenericEncoder));
 }
 
-SubPrePcsEncoder::SubPrePcsEncoder(std::unique_ptr<PrimaryLogEncoder>&& primaryEncoder, std::unique_ptr<SecondaryLogEncoder>&& secondaryEncoder,
+SubPrePcsEncoder::SubPrePcsEncoder(std::unique_ptr<PrimaryLogEncoder>&& primaryEncoder,
                                    std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
                                    std::unique_ptr<GenericEncoder>&& primaryGenericEncoder, std::unique_ptr<GenericEncoder>&& secondaryGenericEncoder, std::unique_ptr<GenericEncoder>&& markupGenericEncoder) {
     this->primaryEncoder = std::move(primaryEncoder);
-    this->secondaryEncoder = std::move(secondaryEncoder);
     this->primary = std::move(primary);
     this->secondary = std::move(secondary);
     this->markup = std::move(markup);
@@ -68,16 +67,27 @@ static std::vector<Token> readLine(BitInputStream& inputStream) {
 }
 
 void SubPrePcsEncoder::Encode(BitInputStream& input) {
+    auto i = 0;
+
     while (!input.IsEOF()) {
+        if (i == 1999) {
+            i = 0;
+        }
         auto line = readLine(input);
         primaryEncoder->EncodeLine(line);
         primaryGenericEncoder->Encode(*primary);
         secondaryGenericEncoder->Encode(*secondary);
         markupGenericEncoder->Encode(*markup);
+        i++;
     }
 }
 
 void SubPrePcsEncoder::Finish() {
+    primaryEncoder->Finish();
+    primaryGenericEncoder->Encode(*primary);
+    secondaryGenericEncoder->Encode(*secondary);
+    markupGenericEncoder->Encode(*markup);
+
     primaryGenericEncoder->Finish();
     secondaryGenericEncoder->Finish();
     markupGenericEncoder->Finish();

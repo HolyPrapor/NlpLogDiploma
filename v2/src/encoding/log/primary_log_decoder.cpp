@@ -37,3 +37,7 @@ std::vector<Token> PrimaryLogDecoder::DecodeLine() {
     secondaryLogDecoder->FinishLine();
     return line;
 }
+
+bool PrimaryLogDecoder::HasNext() {
+    return markupInputStream->ReadWithoutEOF();
+}

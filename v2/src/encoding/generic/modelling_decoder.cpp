@@ -22,6 +22,7 @@ void ModellingDecoder::Decode(BitOutputStream &data) {
         if (token == model->GetEndOfFileToken()) {
             break;
         }
+        model->Feed(token);
         tokens.push_back(token);
     }
 
