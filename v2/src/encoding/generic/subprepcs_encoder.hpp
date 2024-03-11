@@ -16,21 +16,22 @@
 class SubPrePcsEncoder : GenericEncoder {
 public:
     explicit SubPrePcsEncoder(std::unique_ptr<PrimaryLogEncoder>&& primaryEncoder, std::unique_ptr<SecondaryLogEncoder>&& secondaryEncoder,
-                              std::unique_ptr<BitInputStream>&& primary, std::unique_ptr<BitInputStream>&& secondary, std::unique_ptr<BitInputStream>&& markup,
+                              std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
                               std::unique_ptr<GenericEncoder>&& primaryGenericEncoder, std::unique_ptr<GenericEncoder>&& secondaryGenericEncoder, std::unique_ptr<GenericEncoder>&& markupGenericEncoder);
     void Encode(BitInputStream& inputStream) override;
 
-    static SubPrePcsEncoder CreateDefault(std::unique_ptr<BitOutputStream>&& primary, std::unique_ptr<BitOutputStream>&& secondary, std::unique_ptr<BitOutputStream>&& markup);
+    static SubPrePcsEncoder CreateDefault(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup);
 
 private:
     std::unique_ptr<PrimaryLogEncoder> primaryEncoder;
     std::unique_ptr<SecondaryLogEncoder> secondaryEncoder;
-    std::unique_ptr<BitInputStream> primary;
-    std::unique_ptr<BitInputStream> secondary;
-    std::unique_ptr<BitInputStream> markup;
     std::unique_ptr<GenericEncoder> primaryGenericEncoder;
     std::unique_ptr<GenericEncoder> secondaryGenericEncoder;
     std::unique_ptr<GenericEncoder> markupGenericEncoder;
+
+    std::shared_ptr<BitInputStream> primary;
+    std::shared_ptr<BitInputStream> secondary;
+    std::shared_ptr<BitInputStream> markup;
 };
 
 #endif //DIPLOMA_SUBPREPCS_ENCODER_HPP

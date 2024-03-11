@@ -12,15 +12,15 @@
 
 class PrimaryLogDecoder {
 public:
-    explicit PrimaryLogDecoder(LogLinkDecoder& linkDecoder, LogStorage& storage, SecondaryLogDecoder& secondaryLogDecoder, std::unique_ptr<BitInputStream> mainInputStream, std::unique_ptr<BitInputStream> markupInputStream);
+    explicit PrimaryLogDecoder(std::unique_ptr<LogLinkDecoder>&& linkDecoder, std::unique_ptr<LogStorage>&& storage, std::unique_ptr<SecondaryLogDecoder>&& secondaryLogDecoder, std::shared_ptr<BitInputStream> mainInputStream, std::shared_ptr<BitInputStream> markupInputStream);
     std::vector<Token> DecodeLine();
 
 private:
-    LogLinkDecoder &linkDecoder;
-    LogStorage &storage;
-    SecondaryLogDecoder &secondaryLogDecoder;
-    std::unique_ptr<BitInputStream> mainInputStream;
-    std::unique_ptr<BitInputStream> markupInputStream;
+    std::unique_ptr<LogLinkDecoder> linkDecoder;
+    std::unique_ptr<LogStorage> storage;
+    std::unique_ptr<SecondaryLogDecoder> secondaryLogDecoder;
+    std::shared_ptr<BitInputStream> mainInputStream;
+    std::shared_ptr<BitInputStream> markupInputStream;
 };
 
 #endif //DIPLOMA_PRIMARY_LOG_DECODER_HPP

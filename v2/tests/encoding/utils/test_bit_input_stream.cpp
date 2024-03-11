@@ -19,8 +19,8 @@ static void writeAndTestBits(const fs::path& tempFilePath, unsigned char written
         REQUIRE(out.good());
     }
 
-    std::ifstream inputFile(tempFilePath, std::ios::binary);
-    REQUIRE(inputFile.is_open());
+    auto inputFile = std::make_shared<std::ifstream>(tempFilePath, std::ios::binary);
+    REQUIRE(inputFile->is_open());
 
     BitInputStream bitInputStream(inputFile);
 

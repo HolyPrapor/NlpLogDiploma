@@ -4,10 +4,10 @@
 
 #include "bit_input_stream.hpp"
 
-BitInputStream::BitInputStream(std::istream &input_stream) : num_bits_remaining_{0},
+BitInputStream::BitInputStream(std::shared_ptr<std::istream> input_stream) : num_bits_remaining_{0},
                                                                      current_byte_{0},
                                                                      is_closed_{false},
-                                                                     input_stream_(input_stream) {}
+                                                                     input_stream_(std::move(input_stream)) {}
 
 std::optional<bool> BitInputStream::Read() {
     if (is_closed_) {
@@ -15,8 +15,8 @@ std::optional<bool> BitInputStream::Read() {
     }
     if (num_bits_remaining_ == 0) {
         char buffer[1];
-        input_stream_.read(buffer, 1);
-        if (input_stream_.gcount() == 0) {
+        input_stream_->read(buffer, 1);
+        if (input_stream_->gcount() == 0) {
             return std::nullopt;
         }
         current_byte_ = static_cast<unsigned char>(buffer[0]);

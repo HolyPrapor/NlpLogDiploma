@@ -9,6 +9,7 @@
 
 class GenericDecoder {
     virtual void Decode(BitOutputStream& data) = 0;
+    virtual void Finish() {}
 };
 
 #endif //DIPLOMA_GENERIC_DECODER_HPP

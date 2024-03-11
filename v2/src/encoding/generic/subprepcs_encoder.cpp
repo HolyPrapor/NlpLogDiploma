@@ -9,40 +9,41 @@
 #include "encoding/log/link/residue_link_encoder.hpp"
 #include "encoding/log/link/storage/greedy_log_storage.hpp"
 #include "encoding/log/secondary/naive_secondary_log_encoder.hpp"
+#include "modelling_encoder.hpp"
 
-SubPrePcsEncoder SubPrePcsEncoder::CreateDefault(std::unique_ptr<BitOutputStream>&& primary, std::unique_ptr<BitOutputStream>&& secondary, std::unique_ptr<BitOutputStream>&& markup) {
+SubPrePcsEncoder SubPrePcsEncoder::CreateDefault(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup) {
     auto linkEncoder = std::make_unique<ResidueLinkEncoder>(255);
     auto storage = std::make_unique<GreedyLogStorage>(50);
 
-    // todo: change to unique pointers?
-    auto primaryInMemory = std::stringstream();
-    auto secondaryInMemory = std::stringstream();
-    auto markupInMemory = std::stringstream();
+    auto primaryInMemory = std::make_shared<std::stringstream>();
+    auto secondaryInMemory = std::make_shared<std::stringstream>();
+    auto markupInMemory = std::make_shared<std::stringstream>();
 
-    auto primaryInMemoryIn = std::make_unique<BitInputStream>(primaryInMemory);
-    auto primaryInMemoryOut = std::make_unique<BitOutputStream>(primaryInMemory);
+    auto primaryInMemoryIn = std::make_shared<BitInputStream>(primaryInMemory);
+    auto primaryInMemoryOut = std::make_shared<BitOutputStream>(primaryInMemory);
 
-    auto secondaryInMemoryIn = std::make_unique<BitInputStream>(secondaryInMemory);
-    auto secondaryInMemoryOut = std::make_unique<BitOutputStream>(secondaryInMemory);
+    auto secondaryInMemoryIn = std::make_shared<BitInputStream>(secondaryInMemory);
+    auto secondaryInMemoryOut = std::make_shared<BitOutputStream>(secondaryInMemory);
 
-    auto markupInMemoryIn = std::make_unique<BitInputStream>(markupInMemory);
-    auto markupInMemoryOut = std::make_unique<BitOutputStream>(markupInMemory);
+    auto markupInMemoryIn = std::make_shared<BitInputStream>(markupInMemory);
+    auto markupInMemoryOut = std::make_shared<BitOutputStream>(markupInMemory);
 
-    auto secondaryEncoder = std::make_unique<NaiveSecondaryLogEncoder>(std::move(secondaryInMemoryOut));
-    // todo: change to unique pointers
-    auto primaryEncoder = std::make_unique<PrimaryLogEncoder>(*linkEncoder, *storage, *secondaryEncoder, std::move(primaryInMemoryOut), std::move(markupInMemoryOut), 4);
+    auto secondaryEncoder = std::make_unique<NaiveSecondaryLogEncoder>(secondaryInMemoryOut);
+    auto primaryEncoder = std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryInMemoryOut, markupInMemoryOut, 4);
 
-    // todo: change to specific encoders
-    auto primaryGenericEncoder = std::make_unique<GenericEncoder>(std::move(primaryInMemoryIn));
-    auto secondaryGenericEncoder = std::make_unique<GenericEncoder>(std::move(secondaryInMemoryIn));
-    auto markupGenericEncoder = std::make_unique<GenericEncoder>(std::move(markupInMemoryIn));
+    auto ppmEncoder = std::make_unique<PPMEncoderModel>(4);
+    auto arithmeticEncoder = std::make_unique<ArithmeticEncoder>(32, primaryInMemoryOut);
+
+    auto primaryGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(primary)));
+    auto secondaryGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(secondary)));
+    auto markupGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(markup)));
 
     return SubPrePcsEncoder(std::move(primaryEncoder), std::move(secondaryEncoder), std::move(primaryInMemoryIn), std::move(secondaryInMemoryIn), std::move(markupInMemoryIn),
                             std::move(primaryGenericEncoder), std::move(secondaryGenericEncoder), std::move(markupGenericEncoder));
 }
 
 SubPrePcsEncoder::SubPrePcsEncoder(std::unique_ptr<PrimaryLogEncoder>&& primaryEncoder, std::unique_ptr<SecondaryLogEncoder>&& secondaryEncoder,
-                                   std::unique_ptr<BitInputStream>&& primary, std::unique_ptr<BitInputStream>&& secondary, std::unique_ptr<BitInputStream>&& markup,
+                                   std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
                                    std::unique_ptr<GenericEncoder>&& primaryGenericEncoder, std::unique_ptr<GenericEncoder>&& secondaryGenericEncoder, std::unique_ptr<GenericEncoder>&& markupGenericEncoder) {
     this->primaryEncoder = std::move(primaryEncoder);
     this->secondaryEncoder = std::move(secondaryEncoder);

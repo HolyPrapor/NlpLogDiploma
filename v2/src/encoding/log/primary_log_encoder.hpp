@@ -12,16 +12,17 @@
 
 class PrimaryLogEncoder {
 public:
-    explicit PrimaryLogEncoder(LogLinkEncoder& linkEncoder, LogStorage& storage, SecondaryLogEncoder& secondaryLogEncoder, std::unique_ptr<BitOutputStream> mainOutputStream, std::unique_ptr<BitOutputStream> markupOutputStream, int minLinkLength = 4);
+    explicit PrimaryLogEncoder(std::unique_ptr<LogLinkEncoder>&& linkEncoder, std::unique_ptr<LogStorage>&& storage, std::unique_ptr<SecondaryLogEncoder>&& secondaryLogEncoder, std::shared_ptr<BitOutputStream> mainOutputStream, std::shared_ptr<BitOutputStream> markupOutputStream, int minLinkLength = 4);
     void EncodeLine(const std::vector<Token>& line);
 
 private:
-    LogLinkEncoder &linkEncoder;
-    LogStorage &storage;
-    SecondaryLogEncoder &secondaryLogEncoder;
-    std::unique_ptr<BitOutputStream> mainOutputStream;
+    std::unique_ptr<LogLinkEncoder> linkEncoder;
+    std::unique_ptr<LogStorage> storage;
+    std::unique_ptr<SecondaryLogEncoder> secondaryLogEncoder;
+    std::shared_ptr<BitOutputStream> mainOutputStream;
+    std::shared_ptr<BitOutputStream> markupOutputStream;
+
     int minLinkLength;
-    std::unique_ptr<BitOutputStream> markupOutputStream;
 };
 
 #endif //DIPLOMA_PRIMARY_LOG_ENCODER_HPP

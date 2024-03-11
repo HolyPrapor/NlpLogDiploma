@@ -8,7 +8,7 @@
 #include "encoding/log/link/residue_link_encoder.hpp"
 
 TEST_CASE("ResidueLinkEncoder correctly encodes", "[ResidueLinkEncoder]") {
-    std::stringstream stream;
+    auto stream = std::make_shared<std::stringstream>();
     BitOutputStream outputStream(stream);
     ResidueLinkEncoder encoder(255);
     std::string expected;
@@ -39,19 +39,19 @@ TEST_CASE("ResidueLinkEncoder correctly encodes", "[ResidueLinkEncoder]") {
     }
 
     outputStream.Close();
-    REQUIRE(stream.str() == expected);
+    REQUIRE(stream->str() == expected);
 }
 
 TEST_CASE("ResidueLogDecoder correctly decodes", "[ResidueLogDecoder]") {
-    std::stringstream stream;
+    auto stream = std::make_shared<std::stringstream>();
     BitInputStream inputStream(stream);
     ResidueLinkDecoder decoder(255);
     std::string input;
 
     SECTION("Decodes link") {
         input = "\x01\x02\x03";
-        stream.write(input.c_str(), input.size());
-        stream.seekg(0);
+        stream->write(input.c_str(), input.size());
+        stream->seekg(0);
         auto link = decoder.DecodeLink(inputStream);
         REQUIRE(link.RecordIndex == 1);
         REQUIRE(link.StartIndex == 2);
@@ -60,24 +60,24 @@ TEST_CASE("ResidueLogDecoder correctly decodes", "[ResidueLogDecoder]") {
 
     SECTION("Decodes token") {
         input = "\x04";
-        stream.write(input.c_str(), input.size());
-        stream.seekg(0);
+        stream->write(input.c_str(), input.size());
+        stream->seekg(0);
         auto token = decoder.DecodeToken(inputStream);
         REQUIRE(token == 4);
     }
 
     SECTION("Decodes big token") {
         input = "\xff\x01";
-        stream.write(input.c_str(), input.size());
-        stream.seekg(0);
+        stream->write(input.c_str(), input.size());
+        stream->seekg(0);
         auto token = decoder.DecodeToken(inputStream);
         REQUIRE(token == 255 + 1);
     }
 
     SECTION("Decodes very big token") {
         input = "\xff\x84";
-        stream.write(input.c_str(), input.size());
-        stream.seekg(0);
+        stream->write(input.c_str(), input.size());
+        stream->seekg(0);
         auto token = decoder.DecodeToken(inputStream);
         REQUIRE(token == 255 + 128 + 4);
     }
@@ -98,7 +98,7 @@ TEST_CASE("Residue round trip", "[ResidueLinkCoder]") {
         maxValue = 60;
     }
 
-    std::stringstream stream;
+    auto stream = std::make_shared<std::stringstream>();
     BitOutputStream outputStream(stream);
     ResidueLinkEncoder encoder(maxValue);
     ResidueLinkDecoder decoder(maxValue);
@@ -109,7 +109,7 @@ TEST_CASE("Residue round trip", "[ResidueLinkCoder]") {
     encoder.EncodeToken(outputStream, token);
     outputStream.Close();
 
-    std::string input = stream.str();
+    std::string input = stream->str();
     BitInputStream inputStream(stream);
 
     auto decodedLink = decoder.DecodeLink(inputStream);

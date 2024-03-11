@@ -4,7 +4,7 @@
 
 #include "arithmetic_decoder.hpp"
 ArithmeticDecoder::ArithmeticDecoder(const std::uint64_t &num_bits,
-                                            std::unique_ptr<BitInputStream> input_stream)
+                                            std::shared_ptr<BitInputStream> input_stream)
         : BaseCoder(num_bits), code_{0} {
     input_stream_ = std::move(input_stream);
     for (auto i = 0; i < num_bits_; ++i) {

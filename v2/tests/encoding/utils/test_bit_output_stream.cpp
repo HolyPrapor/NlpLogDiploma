@@ -13,14 +13,14 @@ namespace fs = std::filesystem;
 
 static void writeAndTestBits(const fs::path& tempFilePath, unsigned char writtenByte) {
     {
-        std::ofstream out(tempFilePath, std::ios::binary);
-        REQUIRE(out.is_open());
+        auto out = std::make_shared<std::ofstream>(tempFilePath, std::ios::binary);
+        REQUIRE(out->is_open());
         BitOutputStream bitOutputStream(out);
         for (int i = 7; i >= 0; --i) {
             bool bit = (writtenByte >> i) & 1;
             bitOutputStream.Write(bit);
         }
-        REQUIRE(out.good());
+        REQUIRE(out->good());
         bitOutputStream.Close();
     }
 

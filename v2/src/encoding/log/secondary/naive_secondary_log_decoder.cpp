@@ -4,7 +4,7 @@
 
 #include "naive_secondary_log_decoder.hpp"
 
-NaiveSecondaryLogDecoder::NaiveSecondaryLogDecoder(std::unique_ptr<BitInputStream> inputStream) : inputStream(std::move(inputStream)) {
+NaiveSecondaryLogDecoder::NaiveSecondaryLogDecoder(std::shared_ptr<BitInputStream> inputStream) : inputStream(std::move(inputStream)) {
 }
 
 Token NaiveSecondaryLogDecoder::DecodeToken() {

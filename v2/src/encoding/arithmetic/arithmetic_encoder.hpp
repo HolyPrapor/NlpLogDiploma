@@ -11,7 +11,7 @@
 
 class ArithmeticEncoder : public BaseCoder {
 private:
-    std::unique_ptr<BitOutputStream> output_stream_;
+    std::shared_ptr<BitOutputStream> output_stream_;
     std::uint64_t num_underflow_;
 
 protected:
@@ -19,7 +19,7 @@ protected:
     void Underflow() override;
 
 public:
-    ArithmeticEncoder(const std::uint64_t &num_bits, std::unique_ptr<BitOutputStream> output_stream);
+    ArithmeticEncoder(const std::uint64_t &num_bits, std::shared_ptr<BitOutputStream> output_stream);
 
     void Write(const std::vector<int> &frequencies, const Token &symbol);
     void Finish();

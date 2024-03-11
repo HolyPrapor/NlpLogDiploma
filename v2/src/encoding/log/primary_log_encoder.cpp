@@ -4,8 +4,12 @@
 
 #include "primary_log_encoder.hpp"
 
-PrimaryLogEncoder::PrimaryLogEncoder(LogLinkEncoder& linkEncoder, LogStorage& storage, SecondaryLogEncoder& secondaryLogEncoder, std::unique_ptr<BitOutputStream> mainOutputStream, std::unique_ptr<BitOutputStream> markupOutputStream, int minLinkLength)
-    : linkEncoder(linkEncoder), storage(storage), secondaryLogEncoder(secondaryLogEncoder), mainOutputStream(std::move(mainOutputStream)), markupOutputStream(std::move(markupOutputStream)), minLinkLength(minLinkLength) {}
+PrimaryLogEncoder::PrimaryLogEncoder(std::unique_ptr<LogLinkEncoder>&& linkEncoder, std::unique_ptr<LogStorage>&& storage,
+                                     std::unique_ptr<SecondaryLogEncoder>&& secondaryLogEncoder, std::shared_ptr<BitOutputStream> mainOutputStream,
+                                     std::shared_ptr<BitOutputStream> markupOutputStream, int minLinkLength) :
+                                     linkEncoder(std::move(linkEncoder)), storage(std::move(storage)),
+                                     secondaryLogEncoder(std::move(secondaryLogEncoder)), mainOutputStream(std::move(mainOutputStream)),
+                                     markupOutputStream(std::move(markupOutputStream)), minLinkLength(minLinkLength) {}
 
 void PrimaryLogEncoder::EncodeLine(const std::vector<Token>& line) {
     // record the length of the line
@@ -14,21 +18,21 @@ void PrimaryLogEncoder::EncodeLine(const std::vector<Token>& line) {
     markupOutputStream->WriteByte(lineLength);
     markupOutputStream->WriteByte(lineLength >> 8);
     for (auto i = 0; i < line.size();) {
-        auto link = storage.TryLink(line, i);
+        auto link = storage->TryLink(line, i);
         if (link.has_value() && link.value().Length >= minLinkLength) {
             // 0 means link
             markupOutputStream->Write(0);
-            linkEncoder.EncodeLink(*mainOutputStream, link.value());
+            linkEncoder->EncodeLink(*mainOutputStream, link.value());
             i += link.value().Length;
-            secondaryLogEncoder.Feed(line, i, link.value().Length);
+            secondaryLogEncoder->Feed(line, i, link.value().Length);
         }
         else {
             // 1 means single token
             markupOutputStream->Write(1);
-            secondaryLogEncoder.EncodeToken(line[i]);
+            secondaryLogEncoder->EncodeToken(line[i]);
             i++;
         }
     }
-    storage.Store(line);
-    secondaryLogEncoder.FinishLine();
+    storage->Store(line);
+    secondaryLogEncoder->FinishLine();
 }

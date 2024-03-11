@@ -13,14 +13,14 @@
 
 class NaiveSecondaryLogDecoder : public SecondaryLogDecoder {
 public:
-    explicit NaiveSecondaryLogDecoder(std::unique_ptr<BitInputStream> inputStream);
+    explicit NaiveSecondaryLogDecoder(std::shared_ptr<BitInputStream> inputStream);
 
     Token DecodeToken() override;
 
     void Feed(const std::vector<Token>& line, const int& start, const int& length) override;
 
 private:
-    std::unique_ptr<BitInputStream> inputStream;
+    std::shared_ptr<BitInputStream> inputStream;
 };
 
 #endif //DIPLOMA_NAIVE_SECONDARY_LOG_DECODER_HPP

@@ -18,8 +18,8 @@ static const int context_size = 2;
 
 static void encodeAndDecode(const std::string& originalString, const fs::path& tempFilePath) {
     {
-        std::ofstream outputFileStream(tempFilePath, std::ios::binary);
-        auto bitOutputStream = std::make_unique<BitOutputStream>(outputFileStream);
+        auto outputFileStream = std::make_shared<std::ofstream>(tempFilePath, std::ios::binary);
+        auto bitOutputStream = std::make_shared<BitOutputStream>(outputFileStream);
         ArithmeticEncoder encoder(num_bits, std::move(bitOutputStream));
         PPMEncoderModel model(context_size);
 
@@ -40,8 +40,8 @@ static void encodeAndDecode(const std::string& originalString, const fs::path& t
     std::vector<Token> decodedTokens;
     {
         bool isFinished = false;
-        std::ifstream inputFileStream(tempFilePath, std::ios::binary);
-        auto bitInputStream = std::make_unique<BitInputStream>(inputFileStream);
+        auto inputFileStream = std::make_shared<std::ifstream>(tempFilePath, std::ios::binary);
+        auto bitInputStream = std::make_shared<BitInputStream>(inputFileStream);
         ArithmeticDecoder decoder(num_bits, std::move(bitInputStream));
         PPMModelDecoder model(context_size);
 

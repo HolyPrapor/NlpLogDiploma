@@ -6,15 +6,16 @@
 #define NLPLOGDIPLOMA_BIT_OUTPUT_STREAM_H
 
 #include <fstream>
+#include <memory>
 
 class BitOutputStream {
-    std::ostream& output_stream_;
+    std::shared_ptr<std::ostream> output_stream_;
     size_t num_bits_filled_;
     unsigned char current_byte_;
     bool is_closed_;
 
 public:
-    explicit BitOutputStream(std::ostream& output_stream);
+    explicit BitOutputStream(std::shared_ptr<std::ostream> output_stream);
     ~BitOutputStream() {
         if (!is_closed_) {
             Close();

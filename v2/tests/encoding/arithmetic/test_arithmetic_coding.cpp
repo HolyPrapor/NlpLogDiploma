@@ -36,9 +36,9 @@ static const unsigned char eof = '@';
 
 static void encodeAndDecode(const std::string& originalString, const std::vector<int>& frequencies, const fs::path& tempFilePath) {
     {
-        std::ofstream outputFileStream(tempFilePath, std::ios::binary);
-        auto bitOutputStream = std::make_unique<BitOutputStream>(outputFileStream);
-        ArithmeticEncoder encoder(num_bits, std::move(bitOutputStream));
+        auto outputFileStream = std::make_shared<std::ofstream>(tempFilePath, std::ios::binary);
+        auto bitOutputStream = std::make_shared<BitOutputStream>(outputFileStream);
+        ArithmeticEncoder encoder(num_bits, bitOutputStream);
 
         for (unsigned char symbol : originalString) {
             encoder.Write(frequencies, symbol);
@@ -50,9 +50,9 @@ static void encodeAndDecode(const std::string& originalString, const std::vector
     std::string decodedString;
     {
         bool isFinished = false;
-        std::ifstream inputFileStream(tempFilePath, std::ios::binary);
-        auto bitInputStream = std::make_unique<BitInputStream>(inputFileStream);
-        ArithmeticDecoder decoder(num_bits, std::move(bitInputStream));
+        auto inputFileStream = std::make_shared<std::ifstream>(tempFilePath, std::ios::binary);
+        auto bitInputStream = std::make_shared<BitInputStream>(inputFileStream);
+        ArithmeticDecoder decoder(num_bits, bitInputStream);
 
         for (auto i = 0; i < originalString.size(); i++) {
             unsigned char symbol = decoder.Read(frequencies);

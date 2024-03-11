@@ -31,18 +31,18 @@ static void encodeAndDecode(const std::vector<std::string>& originalLines) {
         originalLogs.push_back(toTokens(line));
     }
 
-    std::stringstream mainOutputStream;
-    std::stringstream secondaryOutputStream;
-    std::stringstream markupOutputStream;
+    auto mainOutputStream = std::make_shared<std::stringstream>();
+    auto secondaryOutputStream = std::make_shared<std::stringstream>();
+    auto markupOutputStream = std::make_shared<std::stringstream>();
     {
-        auto mainBitOutputStream = std::make_unique<BitOutputStream>(mainOutputStream);
-        auto secondaryBitOutputStream = std::make_unique<BitOutputStream>(secondaryOutputStream);
-        auto markupBitOutputStream = std::make_unique<BitOutputStream>(markupOutputStream);
+        auto mainBitOutputStream = std::make_shared<BitOutputStream>(mainOutputStream);
+        auto secondaryBitOutputStream = std::make_shared<BitOutputStream>(secondaryOutputStream);
+        auto markupBitOutputStream = std::make_shared<BitOutputStream>(markupOutputStream);
 
-        ResidueLinkEncoder linkEncoder;
-        GreedyLogStorage storage(50);
-        NaiveSecondaryLogEncoder secondaryLogEncoder(std::move(secondaryBitOutputStream));
-        PrimaryLogEncoder primaryLogEncoder(linkEncoder, storage, secondaryLogEncoder, std::move(mainBitOutputStream), std::move(markupBitOutputStream), 2);
+        auto linkEncoder = std::make_unique<ResidueLinkEncoder>(255);
+        auto storage = std::make_unique<GreedyLogStorage>(50);
+        auto secondaryLogEncoder = std::make_unique<NaiveSecondaryLogEncoder>(std::move(secondaryBitOutputStream));
+        PrimaryLogEncoder primaryLogEncoder(std::move(linkEncoder), std::move(storage), std::move(secondaryLogEncoder), mainBitOutputStream, markupBitOutputStream, 2);
 
         for (const auto& line : originalLogs) {
             primaryLogEncoder.EncodeLine(line);
@@ -50,14 +50,14 @@ static void encodeAndDecode(const std::vector<std::string>& originalLines) {
     }
 
     {
-        auto mainBitInputStream = std::make_unique<BitInputStream>(mainOutputStream);
-        auto secondaryBitInputStream = std::make_unique<BitInputStream>(secondaryOutputStream);
-        auto markupBitInputStream = std::make_unique<BitInputStream>(markupOutputStream);
+        auto mainBitInputStream = std::make_shared<BitInputStream>(mainOutputStream);
+        auto secondaryBitInputStream = std::make_shared<BitInputStream>(secondaryOutputStream);
+        auto markupBitInputStream = std::make_shared<BitInputStream>(markupOutputStream);
 
-        ResidueLinkDecoder linkDecoder;
-        GreedyLogStorage storage(50);
-        NaiveSecondaryLogDecoder secondaryLogDecoder(std::move(secondaryBitInputStream));
-        PrimaryLogDecoder primaryLogDecoder(linkDecoder, storage, secondaryLogDecoder, std::move(mainBitInputStream), std::move(markupBitInputStream));
+        auto linkDecoder = std::make_unique<ResidueLinkDecoder>(255);
+        auto storage = std::make_unique<GreedyLogStorage>(50);
+        auto secondaryLogDecoder = std::make_unique<NaiveSecondaryLogDecoder>(secondaryBitInputStream);
+        PrimaryLogDecoder primaryLogDecoder(std::move(linkDecoder), std::move(storage), std::move(secondaryLogDecoder), mainBitInputStream, markupBitInputStream);
 
         for (const auto & originalLog : originalLogs) {
             auto decodedLine = primaryLogDecoder.DecodeLine();
@@ -87,8 +87,7 @@ TEST_CASE("Primary log coding round-trip", "[PrimaryLogCoder]") {
         encodeAndDecode({std::string(1000, 'a'), std::string(1000, 'b'), std::string(1000, 'c')});
     }
 
-    // todo: fix
-//    SECTION("Multiple long lines, with links") {
-//        encodeAndDecode({std::string(1000, 'a'), std::string(1000, 'b'), std::string(1000, 'a') + std::string(1000, 'b'), std::string(1000, 'b') + std::string(1000, 'c'), std::string(1000, 'a') + std::string(1000, 'b') + std::string(1000, 'c'), std::string(1000, 'b') + std::string(1000, 'c') + std::string(1000, 'a')});
-//    }
+    SECTION("Multiple long lines, with links") {
+        encodeAndDecode({std::string(1000, 'a'), std::string(1000, 'b'), std::string(1000, 'a') + std::string(1000, 'b'), std::string(1000, 'b') + std::string(1000, 'c'), std::string(1000, 'a') + std::string(1000, 'b') + std::string(1000, 'c'), std::string(1000, 'b') + std::string(1000, 'c') + std::string(1000, 'a')});
+    }
 }

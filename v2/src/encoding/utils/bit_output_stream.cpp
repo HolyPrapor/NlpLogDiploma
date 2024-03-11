@@ -4,7 +4,7 @@
 
 #include "bit_output_stream.hpp"
 
-BitOutputStream::BitOutputStream(std::ostream &output_stream) : output_stream_(output_stream), num_bits_filled_{0}, current_byte_{0}, is_closed_{false} {
+BitOutputStream::BitOutputStream(std::shared_ptr<std::ostream> output_stream) : output_stream_(std::move(output_stream)), num_bits_filled_{0}, current_byte_{0}, is_closed_{false} {
 }
 
 void BitOutputStream::Write(const bool& bit) {
@@ -16,7 +16,7 @@ void BitOutputStream::Write(const bool& bit) {
     if (num_bits_filled_ == 8) {
         char buffer[1];
         buffer[0] = static_cast<char>(current_byte_);
-        output_stream_.write(buffer, 1);
+        output_stream_->write(buffer, 1);
         num_bits_filled_ = 0;
     }
 }

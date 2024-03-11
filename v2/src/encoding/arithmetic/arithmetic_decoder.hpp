@@ -11,7 +11,7 @@
 
 class ArithmeticDecoder : public BaseCoder {
 private:
-    std::unique_ptr<BitInputStream> input_stream_;
+    std::shared_ptr<BitInputStream> input_stream_;
     std::uint64_t code_;
     bool ReadCodeBit();
 
@@ -20,7 +20,7 @@ protected:
     void Underflow() override;
 
 public:
-    ArithmeticDecoder(const std::uint64_t& num_bits, std::unique_ptr<BitInputStream> input_stream);
+    ArithmeticDecoder(const std::uint64_t& num_bits, std::shared_ptr<BitInputStream> input_stream);
     Token Read(const std::vector<int>& frequencies);
 };
 
