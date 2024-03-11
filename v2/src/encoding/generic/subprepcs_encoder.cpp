@@ -5,7 +5,6 @@
 #include <vector>
 #include <sstream>
 #include "subprepcs_encoder.hpp"
-#include "defs.hpp"
 #include "encoding/log/link/residue_link_encoder.hpp"
 #include "encoding/log/link/storage/greedy_log_storage.hpp"
 #include "encoding/log/secondary/naive_secondary_log_encoder.hpp"

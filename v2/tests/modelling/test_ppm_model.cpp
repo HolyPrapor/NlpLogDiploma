@@ -43,7 +43,7 @@ static void encodeAndDecode(const std::string& originalString, const fs::path& t
         auto inputFileStream = std::make_shared<std::ifstream>(tempFilePath, std::ios::binary);
         auto bitInputStream = std::make_shared<BitInputStream>(inputFileStream);
         ArithmeticDecoder decoder(num_bits, std::move(bitInputStream));
-        PPMModelDecoder model(context_size);
+        PPMDecoderModel model(context_size);
 
         for (auto i = 0; i < 2 * originalString.size(); i++) {
             auto token = model.DecodeNextToken(decoder);

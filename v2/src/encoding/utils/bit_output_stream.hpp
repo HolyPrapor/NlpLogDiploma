@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <memory>
+#include <vector>
 
 class BitOutputStream {
     std::shared_ptr<std::ostream> output_stream_;
@@ -31,6 +32,12 @@ public:
     }
     void Flush() {
         output_stream_->flush();
+    }
+
+    void WriteAll(const std::vector<unsigned char>& bytes) {
+        for (auto byte : bytes) {
+            WriteByte(byte);
+        }
     }
 };
 

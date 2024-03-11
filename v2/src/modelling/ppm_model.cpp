@@ -183,15 +183,15 @@ Distribution PPMBaseModel::GetCurrentDistribution() {
     return Distribution(std::make_unique<std::vector<int>>(GetUniformFrequencies()));
 }
 
-PPMModelDecoder::PPMModelDecoder(int context_size, int alphabet_size)
+PPMDecoderModel::PPMDecoderModel(int context_size, int alphabet_size)
         : PPMBaseModel(context_size, alphabet_size) {
 }
 
-void PPMModelDecoder::EncodeNextToken(ArithmeticEncoder& encoder, const Token& token) {
-    throw std::runtime_error("PPMModelDecoder::EncodeNextToken is not implemented");
+void PPMDecoderModel::EncodeNextToken(ArithmeticEncoder& encoder, const Token& token) {
+    throw std::runtime_error("PPMDecoderModel::EncodeNextToken is not implemented");
 }
 
-Token PPMModelDecoder::DecodeNextToken(ArithmeticDecoder& decoder) {
+Token PPMDecoderModel::DecodeNextToken(ArithmeticDecoder& decoder) {
     UpdateTrie();
     for (int size = std::min(context_size, static_cast<int>(impl->context.size())); size >= 0; --size) {
         auto result = impl->trie.TryPath(impl->context, static_cast<int>(impl->context.size()) - size, size, false);

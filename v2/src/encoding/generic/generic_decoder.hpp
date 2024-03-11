@@ -8,6 +8,7 @@
 #include "encoding/utils/bit_output_stream.hpp"
 
 class GenericDecoder {
+public:
     virtual void Decode(BitOutputStream& data) = 0;
     virtual void Finish() {}
 };

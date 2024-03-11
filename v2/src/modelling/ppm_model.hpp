@@ -35,9 +35,9 @@ public:
     Token DecodeNextToken(ArithmeticDecoder& decoder) override;
 };
 
-class PPMModelDecoder : public PPMBaseModel {
+class PPMDecoderModel : public PPMBaseModel {
 public:
-    explicit PPMModelDecoder(int context_size, int alphabet_size = BinaryAlphabetSize);
+    explicit PPMDecoderModel(int context_size, int alphabet_size = BinaryAlphabetSize);
     void EncodeNextToken(ArithmeticEncoder& encoder, const Token& token) override;
     Token DecodeNextToken(ArithmeticDecoder& decoder) override;
 
