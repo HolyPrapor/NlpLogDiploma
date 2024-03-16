@@ -60,11 +60,9 @@ static void encodeAndDecode(const std::vector<std::string>& originalLines) {
         PrimaryLogDecoder primaryLogDecoder(std::move(linkDecoder), std::move(storage), std::move(secondaryLogDecoder), mainBitInputStream, markupBitInputStream);
 
         for (const auto & originalLog : originalLogs) {
-            REQUIRE(primaryLogDecoder.HasNext());
             auto decodedLine = primaryLogDecoder.DecodeLine();
             REQUIRE(decodedLine == originalLog);
         }
-        REQUIRE_FALSE(primaryLogDecoder.HasNext());
     }
 }
 

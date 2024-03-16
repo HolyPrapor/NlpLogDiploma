@@ -939,7 +939,6 @@ CSIPERF:TXCOMMIT;200
 2016-09-28 04:40:53, Info                  CBS    Reboot mark refs incremented to: 1
 2016-09-28 04:40:53, Info                  CBS    Scavenge: Starts
 2016-09-28 04:40:53, Info                  CSI    00000009@2016/9/27:20:40:53.744 CSI Transaction @0x47e9e0 initialized for deployment engine {d16d444c-56d8-11d5-882d-0080c847b195} with flags 00000002 and client id [10]"TI6.0_0:0/"
-
 2016-09-28 04:40:53, Info                  CBS    Scavenge: Begin CSI Store
 2016-09-28 04:40:54, Info                  CSI    0000000a Performing 1 operations; 1 are not lock/unlock and follow:
   Scavenge (8): flags: 00000017

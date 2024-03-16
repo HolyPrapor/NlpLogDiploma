@@ -72,7 +72,7 @@ void decode(const std::string& primary, const std::string& secondary, const std:
 
 void compressAndDecompressFile(const std::string& basePath, const std::string& logSize, const std::string& logType) {
     std::string testFilePath = basePath + "test_files/logs/" + logSize + "/" + logType + ".log";
-    const std::string prefix = "subprepcs_" + logSize + "_" + logType;
+    const std::string prefix = "subprepcs_" + logSize + "_" + logType + "_";
 
     const auto baseDir = fs::temp_directory_path();
     const auto decoded = baseDir / (prefix + ".log");
