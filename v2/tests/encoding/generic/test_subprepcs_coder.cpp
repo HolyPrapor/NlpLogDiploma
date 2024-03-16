@@ -27,16 +27,9 @@ bool areFilesEqual(std::ifstream& file1, std::ifstream& file2) {
     return iter1 == end && iter2 == end; // Files are equal if both are at the end
 }
 
-TEST_CASE("SubPrePCS sample coding", "[SubPrePCS]") {
-    std::string basePath;
-    if (const char* envBasePath = std::getenv("TEST_BASE_PATH")) {
-        basePath = envBasePath; // Use the environment variable if it's set
-    } else {
-        basePath = "../../"; // Default to local running path
-    }
-    std::string testFilePath = basePath + "test_files/logs/small/java.log";
-
-    const std::string prefix = "temp_subprepcs";
+void compressAndDecompressFile(const std::string& basePath, const std::string& logSize, const std::string& logType) {
+    std::string testFilePath = basePath + "test_files/logs/" + logSize + "/" + logType + ".log";
+    const std::string prefix = "subprepcs_" + logSize + "_" + logType;
 
     const auto tempDir = fs::temp_directory_path();
     const auto decodedFilePath = tempDir / (prefix + ".log");
@@ -44,7 +37,7 @@ TEST_CASE("SubPrePCS sample coding", "[SubPrePCS]") {
     const auto tempSecondaryFilePath = tempDir / (prefix + "secondary.bin");
     const auto tempMarkupFilePath = tempDir / (prefix + "markup.bin");
 
-    SECTION("Test encode with a small log") {
+    SECTION("Encode: " + logSize + "-" + logType) {
         auto tempPrimary = std::make_shared<std::ofstream>(tempPrimaryFilePath, std::ios::binary);
         auto tempBitPrimary = std::make_shared<BitOutputStream>(tempPrimary);
         auto tempSecondary = std::make_shared<std::ofstream>(tempSecondaryFilePath, std::ios::binary);
@@ -59,7 +52,7 @@ TEST_CASE("SubPrePCS sample coding", "[SubPrePCS]") {
         subPrePcsEncoder.Finish();
     }
 
-    SECTION("Test decode with a small log") {
+    SECTION("Decode: " + logSize + "-" + logType) {
         auto tempPrimary = std::make_shared<std::ifstream>(tempPrimaryFilePath, std::ios::binary);
         auto tempBitPrimary = std::make_shared<BitInputStream>(tempPrimary);
         auto tempSecondary = std::make_shared<std::ifstream>(tempSecondaryFilePath, std::ios::binary);
@@ -74,10 +67,32 @@ TEST_CASE("SubPrePCS sample coding", "[SubPrePCS]") {
         subPrePcsDecoder.Finish();
     }
 
-    SECTION("Are files equal") {
+    SECTION("Compare: " + logSize + "-" + logType) {
+        auto originalSize = fs::file_size(testFilePath);
+        auto compressedSize = fs::file_size(tempPrimaryFilePath) + fs::file_size(tempSecondaryFilePath) + fs::file_size(tempMarkupFilePath);
+        std::cout << "Compressed log size: " << compressedSize << " bytes" << std::endl;
+        std::cout << "Original log size: " << originalSize << " bytes" << std::endl;
+        REQUIRE(compressedSize < originalSize);
         REQUIRE(areFilesEqual(*std::make_shared<std::ifstream>(testFilePath), *std::make_shared<std::ifstream>(decodedFilePath)));
     }
 
     // keep the files for debugging
     //    fs::remove(tempFilePath);
+}
+
+TEST_CASE("SubPrePCS coding", "[SubPrePCS]") {
+    std::string basePath;
+    if (const char* envBasePath = std::getenv("TEST_BASE_PATH")) {
+        basePath = envBasePath; // Use the environment variable if it's set
+    } else {
+        basePath = "../../"; // Default to local running path
+    }
+
+    for (auto& p: fs::directory_iterator(basePath + "test_files/logs/")) {
+        auto dirName = p.path().filename().string();
+        for (auto& file: fs::directory_iterator(p.path())) {
+            auto fileName = file.path().stem().string();
+            compressAndDecompressFile(basePath, dirName, fileName);
+        }
+    }
 }
