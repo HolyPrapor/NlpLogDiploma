@@ -9,7 +9,7 @@
 
 class ResidueLinkEncoder : public LogLinkEncoder {
 public:
-    explicit ResidueLinkEncoder(int maxValue = 127);
+    explicit ResidueLinkEncoder(int maxValue = 255);
     void EncodeLink(BitOutputStream& outputStream, const LogLink& link) override;
     void EncodeToken(BitOutputStream& outputStream, Token token) override;
 

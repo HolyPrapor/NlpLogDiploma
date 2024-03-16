@@ -67,18 +67,12 @@ static std::vector<Token> readLine(BitInputStream& inputStream) {
 }
 
 void SubPrePcsEncoder::Encode(BitInputStream& input) {
-    auto i = 0;
-
     while (!input.IsEOF()) {
-        if (i == 1999) {
-            i = 0;
-        }
         auto line = readLine(input);
         primaryEncoder->EncodeLine(line);
         primaryGenericEncoder->Encode(*primary);
         secondaryGenericEncoder->Encode(*secondary);
         markupGenericEncoder->Encode(*markup);
-        i++;
     }
 }
 

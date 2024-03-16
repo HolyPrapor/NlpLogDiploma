@@ -3,6 +3,7 @@
 //
 
 #include "primary_log_decoder.hpp"
+#include "encoding/residue_coder.hpp"
 
 //PrimaryLogDecoder::PrimaryLogDecoder(LogLinkDecoder& linkDecoder, LogStorage& storage, SecondaryLogDecoder& secondaryLogDecoder, std::unique_ptr<BitInputStream> mainInputStream, std::unique_ptr<BitInputStream> markupInputStream) : linkDecoder(linkDecoder), storage(storage), secondaryLogDecoder(secondaryLogDecoder), mainInputStream(std::move(mainInputStream)), markupInputStream(std::move(markupInputStream)) {}
 PrimaryLogDecoder::PrimaryLogDecoder(std::unique_ptr<LogLinkDecoder>&& linkDecoder, std::unique_ptr<LogStorage>&& storage,
@@ -13,8 +14,7 @@ PrimaryLogDecoder::PrimaryLogDecoder(std::unique_ptr<LogLinkDecoder>&& linkDecod
                                      mainInputStream(std::move(mainInputStream)), markupInputStream(std::move(markupInputStream)) {}
 
 std::vector<Token> PrimaryLogDecoder::DecodeLine() {
-    // todo: line length often fits in one byte, so we can optimize it
-    int lineLength = int(markupInputStream->ReadByte()) | int(markupInputStream->ReadByte()) << 8;
+    int lineLength = ResidueCoder::DecodeInt(*markupInputStream, 255);
     std::vector<Token> line;
     line.reserve(lineLength);
     for (auto i = 0; i < lineLength;) {

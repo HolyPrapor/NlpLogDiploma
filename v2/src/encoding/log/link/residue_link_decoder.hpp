@@ -9,7 +9,7 @@
 
 class ResidueLinkDecoder : public LogLinkDecoder {
 public:
-    explicit ResidueLinkDecoder(int maxValue = 127);
+    explicit ResidueLinkDecoder(int maxValue = 255);
     LogLink DecodeLink(BitInputStream& inputStream) override;
     Token DecodeToken(BitInputStream& inputStream) override;
 

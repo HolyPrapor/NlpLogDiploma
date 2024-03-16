@@ -53,6 +53,9 @@ static void writeLine(BitOutputStream& outputStream, const std::vector<Token>& l
 }
 
 void SubPrePcsDecoder::Decode(BitOutputStream& data) {
+    // todo: we don't know how much to read so that we can decode the line, so for now we just decode everything
+    // in memory. This is very inefficient, we must make lazy BitInputStream that reads when needed.
+    // We should probably do the same for BitOutputStream.
     primaryGenericDecoder->Decode(*primary);
     secondaryGenericDecoder->Decode(*secondary);
     markupGenericDecoder->Decode(*markup);
@@ -60,14 +63,12 @@ void SubPrePcsDecoder::Decode(BitOutputStream& data) {
     secondaryGenericDecoder->Finish();
     markupGenericDecoder->Finish();
 
-    auto i = 0;
-    while (primaryDecoder->HasNext()) {
-        if (i == 1999) {
-            i = 0;
-        }
+    while (true) {
         auto tokens = primaryDecoder->DecodeLine();
+        if (tokens.empty()) {
+            break;
+        }
         writeLine(data, tokens);
-        i++;
     }
 
     data.Flush();

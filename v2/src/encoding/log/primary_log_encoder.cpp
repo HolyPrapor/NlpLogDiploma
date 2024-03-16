@@ -3,6 +3,7 @@
 //
 
 #include "primary_log_encoder.hpp"
+#include "encoding/residue_coder.hpp"
 
 PrimaryLogEncoder::PrimaryLogEncoder(std::unique_ptr<LogLinkEncoder>&& linkEncoder, std::unique_ptr<LogStorage>&& storage,
                                      std::unique_ptr<SecondaryLogEncoder>&& secondaryLogEncoder, std::shared_ptr<BitOutputStream> mainOutputStream,
@@ -12,14 +13,10 @@ PrimaryLogEncoder::PrimaryLogEncoder(std::unique_ptr<LogLinkEncoder>&& linkEncod
                                      markupOutputStream(std::move(markupOutputStream)), minLinkLength(minLinkLength) {}
 
 void PrimaryLogEncoder::EncodeLine(const std::vector<Token>& line) {
-    // todo: come up with a smarter way to check line presence
-    markupOutputStream->Write(1);
-
     // record the length of the line
     // todo: line length often fits in one byte, so we can optimize it
     auto lineLength = int(line.size());
-    markupOutputStream->WriteByte(lineLength);
-    markupOutputStream->WriteByte(lineLength >> 8);
+    ResidueCoder::EncodeInt(*markupOutputStream, lineLength, 255);
     for (auto i = 0; i < line.size();) {
         auto link = storage->TryLink(line, i);
         if (link.has_value() && link.value().Length >= minLinkLength) {
@@ -45,7 +42,7 @@ void PrimaryLogEncoder::EncodeLine(const std::vector<Token>& line) {
 
 void PrimaryLogEncoder::Finish() {
     // no more lines
-    markupOutputStream->Write(0);
+    ResidueCoder::EncodeInt(*markupOutputStream, 0, 255);
 
     mainOutputStream->Close();
     secondaryLogEncoder->Finish();
