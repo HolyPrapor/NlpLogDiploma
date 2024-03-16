@@ -13,6 +13,7 @@ class ArithmeticDecoder : public BaseCoder {
 private:
     std::shared_ptr<BitInputStream> input_stream_;
     std::uint64_t code_;
+    bool initialized_ = false;
     bool ReadCodeBit();
 
 protected:

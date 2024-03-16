@@ -5,14 +5,17 @@
 #include "arithmetic_decoder.hpp"
 ArithmeticDecoder::ArithmeticDecoder(const std::uint64_t &num_bits,
                                             std::shared_ptr<BitInputStream> input_stream)
-        : BaseCoder(num_bits), code_{0} {
-    input_stream_ = std::move(input_stream);
-    for (auto i = 0; i < num_bits_; ++i) {
-        code_ = code_ << 1 | ReadCodeBit();
-    }
+        : BaseCoder(num_bits), code_{0}, input_stream_{std::move(input_stream)} {
 }
 
 Token ArithmeticDecoder::Read(const std::vector<int> &frequencies) {
+    if (!initialized_) {
+        for (auto i = 0; i < num_bits_; ++i) {
+            code_ = code_ << 1 | ReadCodeBit();
+        }
+        initialized_ = true;
+    }
+
     const auto value = ((code_ - low_ + 1) * frequencies.back() - 1) / (high_ - low_ + 1);
     int start = 0;
     int end = static_cast<int>(frequencies.size());

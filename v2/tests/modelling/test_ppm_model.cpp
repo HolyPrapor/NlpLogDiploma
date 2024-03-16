@@ -95,5 +95,10 @@ TEST_CASE("PPM arithmetic coding round-trip", "[PPMCoder]") {
         encodeAndDecode(weirdString, tempFilePath);
     }
 
+    SECTION("Another regression") {
+        std::string logString = "2016-09-28 04:30:30, Info                  CBS    Starting TrustedInstaller initialization.\n2016-09-28 04:30:30, Info                  CBS    Loaded Servicing Stack v6.1.7601.23505 with Core: C:\\Windows\\winsxs\\amd64_microsoft-windows-servicingstack_31bf3856ad364e35_6.1.7601.23505_none_681aa442f6fed7f0\\cbscore.dll";
+        encodeAndDecode(logString, tempFilePath);
+    }
+
     fs::remove(tempFilePath);
 }

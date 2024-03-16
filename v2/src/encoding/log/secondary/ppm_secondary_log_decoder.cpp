@@ -5,8 +5,8 @@
 #include "ppm_secondary_log_decoder.hpp"
 #include "encoding/generic/modelling_decoder.hpp"
 
-PPMSecondaryLogDecoder::PPMSecondaryLogDecoder(std::shared_ptr<BitInputStream> inputStream) : inputStream(std::move(inputStream)) {
-    modellingDecoder = std::make_unique<ModellingDecoder>(ModellingDecoder::CreateDefault(this->inputStream));
+PPMSecondaryLogDecoder::PPMSecondaryLogDecoder(const std::shared_ptr<BitInputStream> &inputStream) {
+    modellingDecoder = std::make_unique<ModellingDecoder>(ModellingDecoder::CreateDefault(inputStream));
 }
 
 Token PPMSecondaryLogDecoder::DecodeToken() {
@@ -20,5 +20,5 @@ void PPMSecondaryLogDecoder::Feed(const std::vector<Token>& line, const int& sta
 }
 
 void PPMSecondaryLogDecoder::FinishLine() {
-    modellingDecoder->ClearContext();
+//    modellingDecoder->ClearContext();
 }

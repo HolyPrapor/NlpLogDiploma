@@ -23,8 +23,8 @@ void PrimaryLogEncoder::EncodeLine(const std::vector<Token>& line) {
             // 0 means link
             markupOutputStream->Write(0);
             linkEncoder->EncodeLink(*mainOutputStream, link.value());
-            i += link.value().Length;
             secondaryLogEncoder->Feed(line, i, link.value().Length);
+            i += link.value().Length;
         }
         else {
             // 1 means single token

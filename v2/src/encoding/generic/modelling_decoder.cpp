@@ -4,9 +4,9 @@
 
 #include "modelling_decoder.hpp"
 
-ModellingDecoder ModellingDecoder::CreateDefault(std::shared_ptr<BitInputStream> inputStream) {
-    auto model = std::make_unique<PPMDecoderModel>(3);
-    auto decoder = std::make_unique<ArithmeticDecoder>(32, std::move(inputStream));
+ModellingDecoder ModellingDecoder::CreateDefault(const std::shared_ptr<BitInputStream> &inputStream) {
+    auto model = std::make_unique<PPMDecoderModel>(5);
+    auto decoder = std::make_unique<ArithmeticDecoder>(32, inputStream);
     return ModellingDecoder(std::move(model), std::move(decoder));
 }
 
@@ -37,12 +37,9 @@ Token ModellingDecoder::Decode() {
 }
 
 void ModellingDecoder::Feed(const Token &token) {
+    model->UpdateTrie();
     model->Feed(token);
 }
 
 void ModellingDecoder::Finish() {
-}
-
-void ModellingDecoder::ClearContext() {
-    model->ClearContext();
 }

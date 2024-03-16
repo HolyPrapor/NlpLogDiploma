@@ -6,8 +6,7 @@
 
 ArithmeticEncoder::ArithmeticEncoder(const std::uint64_t &num_bits,
                                             std::shared_ptr<BitOutputStream> output_stream)
-        : BaseCoder(num_bits), num_underflow_(0) {
-    output_stream_ = std::move(output_stream);
+        : BaseCoder(num_bits), num_underflow_(0), output_stream_{std::move(output_stream)} {
 }
 
 void ArithmeticEncoder::Write(const std::vector<int> &frequencies, const Token &symbol) {

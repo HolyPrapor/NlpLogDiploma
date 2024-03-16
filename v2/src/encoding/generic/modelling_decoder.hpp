@@ -16,10 +16,9 @@ public:
     void Decode(BitOutputStream& data) override;
     Token Decode();
     void Feed(const Token& token);
-    void ClearContext();
     void Finish() override;
 
-    static ModellingDecoder CreateDefault(std::shared_ptr<BitInputStream> inputStream);
+    static ModellingDecoder CreateDefault(const std::shared_ptr<BitInputStream> &inputStream);
 
 private:
     std::unique_ptr<PPMDecoderModel> model;

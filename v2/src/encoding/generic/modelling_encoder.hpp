@@ -16,10 +16,9 @@ public:
     void Encode(BitInputStream& inputStream) override;
     void Encode(const Token& token);
     void Feed(const Token& token);
-    void ClearContext();
     void Finish() override;
 
-    static ModellingEncoder CreateDefault(std::shared_ptr<BitOutputStream> outputStream);
+    static ModellingEncoder CreateDefault(const std::shared_ptr<BitOutputStream> &outputStream);
 
 private:
     std::vector<unsigned char> buffer;

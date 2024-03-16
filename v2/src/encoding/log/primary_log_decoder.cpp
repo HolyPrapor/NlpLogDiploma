@@ -29,8 +29,8 @@ std::vector<Token> PrimaryLogDecoder::DecodeLine() {
             for (auto j = 0; j < link.Length; j++) {
                 line.push_back(storedLine[link.StartIndex + j]);
             }
+            secondaryLogDecoder->Feed(storedLine, link.StartIndex, link.Length);
             i += link.Length;
-            secondaryLogDecoder->Feed(line, i, link.Length);
         }
     }
     storage->Store(line);

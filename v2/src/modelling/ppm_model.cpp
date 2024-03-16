@@ -115,6 +115,7 @@ struct PPMBaseModel::Impl {
     Trie trie;
     std::vector<Token> context;
     std::vector<int> uniform_frequencies;
+    bool updated_trie = false;
 };
 
 PPMBaseModel::PPMBaseModel(int context_size, int alphabet_size)
@@ -145,10 +146,7 @@ void PPMBaseModel::Feed(const Token& next_token) {
     if (static_cast<int>(impl->context.size()) > context_size + 1) {
         impl->context.erase(impl->context.begin());
     }
-}
-
-void PPMBaseModel::ClearContext() {
-    impl->context.clear();
+    impl->updated_trie = false;
 }
 
 // todo: remove current symbol from the context to eliminate implicit dependency between EncodeNextToken and Feed
@@ -173,7 +171,11 @@ Token PPMEncoderModel::DecodeNextToken(ArithmeticDecoder& decoder) {
 }
 
 void PPMBaseModel::UpdateTrie() {
+    if (impl->updated_trie) {
+        return;
+    }
     impl->trie.Update(impl->context, 0, static_cast<int>(impl->context.size()));
+    impl->updated_trie = true;
 }
 
 Distribution PPMBaseModel::GetCurrentDistribution() {

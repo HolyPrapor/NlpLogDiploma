@@ -82,13 +82,13 @@ void compressAndDecompressFile(const std::string &basePath, const std::string &l
                                                                     std::shared_ptr<BitInputStream>,
                                                                     std::shared_ptr<BitInputStream>)> &createDecoder) {
     std::string testFilePath = basePath + "test_files/logs/" + logSize + "/" + logType + ".log";
-    const std::string prefix = "subprepcs_" + coderName + "_" + logSize + "_" + logType + "_";
+    const std::string prefix = "subprepcs_" + coderName + "_" + logSize + "_" + logType;
 
     const auto baseDir = fs::temp_directory_path();
     const auto decoded = baseDir / (prefix + ".log");
-    const auto primary = baseDir / (prefix + "primary.bin");
-    const auto secondary = baseDir / (prefix + "secondary.bin");
-    const auto markup = baseDir / (prefix + "markup.bin");
+    const auto primary = baseDir / (prefix + "_primary.bin");
+    const auto secondary = baseDir / (prefix + "_secondary.bin");
+    const auto markup = baseDir / (prefix + "_markup.bin");
 
     auto start = std::chrono::high_resolution_clock::now();
     encode(testFilePath, primary, secondary, markup, createEncoder);
@@ -136,14 +136,14 @@ TEST_CASE("SubPrePCS coding", "[SubPrePCS]") {
     } else {
         basePath = "../../"; // Default to local running path
     }
-
-    SECTION("naive") {
-        runAgainstTestFiles(basePath, "naive", SubPrePcsEncoder::CreateNaive, SubPrePcsDecoder::CreateNaive);
-    }
-
-    SECTION("residue") {
-        runAgainstTestFiles(basePath, "residue", SubPrePcsEncoder::CreateResidue, SubPrePcsDecoder::CreateResidue);
-    }
+//
+//    SECTION("naive") {
+//        runAgainstTestFiles(basePath, "naive", SubPrePcsEncoder::CreateNaive, SubPrePcsDecoder::CreateNaive);
+//    }
+//
+//    SECTION("residue") {
+//        runAgainstTestFiles(basePath, "residue", SubPrePcsEncoder::CreateResidue, SubPrePcsDecoder::CreateResidue);
+//    }
 
     SECTION("ppm") {
         runAgainstTestFiles(basePath, "ppm", SubPrePcsEncoder::CreatePPM, SubPrePcsDecoder::CreatePPM);

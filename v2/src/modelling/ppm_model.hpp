@@ -17,7 +17,6 @@ protected:
     std::unique_ptr<Impl> impl;
 
     Token GetEscapeToken() const;
-    void UpdateTrie();
 
 public:
     int context_size, alphabet_size;
@@ -26,7 +25,7 @@ public:
     Token GetEndOfFileToken() override;
     Distribution GetCurrentDistribution() override;
     void Feed(const Token& next_token) override;
-    void ClearContext();
+    void UpdateTrie();
 };
 
 class PPMEncoderModel : public PPMBaseModel {
