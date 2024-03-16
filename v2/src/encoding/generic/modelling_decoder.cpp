@@ -30,9 +30,19 @@ void ModellingDecoder::Decode(BitOutputStream &data) {
     data.WriteAll(buffer);
 }
 
+Token ModellingDecoder::Decode() {
+    auto token = model->DecodeNextToken(*decoder);
+    model->Feed(token);
+    return token;
+}
+
 void ModellingDecoder::Feed(const Token &token) {
     model->Feed(token);
 }
 
 void ModellingDecoder::Finish() {
+}
+
+void ModellingDecoder::ClearContext() {
+    model->ClearContext();
 }

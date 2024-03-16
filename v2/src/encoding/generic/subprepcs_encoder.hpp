@@ -23,6 +23,7 @@ public:
 
     static SubPrePcsEncoder CreateNaive(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup);
     static SubPrePcsEncoder CreateResidue(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup);
+    static SubPrePcsEncoder CreatePPM(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup);
 
 private:
     std::unique_ptr<PrimaryLogEncoder> primaryEncoder;

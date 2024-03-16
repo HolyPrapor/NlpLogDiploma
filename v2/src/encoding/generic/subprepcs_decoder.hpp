@@ -22,6 +22,7 @@ public:
 
     static SubPrePcsDecoder CreateNaive(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup);
     static SubPrePcsDecoder CreateResidue(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup);
+    static SubPrePcsDecoder CreatePPM(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup);
 
 private:
     std::unique_ptr<PrimaryLogDecoder> primaryDecoder;

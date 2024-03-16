@@ -14,6 +14,7 @@ class ModellingEncoder : public GenericEncoder {
 public:
     explicit ModellingEncoder(std::unique_ptr<PPMEncoderModel>&& model, std::unique_ptr<ArithmeticEncoder>&& encoder);
     void Encode(BitInputStream& inputStream) override;
+    void Encode(const Token& token);
     void Feed(const Token& token);
     void ClearContext();
     void Finish() override;

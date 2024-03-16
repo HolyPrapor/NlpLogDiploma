@@ -144,4 +144,8 @@ TEST_CASE("SubPrePCS coding", "[SubPrePCS]") {
     SECTION("residue") {
         runAgainstTestFiles(basePath, "residue", SubPrePcsEncoder::CreateResidue, SubPrePcsDecoder::CreateResidue);
     }
+
+    SECTION("ppm") {
+        runAgainstTestFiles(basePath, "ppm", SubPrePcsEncoder::CreatePPM, SubPrePcsDecoder::CreatePPM);
+    }
 }

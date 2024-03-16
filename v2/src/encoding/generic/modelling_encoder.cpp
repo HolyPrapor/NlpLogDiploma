@@ -5,7 +5,7 @@
 #include "modelling_encoder.hpp"
 
 ModellingEncoder ModellingEncoder::CreateDefault(std::shared_ptr<BitOutputStream> outputStream) {
-    auto model = std::make_unique<PPMEncoderModel>(4);
+    auto model = std::make_unique<PPMEncoderModel>(3);
     auto encoder = std::make_unique<ArithmeticEncoder>(32, std::move(outputStream));
     return ModellingEncoder(std::move(model), std::move(encoder));
 }
@@ -20,9 +20,13 @@ void ModellingEncoder::Encode(BitInputStream &inputStream) {
 
     auto tokens = model->TokenizeChunk(buffer);
     for (Token token : tokens) {
-        model->Feed(token);
-        model->EncodeNextToken(*encoder, token);
+        Encode(token);
     }
+}
+
+void ModellingEncoder::Encode(const Token &token) {
+    model->Feed(token);
+    model->EncodeNextToken(*encoder, token);
 }
 
 void ModellingEncoder::Feed(const Token &token) {
