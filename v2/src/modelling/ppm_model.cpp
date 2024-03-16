@@ -147,6 +147,10 @@ void PPMBaseModel::Feed(const Token& next_token) {
     }
 }
 
+void PPMBaseModel::ClearContext() {
+    impl->context.clear();
+}
+
 // todo: remove current symbol from the context to eliminate implicit dependency between EncodeNextToken and Feed
 void PPMEncoderModel::EncodeNextToken(ArithmeticEncoder& encoder, const Token& token) {
     for (int size = std::min(context_size, static_cast<int>(impl->context.size()) - 1); size >= 0; --size) {

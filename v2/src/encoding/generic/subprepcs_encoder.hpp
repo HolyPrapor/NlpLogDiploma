@@ -21,7 +21,8 @@ public:
     void Encode(BitInputStream& inputStream) override;
     void Finish() override;
 
-    static SubPrePcsEncoder CreateDefault(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup);
+    static SubPrePcsEncoder CreateNaive(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup);
+    static SubPrePcsEncoder CreateResidue(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup);
 
 private:
     std::unique_ptr<PrimaryLogEncoder> primaryEncoder;

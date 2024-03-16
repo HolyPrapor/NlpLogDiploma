@@ -14,6 +14,8 @@ class ModellingDecoder : public GenericDecoder {
 public:
     explicit ModellingDecoder(std::unique_ptr<PPMDecoderModel>&& model, std::unique_ptr<ArithmeticDecoder>&& decoder);
     void Decode(BitOutputStream& data) override;
+    void Feed(const Token& token);
+    void ClearContext();
     void Finish() override;
 
     static ModellingDecoder CreateDefault(std::shared_ptr<BitInputStream> inputStream);

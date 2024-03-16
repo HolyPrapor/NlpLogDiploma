@@ -25,6 +25,14 @@ void ModellingEncoder::Encode(BitInputStream &inputStream) {
     }
 }
 
+void ModellingEncoder::Feed(const Token &token) {
+    model->Feed(token);
+}
+
+void ModellingEncoder::ClearContext() {
+    model->ClearContext();
+}
+
 void ModellingEncoder::Finish() {
     auto lastToken = model->GetEndOfFileToken();
     model->Feed(lastToken);

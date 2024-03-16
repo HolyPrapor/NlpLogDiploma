@@ -26,6 +26,7 @@ public:
     Token GetEndOfFileToken() override;
     Distribution GetCurrentDistribution() override;
     void Feed(const Token& next_token) override;
+    void ClearContext();
 };
 
 class PPMEncoderModel : public PPMBaseModel {

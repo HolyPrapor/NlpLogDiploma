@@ -20,7 +20,8 @@ public:
     void Decode(BitOutputStream& data) override;
     void Finish() override;
 
-    static SubPrePcsDecoder CreateDefault(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup);
+    static SubPrePcsDecoder CreateNaive(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup);
+    static SubPrePcsDecoder CreateResidue(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup);
 
 private:
     std::unique_ptr<PrimaryLogDecoder> primaryDecoder;
