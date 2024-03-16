@@ -70,8 +70,8 @@ void compressAndDecompressFile(const std::string& basePath, const std::string& l
     SECTION("Compare: " + logSize + "-" + logType) {
         auto originalSize = fs::file_size(testFilePath);
         auto compressedSize = fs::file_size(tempPrimaryFilePath) + fs::file_size(tempSecondaryFilePath) + fs::file_size(tempMarkupFilePath);
-        std::cout << "Compressed log size: " << compressedSize << " bytes" << std::endl;
-        std::cout << "Original log size: " << originalSize << " bytes" << std::endl;
+        std::cout << "Compressed " << logSize << "-" << logType << " size: " << compressedSize << " bytes" << std::endl;
+        std::cout << "Original " << logSize << "-" << logType <<  " size: "  << originalSize << " bytes" << std::endl;
         REQUIRE(compressedSize < originalSize);
         REQUIRE(areFilesEqual(*std::make_shared<std::ifstream>(testFilePath), *std::make_shared<std::ifstream>(decodedFilePath)));
     }
