@@ -27,57 +27,78 @@ bool areFilesEqual(std::ifstream& file1, std::ifstream& file2) {
     return iter1 == end && iter2 == end; // Files are equal if both are at the end
 }
 
+void saveToCsv(const std::string& logSize, const std::string& logType, ulong originalSize, ulong compressedSize, long compressionMs, long decompressionMs) {
+    const auto resultsPath = fs::temp_directory_path() / "subprepcs_results.csv";
+    std::ofstream csvFile;
+    csvFile.open(resultsPath, std::ios::app);
+
+    if (csvFile.tellp() == 0) {
+        csvFile << "logSize,logType,originalSize,compressedSize,compressionMs,decompressionMs" << std::endl;
+    }
+
+    csvFile << logSize << "," << logType << "," << originalSize << "," << compressedSize << "," << compressionMs << "," << decompressionMs << std::endl;
+    csvFile.close();
+}
+
+void encode(const std::string& testFile, const std::string& primary, const std::string& secondary, const std::string& markup) {
+    auto primaryFile = std::make_shared<std::ofstream>(primary, std::ios::binary);
+    auto primaryStream = std::make_shared<BitOutputStream>(primaryFile);
+    auto secondaryFile = std::make_shared<std::ofstream>(secondary, std::ios::binary);
+    auto secondaryStream = std::make_shared<BitOutputStream>(secondaryFile);
+    auto markupFile = std::make_shared<std::ofstream>(markup, std::ios::binary);
+    auto markupStream = std::make_shared<BitOutputStream>(markupFile);
+
+    auto subPrePcsEncoder = SubPrePcsEncoder::CreateDefault(primaryStream, secondaryStream, markupStream);
+    auto logData = std::make_shared<std::ifstream>(testFile, std::ios::binary);
+    auto logBitData = std::make_shared<BitInputStream>(logData);
+    subPrePcsEncoder.Encode(*logBitData);
+    subPrePcsEncoder.Finish();
+}
+
+void decode(const std::string& primary, const std::string& secondary, const std::string& markup, const std::string& decoded) {
+    auto primaryFile = std::make_shared<std::ifstream>(primary, std::ios::binary);
+    auto primaryStream = std::make_shared<BitInputStream>(primaryFile);
+    auto secondaryFile = std::make_shared<std::ifstream>(secondary, std::ios::binary);
+    auto secondaryStream = std::make_shared<BitInputStream>(secondaryFile);
+    auto markupFile = std::make_shared<std::ifstream>(markup, std::ios::binary);
+    auto markupStream = std::make_shared<BitInputStream>(markupFile);
+
+    auto subPrePcsDecoder = SubPrePcsDecoder::CreateDefault(primaryStream, secondaryStream, markupStream);
+    auto logData = std::make_shared<std::ofstream>(decoded, std::ios::binary);
+    auto logBitData = std::make_shared<BitOutputStream>(logData);
+    subPrePcsDecoder.Decode(*logBitData);
+    subPrePcsDecoder.Finish();
+}
+
 void compressAndDecompressFile(const std::string& basePath, const std::string& logSize, const std::string& logType) {
     std::string testFilePath = basePath + "test_files/logs/" + logSize + "/" + logType + ".log";
     const std::string prefix = "subprepcs_" + logSize + "_" + logType;
 
-    const auto tempDir = fs::temp_directory_path();
-    const auto decodedFilePath = tempDir / (prefix + ".log");
-    const auto tempPrimaryFilePath = tempDir / (prefix + "primary.bin");
-    const auto tempSecondaryFilePath = tempDir / (prefix + "secondary.bin");
-    const auto tempMarkupFilePath = tempDir / (prefix + "markup.bin");
+    const auto baseDir = fs::temp_directory_path();
+    const auto decoded = baseDir / (prefix + ".log");
+    const auto primary = baseDir / (prefix + "primary.bin");
+    const auto secondary = baseDir / (prefix + "secondary.bin");
+    const auto markup = baseDir / (prefix + "markup.bin");
 
-    SECTION("Encode: " + logSize + "-" + logType) {
-        auto tempPrimary = std::make_shared<std::ofstream>(tempPrimaryFilePath, std::ios::binary);
-        auto tempBitPrimary = std::make_shared<BitOutputStream>(tempPrimary);
-        auto tempSecondary = std::make_shared<std::ofstream>(tempSecondaryFilePath, std::ios::binary);
-        auto tempBitSecondary = std::make_shared<BitOutputStream>(tempSecondary);
-        auto tempMarkup = std::make_shared<std::ofstream>(tempMarkupFilePath, std::ios::binary);
-        auto tempBitMarkup = std::make_shared<BitOutputStream>(tempMarkup);
+    auto start = std::chrono::high_resolution_clock::now();
+    encode(testFilePath, primary, secondary, markup);
+    auto encodeEnd = std::chrono::high_resolution_clock::now();
+    auto encodeMs = std::chrono::duration_cast<std::chrono::milliseconds>(encodeEnd - start).count();
 
-        auto subPrePcsEncoder = SubPrePcsEncoder::CreateDefault(tempBitPrimary, tempBitSecondary, tempBitMarkup);
-        auto logData = std::make_shared<std::ifstream>(testFilePath, std::ios::binary);
-        auto logBitData = std::make_shared<BitInputStream>(logData);
-        subPrePcsEncoder.Encode(*logBitData);
-        subPrePcsEncoder.Finish();
-    }
+    auto startDecode = std::chrono::high_resolution_clock::now();
+    decode(primary, secondary, markup, decoded);
+    auto decodeEnd = std::chrono::high_resolution_clock::now();
+    auto decodeMs = std::chrono::duration_cast<std::chrono::milliseconds>(decodeEnd - startDecode).count();
 
-    SECTION("Decode: " + logSize + "-" + logType) {
-        auto tempPrimary = std::make_shared<std::ifstream>(tempPrimaryFilePath, std::ios::binary);
-        auto tempBitPrimary = std::make_shared<BitInputStream>(tempPrimary);
-        auto tempSecondary = std::make_shared<std::ifstream>(tempSecondaryFilePath, std::ios::binary);
-        auto tempBitSecondary = std::make_shared<BitInputStream>(tempSecondary);
-        auto tempMarkup = std::make_shared<std::ifstream>(tempMarkupFilePath, std::ios::binary);
-        auto tempBitMarkup = std::make_shared<BitInputStream>(tempMarkup);
-
-        auto subPrePcsDecoder = SubPrePcsDecoder::CreateDefault(tempBitPrimary, tempBitSecondary, tempBitMarkup);
-        auto logData = std::make_shared<std::ofstream>(decodedFilePath, std::ios::binary);
-        auto logBitData = std::make_shared<BitOutputStream>(logData);
-        subPrePcsDecoder.Decode(*logBitData);
-        subPrePcsDecoder.Finish();
-    }
-
-    SECTION("Compare: " + logSize + "-" + logType) {
-        auto originalSize = fs::file_size(testFilePath);
-        auto compressedSize = fs::file_size(tempPrimaryFilePath) + fs::file_size(tempSecondaryFilePath) + fs::file_size(tempMarkupFilePath);
-        std::cout << "Compressed " << logSize << "-" << logType << " size: " << compressedSize << " bytes" << std::endl;
-        std::cout << "Original " << logSize << "-" << logType <<  " size: "  << originalSize << " bytes" << std::endl;
-        REQUIRE(compressedSize < originalSize);
-        REQUIRE(areFilesEqual(*std::make_shared<std::ifstream>(testFilePath), *std::make_shared<std::ifstream>(decodedFilePath)));
-    }
+    auto originalSize = fs::file_size(testFilePath);
+    auto compressedSize = fs::file_size(primary) + fs::file_size(secondary) + fs::file_size(markup);
+    REQUIRE(compressedSize < originalSize);
+    REQUIRE(areFilesEqual(*std::make_shared<std::ifstream>(testFilePath), *std::make_shared<std::ifstream>(decoded)));
+    std::cout << "Compressed " << logSize << "-" << logType << " size: " << compressedSize << " bytes" << std::endl;
+    std::cout << "Original " << logSize << "-" << logType <<  " size: "  << originalSize << " bytes" << std::endl;
+    saveToCsv(logSize, logType, originalSize, compressedSize, encodeMs, decodeMs);
 
     // keep the files for debugging
-    //    fs::remove(tempFilePath);
 }
 
 TEST_CASE("SubPrePCS coding", "[SubPrePCS]") {
@@ -92,7 +113,9 @@ TEST_CASE("SubPrePCS coding", "[SubPrePCS]") {
         auto dirName = p.path().filename().string();
         for (auto& file: fs::directory_iterator(p.path())) {
             auto fileName = file.path().stem().string();
-            compressAndDecompressFile(basePath, dirName, fileName);
+            SECTION(dirName + "/" + fileName) {
+                compressAndDecompressFile(basePath, dirName, fileName);
+            }
         }
     }
 }
