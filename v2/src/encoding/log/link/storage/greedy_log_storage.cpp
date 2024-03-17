@@ -15,8 +15,12 @@ void GreedyLogStorage::Store(const std::vector<Token>& log) {
 }
 
 // find the longest matching substring across all stored logs
-std::optional<LogLink> GreedyLogStorage::TryLink(const std::vector<Token>& log, const int& startIndex) {
-    return TryLinkGreedily(storage_, log, startIndex);
+std::optional<LogLink> GreedyLogStorage::TryLink(const std::vector<Token>& log, const int& startIndex, const int& minLength) {
+    auto link = TryLinkGreedily(storage_, log, startIndex);
+    if (link.has_value() && link->Length >= minLength) {
+        return link;
+    }
+    return std::nullopt;
 }
 
 // todo: this is probably not the most efficient way to get the log

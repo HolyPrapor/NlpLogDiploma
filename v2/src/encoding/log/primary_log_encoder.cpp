@@ -18,8 +18,8 @@ void PrimaryLogEncoder::EncodeLine(const std::vector<Token>& line) {
     auto lineLength = int(line.size());
     ResidueCoder::EncodeInt(*markupOutputStream, lineLength, 255);
     for (auto i = 0; i < line.size();) {
-        auto link = storage->TryLink(line, i);
-        if (link.has_value() && link.value().Length >= minLinkLength) {
+        auto link = storage->TryLink(line, i, minLinkLength);
+        if (link.has_value()) {
             // 0 means link
             markupOutputStream->Write(0);
             linkEncoder->EncodeLink(*mainOutputStream, link.value());

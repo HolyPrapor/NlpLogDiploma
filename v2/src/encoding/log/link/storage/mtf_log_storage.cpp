@@ -5,6 +5,14 @@
 #include "mtf_log_storage.hpp"
 #include "vector_search.hpp"
 
+static void moveToFront(std::list<std::vector<Token>>& storage, int index) {
+    auto it = storage.begin();
+    std::advance(it, index);
+    auto record = *it;
+    storage.erase(it);
+    storage.push_back(record);
+}
+
 MtfLogStorage::MtfLogStorage(int maxLogSize) : maxLogSize_(maxLogSize) {}
 
 void MtfLogStorage::Store(const std::vector<Token>& log) {
@@ -14,21 +22,18 @@ void MtfLogStorage::Store(const std::vector<Token>& log) {
     }
 }
 
-std::optional<LogLink> MtfLogStorage::TryLink(const std::vector<Token>& log, const int& startIndex) {
+std::optional<LogLink> MtfLogStorage::TryLink(const std::vector<Token>& log, const int& startIndex, const int& minLength) {
     auto link = TryLinkGreedily(storage_, log, startIndex);
-    if (link.has_value()) {
-        auto record = storage_.begin();
-        std::advance(record, link->RecordIndex);
-        storage_.erase(record);
-        storage_.push_front(*record);
+    if (link.has_value() && link->Length >= minLength) {
+        moveToFront(storage_, link->RecordIndex);
+        return link;
     }
-    return link;
+    return std::nullopt;
 }
 
 const std::vector<Token>& MtfLogStorage::GetLog(int index) {
-    auto it = storage_.begin();
-    std::advance(it, index);
-    return *it;
+    moveToFront(storage_, index);
+    return storage_.back();
 }
 
 int MtfLogStorage::GetSize() {

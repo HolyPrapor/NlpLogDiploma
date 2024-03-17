@@ -13,7 +13,7 @@
 class LogStorage {
 public:
     virtual void Store(const std::vector<Token>& log) = 0;
-    virtual std::optional<LogLink> TryLink(const std::vector<Token>& log, const int& startIndex) = 0;
+    virtual std::optional<LogLink> TryLink(const std::vector<Token>& log, const int& startIndex, const int& minLength = 1) = 0;
     virtual const std::vector<Token>& GetLog(int index) = 0;
     virtual int GetSize() = 0;
 };
