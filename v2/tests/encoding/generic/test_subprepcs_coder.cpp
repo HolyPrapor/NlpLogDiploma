@@ -105,6 +105,7 @@ void compressAndDecompressFile(const std::string &basePath, const std::string &l
     auto compressedSize = fs::file_size(primary) + fs::file_size(secondary) + fs::file_size(markup);
     REQUIRE(compressedSize < originalSize);
     REQUIRE(areFilesEqual(*std::make_shared<std::ifstream>(testFilePath), *std::make_shared<std::ifstream>(decoded)));
+    std::cout << coderName << " " << logSize << "-" << logType << " compression ratio: " << (double)compressedSize / originalSize << std::endl;
     std::cout << "Compressed " << logSize << "-" << logType << " size: " << compressedSize << " bytes" << std::endl;
     std::cout << "Original " << logSize << "-" << logType <<  " size: "  << originalSize << " bytes" << std::endl;
     saveToCsv(coderName, logSize, logType, originalSize, compressedSize, encodeMs, decodeMs);
@@ -155,7 +156,7 @@ TEST_CASE("SubPrePCS coding", "[SubPrePCS]") {
     }
 
     SECTION("ppm with mtf") {
-        runAgainstTestFiles(basePath, "ppm",
+        runAgainstTestFiles(basePath, "ppm-mtf",
                             [](std::shared_ptr<BitOutputStream> p, std::shared_ptr<BitOutputStream> s, std::shared_ptr<BitOutputStream> m) -> SubPrePcsEncoder {return SubPrePcsEncoder::CreatePPM(p, s, m, nullptr, std::make_unique<MtfLogStorage>(255)); },
                             [](std::shared_ptr<BitInputStream> p, std::shared_ptr<BitInputStream> s, std::shared_ptr<BitInputStream> m) -> SubPrePcsDecoder {return SubPrePcsDecoder::CreatePPM(p, s, m, nullptr, std::make_unique<MtfLogStorage>(255)); });
     }
