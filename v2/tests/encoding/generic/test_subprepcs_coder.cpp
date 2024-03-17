@@ -105,7 +105,7 @@ void compressAndDecompressFile(const std::string &basePath, const std::string &l
     auto compressedSize = fs::file_size(primary) + fs::file_size(secondary) + fs::file_size(markup);
     REQUIRE(compressedSize < originalSize);
     REQUIRE(areFilesEqual(*std::make_shared<std::ifstream>(testFilePath), *std::make_shared<std::ifstream>(decoded)));
-    std::cout << coderName << " " << logSize << "-" << logType << " compression ratio: " << (double)compressedSize / originalSize << std::endl;
+    std::cout << coderName << " " << logSize << "-" << logType << " compression ratio: " << (double)originalSize / compressedSize  << std::endl;
     std::cout << "Compressed " << logSize << "-" << logType << " size: " << compressedSize << " bytes" << std::endl;
     std::cout << "Original " << logSize << "-" << logType <<  " size: "  << originalSize << " bytes" << std::endl;
     saveToCsv(coderName, logSize, logType, originalSize, compressedSize, encodeMs, decodeMs);
