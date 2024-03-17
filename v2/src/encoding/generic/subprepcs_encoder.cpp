@@ -11,6 +11,7 @@
 #include "modelling_encoder.hpp"
 #include "encoding/log/secondary/residue_secondary_log_encoder.hpp"
 #include "encoding/log/secondary/ppm_secondary_log_encoder.hpp"
+#include "identity_encoder.hpp"
 
 SubPrePcsEncoder SubPrePcsEncoder::CreateNaive(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup,
                                                std::unique_ptr<LogLinkEncoder> linkEncoder, std::unique_ptr<LogStorage> storage) {
@@ -105,7 +106,7 @@ SubPrePcsEncoder::CreatePPM(std::shared_ptr<BitOutputStream> primary, std::share
     auto primaryEncoder = std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryInMemoryOut, markupInMemoryOut, 4);
 
     auto primaryGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(primary)));
-    auto secondaryGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(secondary)));
+    auto secondaryGenericEncoder = std::make_unique<IdentityEncoder>(std::move(secondary));
     auto markupGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(markup)));
 
     return SubPrePcsEncoder(std::move(primaryEncoder), std::move(primaryInMemoryIn), std::move(secondaryInMemoryIn), std::move(markupInMemoryIn),
