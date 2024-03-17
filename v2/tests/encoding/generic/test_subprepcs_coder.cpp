@@ -119,9 +119,9 @@ void runAgainstTestFiles(const std::string& basePath,
                          const std::function<SubPrePcsDecoder(std::shared_ptr<BitInputStream>, std::shared_ptr<BitInputStream>, std::shared_ptr<BitInputStream>)>& createDecoder) {
     for (auto& p: fs::directory_iterator(basePath + "test_files/logs/")) {
         auto dirName = p.path().filename().string();
-        if (dirName != "small") {
-            continue; // Skip non-small logs
-        }
+//        if (dirName != "small") {
+//            continue; // Skip non-small logs
+//        }
         for (auto& file: fs::directory_iterator(p.path())) {
             auto fileName = file.path().stem().string();
             SECTION(dirName + "/" + fileName) {
