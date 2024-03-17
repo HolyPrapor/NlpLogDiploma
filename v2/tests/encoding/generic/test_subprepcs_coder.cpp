@@ -11,6 +11,7 @@
 #include "encoding/utils/bit_input_stream.hpp"
 #include "encoding/generic/subprepcs_encoder.hpp"
 #include "encoding/generic/subprepcs_decoder.hpp"
+#include "encoding/log/link/storage/mtf_log_storage.hpp"
 
 namespace fs = std::filesystem;
 
@@ -136,16 +137,26 @@ TEST_CASE("SubPrePCS coding", "[SubPrePCS]") {
     } else {
         basePath = "../../"; // Default to local running path
     }
-//
-//    SECTION("naive") {
-//        runAgainstTestFiles(basePath, "naive", SubPrePcsEncoder::CreateNaive, SubPrePcsDecoder::CreateNaive);
-//    }
-//
-//    SECTION("residue") {
-//        runAgainstTestFiles(basePath, "residue", SubPrePcsEncoder::CreateResidue, SubPrePcsDecoder::CreateResidue);
-//    }
+
+    SECTION("naive") {
+        runAgainstTestFiles(basePath, "naive", [](std::shared_ptr<BitOutputStream> p, std::shared_ptr<BitOutputStream> s, std::shared_ptr<BitOutputStream> m) -> SubPrePcsEncoder {return SubPrePcsEncoder::CreateNaive(p, s, m); },
+                            [](std::shared_ptr<BitInputStream> p, std::shared_ptr<BitInputStream> s, std::shared_ptr<BitInputStream> m) -> SubPrePcsDecoder {return SubPrePcsDecoder::CreateNaive(p, s, m); });
+    }
+
+    SECTION("residue") {
+        runAgainstTestFiles(basePath, "residue", [](std::shared_ptr<BitOutputStream> p, std::shared_ptr<BitOutputStream> s, std::shared_ptr<BitOutputStream> m) -> SubPrePcsEncoder {return SubPrePcsEncoder::CreateResidue(p, s, m); },
+                            [](std::shared_ptr<BitInputStream> p, std::shared_ptr<BitInputStream> s, std::shared_ptr<BitInputStream> m) -> SubPrePcsDecoder {return SubPrePcsDecoder::CreateResidue(p, s, m); });
+    }
 
     SECTION("ppm") {
-        runAgainstTestFiles(basePath, "ppm", SubPrePcsEncoder::CreatePPM, SubPrePcsDecoder::CreatePPM);
+        runAgainstTestFiles(basePath, "ppm",
+                            [](std::shared_ptr<BitOutputStream> p, std::shared_ptr<BitOutputStream> s, std::shared_ptr<BitOutputStream> m) -> SubPrePcsEncoder {return SubPrePcsEncoder::CreatePPM(p, s, m); },
+                            [](std::shared_ptr<BitInputStream> p, std::shared_ptr<BitInputStream> s, std::shared_ptr<BitInputStream> m) -> SubPrePcsDecoder {return SubPrePcsDecoder::CreatePPM(p, s, m); });
     }
+
+//    SECTION("ppm with mtf") {
+//        runAgainstTestFiles(basePath, "ppm",
+//                            [](std::shared_ptr<BitOutputStream> p, std::shared_ptr<BitOutputStream> s, std::shared_ptr<BitOutputStream> m) -> SubPrePcsEncoder {return SubPrePcsEncoder::CreatePPM(p, s, m, nullptr, std::make_unique<MtfLogStorage>(255)); },
+//                            [](std::shared_ptr<BitInputStream> p, std::shared_ptr<BitInputStream> s, std::shared_ptr<BitInputStream> m) -> SubPrePcsDecoder {return SubPrePcsDecoder::CreatePPM(p, s, m, nullptr, std::make_unique<MtfLogStorage>(255)); });
+//    }
 }

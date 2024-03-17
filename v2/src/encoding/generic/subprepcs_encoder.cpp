@@ -12,9 +12,14 @@
 #include "encoding/log/secondary/residue_secondary_log_encoder.hpp"
 #include "encoding/log/secondary/ppm_secondary_log_encoder.hpp"
 
-SubPrePcsEncoder SubPrePcsEncoder::CreateNaive(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup) {
-    auto linkEncoder = std::make_unique<ResidueLinkEncoder>(255);
-    auto storage = std::make_unique<GreedyLogStorage>(255);
+SubPrePcsEncoder SubPrePcsEncoder::CreateNaive(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup,
+                                               std::unique_ptr<LogLinkEncoder> linkEncoder, std::unique_ptr<LogStorage> storage) {
+    if (linkEncoder == nullptr) {
+        linkEncoder = std::make_unique<ResidueLinkEncoder>(255);
+    }
+    if (storage == nullptr) {
+        storage = std::make_unique<GreedyLogStorage>(255);
+    }
 
     auto primaryInMemory = std::make_shared<std::stringstream>();
     auto secondaryInMemory = std::make_shared<std::stringstream>();
@@ -40,9 +45,14 @@ SubPrePcsEncoder SubPrePcsEncoder::CreateNaive(std::shared_ptr<BitOutputStream> 
                             std::move(primaryGenericEncoder), std::move(secondaryGenericEncoder), std::move(markupGenericEncoder));
 }
 
-SubPrePcsEncoder SubPrePcsEncoder::CreateResidue(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup) {
-    auto linkEncoder = std::make_unique<ResidueLinkEncoder>(255);
-    auto storage = std::make_unique<GreedyLogStorage>(255);
+SubPrePcsEncoder SubPrePcsEncoder::CreateResidue(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup,
+                                                 std::unique_ptr<LogLinkEncoder> linkEncoder, std::unique_ptr<LogStorage> storage) {
+    if (linkEncoder == nullptr) {
+        linkEncoder = std::make_unique<ResidueLinkEncoder>(255);
+    }
+    if (storage == nullptr) {
+        storage = std::make_unique<GreedyLogStorage>(255);
+    }
 
     auto primaryInMemory = std::make_shared<std::stringstream>();
     auto secondaryInMemory = std::make_shared<std::stringstream>();
@@ -69,10 +79,14 @@ SubPrePcsEncoder SubPrePcsEncoder::CreateResidue(std::shared_ptr<BitOutputStream
 }
 
 SubPrePcsEncoder
-SubPrePcsEncoder::CreatePPM(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary,
-                            std::shared_ptr<BitOutputStream> markup) {
-    auto linkEncoder = std::make_unique<ResidueLinkEncoder>(255);
-    auto storage = std::make_unique<GreedyLogStorage>(255);
+SubPrePcsEncoder::CreatePPM(std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup,
+                            std::unique_ptr<LogLinkEncoder> linkEncoder, std::unique_ptr<LogStorage> storage) {
+    if (linkEncoder == nullptr) {
+        linkEncoder = std::make_unique<ResidueLinkEncoder>(255);
+    }
+    if (storage == nullptr) {
+        storage = std::make_unique<GreedyLogStorage>(255);
+    }
 
     auto primaryInMemory = std::make_shared<std::stringstream>();
     auto secondaryInMemory = std::make_shared<std::stringstream>();
