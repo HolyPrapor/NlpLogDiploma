@@ -1,5 +1,5 @@
 //
-// Created by zeliboba on 3/1/24.
+// Created by zeliboba on 3/1/26.
 //
 
 #include <vector>
@@ -36,7 +36,7 @@ SubPrePcsEncoder SubPrePcsEncoder::CreateNaive(std::shared_ptr<BitOutputStream> 
     auto markupInMemoryOut = std::make_shared<BitOutputStream>(markupInMemory);
 
     auto secondaryEncoder = std::make_unique<NaiveSecondaryLogEncoder>(secondaryInMemoryOut);
-    auto primaryEncoder = std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryInMemoryOut, markupInMemoryOut, 4);
+    auto primaryEncoder = std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryInMemoryOut, markupInMemoryOut, 6);
 
     auto primaryGenericEncoder = ModellingEncoder::CreateDefault(primary);
     auto secondaryGenericEncoder = ModellingEncoder::CreateDefault(secondary);
@@ -69,7 +69,7 @@ SubPrePcsEncoder SubPrePcsEncoder::CreateResidue(std::shared_ptr<BitOutputStream
     auto markupInMemoryOut = std::make_shared<BitOutputStream>(markupInMemory);
 
     auto secondaryEncoder = std::make_unique<ResidueSecondaryLogEncoder>(secondaryInMemoryOut);
-    auto primaryEncoder = std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryInMemoryOut, markupInMemoryOut, 4);
+    auto primaryEncoder = std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryInMemoryOut, markupInMemoryOut, 6);
 
     auto primaryGenericEncoder = ModellingEncoder::CreateDefault(primary);
     auto secondaryGenericEncoder = ModellingEncoder::CreateDefault(secondary);
@@ -103,7 +103,7 @@ SubPrePcsEncoder::CreatePPM(std::shared_ptr<BitOutputStream> primary, std::share
     auto markupInMemoryOut = std::make_shared<BitOutputStream>(markupInMemory);
 
     auto secondaryEncoder = std::make_unique<PPMSecondaryLogEncoder>(secondaryInMemoryOut);
-    auto primaryEncoder = std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryInMemoryOut, markupInMemoryOut, 4);
+    auto primaryEncoder = std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryInMemoryOut, markupInMemoryOut, 6);
 
     auto primaryGenericEncoder = ModellingEncoder::CreateDefault(primary);
     auto secondaryGenericEncoder = std::make_unique<IdentityEncoder>(secondary);
