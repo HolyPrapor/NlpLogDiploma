@@ -12,6 +12,7 @@
 class ResidueSecondaryLogEncoder : public SecondaryLogEncoder {
 public:
     explicit ResidueSecondaryLogEncoder(std::shared_ptr<BitOutputStream> outputStream);
+    ~ResidueSecondaryLogEncoder() override = default;
 
     void EncodeToken(const Token& token) override;
 
@@ -21,7 +22,7 @@ public:
 
     void Finish() override;
 private:
-    std::shared_ptr<ModellingEncoder> encoder;
+    std::unique_ptr<ModellingEncoder> encoder;
     std::shared_ptr<BitOutputStream> outputStream;
 };
 

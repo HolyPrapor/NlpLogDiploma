@@ -12,13 +12,14 @@
 
 class ModellingEncoder : public GenericEncoder {
 public:
+    ~ModellingEncoder() override = default;
     explicit ModellingEncoder(std::unique_ptr<PPMEncoderModel>&& model, std::unique_ptr<ArithmeticEncoder>&& encoder);
     void Encode(BitInputStream& inputStream) override;
     void Encode(const Token& token);
     void Feed(const Token& token);
     void Finish() override;
 
-    static ModellingEncoder CreateDefault(const std::shared_ptr<BitOutputStream> &outputStream);
+    static std::unique_ptr<ModellingEncoder> CreateDefault(const std::shared_ptr<BitOutputStream> &outputStream);
 
 private:
     std::vector<unsigned char> buffer;

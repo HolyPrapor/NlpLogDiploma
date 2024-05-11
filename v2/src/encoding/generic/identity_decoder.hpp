@@ -12,6 +12,7 @@
 class IdentityDecoder : public GenericDecoder {
 public:
     explicit IdentityDecoder(const std::shared_ptr<BitInputStream>& inputStream);
+    ~IdentityDecoder() override = default;
 
     void Decode(BitOutputStream& data) override;
     void Finish() override;

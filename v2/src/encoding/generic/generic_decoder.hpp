@@ -9,6 +9,8 @@
 
 class GenericDecoder {
 public:
+    virtual ~GenericDecoder() = default;
+
     virtual void Decode(BitOutputStream& data) = 0;
     virtual void Finish() {}
 };

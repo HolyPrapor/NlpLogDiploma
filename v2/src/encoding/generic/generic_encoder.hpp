@@ -9,6 +9,8 @@
 
 class GenericEncoder {
 public:
+    virtual ~GenericEncoder() = default;
+
     virtual void Encode(BitInputStream& data) = 0;
     virtual void Finish() {}
 };

@@ -9,6 +9,8 @@
 
 class SecondaryLogEncoder : public SecondaryLogCoder {
 public:
+    ~SecondaryLogEncoder() override = default;
+
     virtual void EncodeToken(const Token& token) = 0;
     virtual void Finish() = 0;
 };

@@ -15,6 +15,7 @@ public:
     explicit PrimaryLogEncoder(std::unique_ptr<LogLinkEncoder>&& linkEncoder, std::unique_ptr<LogStorage>&& storage, std::unique_ptr<SecondaryLogEncoder>&& secondaryLogEncoder, std::shared_ptr<BitOutputStream> mainOutputStream, std::shared_ptr<BitOutputStream> markupOutputStream, int minLinkLength = 4);
     void EncodeLine(const std::vector<Token>& line);
     void Finish();
+    ~PrimaryLogEncoder() = default;
 
 private:
     std::unique_ptr<LogLinkEncoder> linkEncoder;

@@ -124,13 +124,14 @@ void runAgainstTestFiles(const std::string& basePath,
 //        }
         for (auto& file: fs::directory_iterator(p.path())) {
             auto fileName = file.path().stem().string();
+//            if (fileName != "android" && fileName != "java")
+//                continue;
             SECTION(dirName + "/" + fileName) {
                 compressAndDecompressFile(basePath, dirName, fileName, coderName, createEncoder, createDecoder);
             }
         }
     }
 }
-
 TEST_CASE("SubPrePCS coding", "[SubPrePCS]") {
     std::string basePath;
     if (const char* envBasePath = std::getenv("TEST_BASE_PATH")) {

@@ -38,9 +38,9 @@ SubPrePcsEncoder SubPrePcsEncoder::CreateNaive(std::shared_ptr<BitOutputStream> 
     auto secondaryEncoder = std::make_unique<NaiveSecondaryLogEncoder>(secondaryInMemoryOut);
     auto primaryEncoder = std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryInMemoryOut, markupInMemoryOut, 4);
 
-    auto primaryGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(primary)));
-    auto secondaryGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(secondary)));
-    auto markupGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(markup)));
+    auto primaryGenericEncoder = ModellingEncoder::CreateDefault(primary);
+    auto secondaryGenericEncoder = ModellingEncoder::CreateDefault(secondary);
+    auto markupGenericEncoder = ModellingEncoder::CreateDefault(markup);
 
     return SubPrePcsEncoder(std::move(primaryEncoder), std::move(primaryInMemoryIn), std::move(secondaryInMemoryIn), std::move(markupInMemoryIn),
                             std::move(primaryGenericEncoder), std::move(secondaryGenericEncoder), std::move(markupGenericEncoder));
@@ -71,9 +71,9 @@ SubPrePcsEncoder SubPrePcsEncoder::CreateResidue(std::shared_ptr<BitOutputStream
     auto secondaryEncoder = std::make_unique<ResidueSecondaryLogEncoder>(secondaryInMemoryOut);
     auto primaryEncoder = std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryInMemoryOut, markupInMemoryOut, 4);
 
-    auto primaryGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(primary)));
-    auto secondaryGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(secondary)));
-    auto markupGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(markup)));
+    auto primaryGenericEncoder = ModellingEncoder::CreateDefault(primary);
+    auto secondaryGenericEncoder = ModellingEncoder::CreateDefault(secondary);
+    auto markupGenericEncoder = ModellingEncoder::CreateDefault(markup);
 
     return SubPrePcsEncoder(std::move(primaryEncoder), std::move(primaryInMemoryIn), std::move(secondaryInMemoryIn), std::move(markupInMemoryIn),
                             std::move(primaryGenericEncoder), std::move(secondaryGenericEncoder), std::move(markupGenericEncoder));
@@ -105,9 +105,9 @@ SubPrePcsEncoder::CreatePPM(std::shared_ptr<BitOutputStream> primary, std::share
     auto secondaryEncoder = std::make_unique<PPMSecondaryLogEncoder>(secondaryInMemoryOut);
     auto primaryEncoder = std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryInMemoryOut, markupInMemoryOut, 4);
 
-    auto primaryGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(primary)));
-    auto secondaryGenericEncoder = std::make_unique<IdentityEncoder>(std::move(secondary));
-    auto markupGenericEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(std::move(markup)));
+    auto primaryGenericEncoder = ModellingEncoder::CreateDefault(primary);
+    auto secondaryGenericEncoder = std::make_unique<IdentityEncoder>(secondary);
+    auto markupGenericEncoder = ModellingEncoder::CreateDefault(markup);
 
     return SubPrePcsEncoder(std::move(primaryEncoder), std::move(primaryInMemoryIn), std::move(secondaryInMemoryIn), std::move(markupInMemoryIn),
                             std::move(primaryGenericEncoder), std::move(secondaryGenericEncoder), std::move(markupGenericEncoder));

@@ -12,6 +12,7 @@
 class ResidueSecondaryLogDecoder : public SecondaryLogDecoder {
 public:
     explicit ResidueSecondaryLogDecoder(std::shared_ptr<BitInputStream> inputStream);
+    ~ResidueSecondaryLogDecoder() override = default;
 
     Token DecodeToken() override;
 

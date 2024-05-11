@@ -6,7 +6,7 @@
 #include "encoding/generic/modelling_decoder.hpp"
 
 PPMSecondaryLogDecoder::PPMSecondaryLogDecoder(const std::shared_ptr<BitInputStream> &inputStream) {
-    modellingDecoder = std::make_unique<ModellingDecoder>(ModellingDecoder::CreateDefault(inputStream));
+    modellingDecoder = ModellingDecoder::CreateDefault(inputStream);
 }
 
 Token PPMSecondaryLogDecoder::DecodeToken() {

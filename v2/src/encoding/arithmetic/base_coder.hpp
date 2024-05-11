@@ -25,6 +25,7 @@ protected:
     virtual void Underflow() = 0;
 public:
     BaseCoder();
+    virtual ~BaseCoder() = default;
     explicit BaseCoder(const std::uint64_t& num_bits);
     void Update(const std::vector<int>& frequencies, const Token& symbol);
 };

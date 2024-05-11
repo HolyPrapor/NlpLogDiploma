@@ -22,6 +22,7 @@ protected:
 
 public:
     ArithmeticDecoder(const std::uint64_t& num_bits, std::shared_ptr<BitInputStream> input_stream);
+    ~ArithmeticDecoder() override = default;
     Token Read(const std::vector<int>& frequencies);
 };
 

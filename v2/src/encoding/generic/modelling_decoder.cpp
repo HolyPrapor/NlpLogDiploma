@@ -4,10 +4,10 @@
 
 #include "modelling_decoder.hpp"
 
-ModellingDecoder ModellingDecoder::CreateDefault(const std::shared_ptr<BitInputStream> &inputStream) {
+std::unique_ptr<ModellingDecoder> ModellingDecoder::CreateDefault(const std::shared_ptr<BitInputStream> &inputStream) {
     auto model = std::make_unique<PPMDecoderModel>(5);
     auto decoder = std::make_unique<ArithmeticDecoder>(32, inputStream);
-    return ModellingDecoder(std::move(model), std::move(decoder));
+    return std::make_unique<ModellingDecoder>(std::move(model), std::move(decoder));
 }
 
 ModellingDecoder::ModellingDecoder(std::unique_ptr<PPMDecoderModel>&& model, std::unique_ptr<ArithmeticDecoder>&& decoder)

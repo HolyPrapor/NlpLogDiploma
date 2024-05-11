@@ -14,6 +14,7 @@ class PrimaryLogDecoder {
 public:
     explicit PrimaryLogDecoder(std::unique_ptr<LogLinkDecoder>&& linkDecoder, std::unique_ptr<LogStorage>&& storage, std::unique_ptr<SecondaryLogDecoder>&& secondaryLogDecoder, std::shared_ptr<BitInputStream> mainInputStream, std::shared_ptr<BitInputStream> markupInputStream);
     std::vector<Token> DecodeLine();
+    ~PrimaryLogDecoder() = default;
 
 private:
     std::unique_ptr<LogLinkDecoder> linkDecoder;

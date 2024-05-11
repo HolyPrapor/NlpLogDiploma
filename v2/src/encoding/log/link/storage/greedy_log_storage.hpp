@@ -11,6 +11,7 @@
 class GreedyLogStorage : public LogStorage {
 public:
     explicit GreedyLogStorage(int maxLogSize);
+    ~GreedyLogStorage() override = default;
 
     void Store(const std::vector<Token>& log) override;
     std::optional<LogLink> TryLink(const std::vector<Token>& log, const int& startIndex, const int& minLength = 1) override;

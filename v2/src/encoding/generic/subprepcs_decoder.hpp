@@ -17,6 +17,7 @@ public:
     explicit SubPrePcsDecoder(std::unique_ptr<PrimaryLogDecoder>&& primaryDecoder, std::unique_ptr<SecondaryLogDecoder>&& secondaryDecoder,
                               std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup,
                               std::unique_ptr<GenericDecoder>&& primaryGenericDecoder, std::unique_ptr<GenericDecoder>&& secondaryGenericDecoder, std::unique_ptr<GenericDecoder>&& markupGenericDecoder);
+    ~SubPrePcsDecoder() override = default;
 
     void Decode(BitOutputStream& data) override;
     void Finish() override;

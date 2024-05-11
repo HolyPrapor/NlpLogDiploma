@@ -12,6 +12,7 @@
 class NaiveSecondaryLogEncoder : public SecondaryLogEncoder {
 public:
     explicit NaiveSecondaryLogEncoder(std::shared_ptr<BitOutputStream> outputStream);
+    ~NaiveSecondaryLogEncoder() override = default;
 
     void EncodeToken(const Token& token) override;
 

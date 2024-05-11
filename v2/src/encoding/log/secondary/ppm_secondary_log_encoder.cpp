@@ -5,7 +5,7 @@
 #include "ppm_secondary_log_encoder.hpp"
 
 PPMSecondaryLogEncoder::PPMSecondaryLogEncoder(const std::shared_ptr<BitOutputStream>& outputStream) : outputStream(outputStream) {
-    modellingEncoder = std::make_unique<ModellingEncoder>(ModellingEncoder::CreateDefault(outputStream));
+    modellingEncoder = ModellingEncoder::CreateDefault(outputStream);
 }
 
 void PPMSecondaryLogEncoder::EncodeToken(const Token& token) {

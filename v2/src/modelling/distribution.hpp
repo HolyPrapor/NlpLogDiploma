@@ -16,6 +16,8 @@ class Distribution {
 public:
     explicit Distribution(std::unique_ptr<const std::vector<int>>&& frequencies) : frequencies(std::move(frequencies)) {}
     explicit Distribution(std::unique_ptr<const std::vector<double>>&& probabilities) : probabilities(std::move(probabilities)) {}
+    Distribution(Distribution&& other) noexcept : frequencies(std::move(other.frequencies)), probabilities(std::move(other.probabilities)) {}
+    ~Distribution() = default;
 
     const std::vector<int>& Frequencies() {
         if (frequencies == nullptr) {

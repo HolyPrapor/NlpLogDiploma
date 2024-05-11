@@ -10,6 +10,8 @@
 
 class SecondaryLogCoder {
 public:
+    virtual ~SecondaryLogCoder() = default;
+
     virtual void Feed(const std::vector<Token>& line, const int& start, const int& length) = 0;
     virtual void FinishLine() {}
 };

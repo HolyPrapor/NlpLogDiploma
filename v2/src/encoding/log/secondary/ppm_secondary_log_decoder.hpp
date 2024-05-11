@@ -13,6 +13,8 @@
 class PPMSecondaryLogDecoder : public SecondaryLogDecoder {
 public:
     explicit PPMSecondaryLogDecoder(const std::shared_ptr<BitInputStream>& inputStream);
+    ~PPMSecondaryLogDecoder() override = default;
+
     Token DecodeToken() override;
     void Feed(const std::vector<Token>& line, const int& start, const int& length) override;
     void FinishLine() override;

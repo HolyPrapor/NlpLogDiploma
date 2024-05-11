@@ -9,6 +9,8 @@
 
 class SecondaryLogDecoder : public SecondaryLogCoder {
 public:
+    ~SecondaryLogDecoder() override = default;
+
     virtual Token DecodeToken() = 0;
 };
 

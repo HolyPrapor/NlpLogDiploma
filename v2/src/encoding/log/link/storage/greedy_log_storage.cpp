@@ -5,7 +5,7 @@
 #include "greedy_log_storage.hpp"
 #include "vector_search.hpp"
 
-GreedyLogStorage::GreedyLogStorage(int maxLogSize) : maxLogSize_(maxLogSize) {}
+GreedyLogStorage::GreedyLogStorage(int maxLogSize) : maxLogSize_(maxLogSize), storage_() {}
 
 void GreedyLogStorage::Store(const std::vector<Token>& log) {
     if (storage_.size() == maxLogSize_) {
@@ -31,5 +31,5 @@ const std::vector<Token>& GreedyLogStorage::GetLog(int index) {
 }
 
 int GreedyLogStorage::GetSize() {
-    return storage_.size();
+    return static_cast<int>(storage_.size());
 }

@@ -12,6 +12,7 @@
 class IdentityEncoder : public GenericEncoder {
 public:
     explicit IdentityEncoder(const std::shared_ptr<BitOutputStream>& outputStream);
+    ~IdentityEncoder() override = default;
 
     void Encode(BitInputStream& data) override;
     void Finish() override;

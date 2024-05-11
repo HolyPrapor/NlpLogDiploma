@@ -20,6 +20,7 @@ protected:
 
 public:
     ArithmeticEncoder(const std::uint64_t &num_bits, std::shared_ptr<BitOutputStream> output_stream);
+    ~ArithmeticEncoder() override = default;
 
     void Write(const std::vector<int> &frequencies, const Token &symbol);
     void Finish();

@@ -11,6 +11,8 @@
 class MtfLogStorage : public LogStorage {
 public:
     explicit MtfLogStorage(int maxLogSize);
+    ~MtfLogStorage() override = default;
+
     void Store(const std::vector<Token>& log) override;
     std::optional<LogLink> TryLink(const std::vector<Token>& log, const int& startIndex, const int& minLength = 1) override;
     const std::vector<Token>& GetLog(int index) override;

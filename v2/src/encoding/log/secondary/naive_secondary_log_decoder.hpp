@@ -14,6 +14,7 @@
 class NaiveSecondaryLogDecoder : public SecondaryLogDecoder {
 public:
     explicit NaiveSecondaryLogDecoder(std::shared_ptr<BitInputStream> inputStream);
+    ~NaiveSecondaryLogDecoder() override = default;
 
     Token DecodeToken() override;
 
