@@ -44,12 +44,17 @@ set(CONFIG_PROTO_FILE ${CMAKE_SOURCE_DIR}/src/compression_config.proto)
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CONFIG_PROTO_FILE})
 
+add_custom_target(create_directory ALL
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/src
+        COMMENT "Creating directory ${CMAKE_CURRENT_BINARY_DIR}/src"
+        )
+
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/src/default_compression_config_textproto.h
         COMMAND xxd -i ${CMAKE_SOURCE_DIR}/src/default_compression_config.textproto ${CMAKE_CURRENT_BINARY_DIR}/src/default_compression_config_textproto.h
         COMMAND sed -i 's/unsigned char .* = {/unsigned char default_compression_config_textproto[] = {/g' ${CMAKE_CURRENT_BINARY_DIR}/src/default_compression_config_textproto.h
         COMMAND sed -i 's/unsigned int .* =/unsigned int default_compression_config_textproto_len =/g' ${CMAKE_CURRENT_BINARY_DIR}/src/default_compression_config_textproto.h
-        DEPENDS ${CMAKE_SOURCE_DIR}/src/default_compression_config.textproto
+        DEPENDS ${CMAKE_SOURCE_DIR}/src/default_compression_config.textproto create_directory
         COMMENT "Generating default_compression_config_textproto.h from default_compression_config.textproto"
 )
 
