@@ -13,8 +13,16 @@
 #include "encoding/log/link/residue_link_encoder.hpp"
 #include "identity_decoder.hpp"
 
-SubPrePcsDecoder SubPrePcsDecoder::CreateNaive(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
-                                               std::unique_ptr<LogLinkDecoder> linkDecoder, std::unique_ptr<LogStorage> storage) {
+SubPrePcsDecoder SubPrePcsDecoder::Create(std::shared_ptr<BitInputStream> primary,
+                                          std::shared_ptr<BitInputStream> secondary,
+                                          std::shared_ptr<BitInputStream> markup,
+                                          PrimaryLogDecoderFactory primaryFactory,
+                                          SecondaryLogDecoderFactory secondaryFactory,
+                                          GenericDecoderFactory primaryGenericFactory,
+                                          GenericDecoderFactory secondaryGenericFactory,
+                                          GenericDecoderFactory markupGenericFactory,
+                                          std::unique_ptr<LogLinkDecoder> linkDecoder,
+                                          std::unique_ptr<LogStorage> storage) {
     if (linkDecoder == nullptr) {
         linkDecoder = std::make_unique<ResidueLinkDecoder>(255);
     }
@@ -35,81 +43,79 @@ SubPrePcsDecoder SubPrePcsDecoder::CreateNaive(std::shared_ptr<BitInputStream> p
     auto markupInMemoryIn = std::make_shared<BitInputStream>(markupInMemory);
     auto markupInMemoryOut = std::make_shared<BitOutputStream>(markupInMemory);
 
-    auto secondaryDecoder = std::make_unique<NaiveSecondaryLogDecoder>(secondaryInMemoryIn);
-    auto primaryDecoder = std::make_unique<PrimaryLogDecoder>(std::move(linkDecoder), std::move(storage), std::move(secondaryDecoder), primaryInMemoryIn, markupInMemoryIn);
+    auto secondaryDecoder = secondaryFactory(secondaryInMemoryIn);
+    auto primaryDecoder = primaryFactory(std::move(linkDecoder), std::move(storage), std::move(secondaryDecoder), primaryInMemoryIn, markupInMemoryIn);
 
-    auto primaryGenericDecoder = ModellingDecoder::CreateDefault(primary);
-    auto secondaryGenericDecoder = ModellingDecoder::CreateDefault(secondary);
-    auto markupGenericDecoder = ModellingDecoder::CreateDefault(markup);
+    auto primaryGenericDecoder = primaryGenericFactory(primary);
+    auto secondaryGenericDecoder = secondaryGenericFactory(secondary);
+    auto markupGenericDecoder = markupGenericFactory(markup);
 
     return SubPrePcsDecoder(std::move(primaryDecoder), std::move(secondaryDecoder), std::move(primaryInMemoryOut), std::move(secondaryInMemoryOut), std::move(markupInMemoryOut),
                             std::move(primaryGenericDecoder), std::move(secondaryGenericDecoder), std::move(markupGenericDecoder));
 }
 
-SubPrePcsDecoder SubPrePcsDecoder::CreateResidue(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
-                                                 std::unique_ptr<LogLinkDecoder> linkDecoder, std::unique_ptr<LogStorage> storage) {
-    if (linkDecoder == nullptr) {
-        linkDecoder = std::make_unique<ResidueLinkDecoder>(255);
-    }
-    if (storage == nullptr) {
-        storage = std::make_unique<GreedyLogStorage>(255);
-    }
 
-    auto primaryInMemory = std::make_shared<std::stringstream>();
-    auto secondaryInMemory = std::make_shared<std::stringstream>();
-    auto markupInMemory = std::make_shared<std::stringstream>();
-
-    auto primaryInMemoryIn = std::make_shared<BitInputStream>(primaryInMemory);
-    auto primaryInMemoryOut = std::make_shared<BitOutputStream>(primaryInMemory);
-
-    auto secondaryInMemoryIn = std::make_shared<BitInputStream>(secondaryInMemory);
-    auto secondaryInMemoryOut = std::make_shared<BitOutputStream>(secondaryInMemory);
-
-    auto markupInMemoryIn = std::make_shared<BitInputStream>(markupInMemory);
-    auto markupInMemoryOut = std::make_shared<BitOutputStream>(markupInMemory);
-
-    auto secondaryDecoder = std::make_unique<ResidueSecondaryLogDecoder>(secondaryInMemoryIn);
-    auto primaryDecoder = std::make_unique<PrimaryLogDecoder>(std::move(linkDecoder), std::move(storage), std::move(secondaryDecoder), primaryInMemoryIn, markupInMemoryIn);
-
-    auto primaryGenericDecoder = ModellingDecoder::CreateDefault(primary);
-    auto secondaryGenericDecoder = ModellingDecoder::CreateDefault(secondary);
-    auto markupGenericDecoder = ModellingDecoder::CreateDefault(markup);
-
-    return SubPrePcsDecoder(std::move(primaryDecoder), std::move(secondaryDecoder), std::move(primaryInMemoryOut), std::move(secondaryInMemoryOut), std::move(markupInMemoryOut),
-                            std::move(primaryGenericDecoder), std::move(secondaryGenericDecoder), std::move(markupGenericDecoder));
+SubPrePcsDecoder SubPrePcsDecoder::CreateNaive(std::shared_ptr<BitInputStream> primary,
+                                               std::shared_ptr<BitInputStream> secondary,
+                                               std::shared_ptr<BitInputStream> markup,
+                                               std::unique_ptr<LogLinkDecoder> linkDecoder,
+                                               std::unique_ptr<LogStorage> storage) {
+    return Create(
+            primary,
+            secondary,
+            markup,
+            [](std::unique_ptr<LogLinkDecoder> linkDecoder, std::unique_ptr<LogStorage> storage, std::unique_ptr<SecondaryLogDecoder> secondaryDecoder, std::shared_ptr<BitInputStream> primaryIn, std::shared_ptr<BitInputStream> markupIn) {
+                return std::make_unique<PrimaryLogDecoder>(std::move(linkDecoder), std::move(storage), std::move(secondaryDecoder), primaryIn, markupIn);
+            },
+            [](std::shared_ptr<BitInputStream> in) { return std::make_unique<NaiveSecondaryLogDecoder>(in); },
+            ModellingDecoder::CreateDefault,
+            ModellingDecoder::CreateDefault,
+            ModellingDecoder::CreateDefault,
+            std::move(linkDecoder),
+            std::move(storage)
+    );
 }
 
-SubPrePcsDecoder SubPrePcsDecoder::CreatePPM(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
-                                             std::unique_ptr<LogLinkDecoder> linkDecoder, std::unique_ptr<LogStorage> storage) {
-    if (linkDecoder == nullptr) {
-        linkDecoder = std::make_unique<ResidueLinkDecoder>(255);
-    }
-    if (storage == nullptr) {
-        storage = std::make_unique<GreedyLogStorage>(255);
-    }
+SubPrePcsDecoder SubPrePcsDecoder::CreateResidue(std::shared_ptr<BitInputStream> primary,
+                                                 std::shared_ptr<BitInputStream> secondary,
+                                                 std::shared_ptr<BitInputStream> markup,
+                                                 std::unique_ptr<LogLinkDecoder> linkDecoder,
+                                                 std::unique_ptr<LogStorage> storage) {
+    return Create(
+            primary,
+            secondary,
+            markup,
+            [](std::unique_ptr<LogLinkDecoder> linkDecoder, std::unique_ptr<LogStorage> storage, std::unique_ptr<SecondaryLogDecoder> secondaryDecoder, std::shared_ptr<BitInputStream> primaryIn, std::shared_ptr<BitInputStream> markupIn) {
+                return std::make_unique<PrimaryLogDecoder>(std::move(linkDecoder), std::move(storage), std::move(secondaryDecoder), primaryIn, markupIn);
+            },
+            [](std::shared_ptr<BitInputStream> in) { return std::make_unique<ResidueSecondaryLogDecoder>(in); },
+            ModellingDecoder::CreateDefault,
+            ModellingDecoder::CreateDefault,
+            ModellingDecoder::CreateDefault,
+            std::move(linkDecoder),
+            std::move(storage)
+    );
+}
 
-    auto primaryInMemory = std::make_shared<std::stringstream>();
-    auto secondaryInMemory = std::make_shared<std::stringstream>();
-    auto markupInMemory = std::make_shared<std::stringstream>();
-
-    auto primaryInMemoryIn = std::make_shared<BitInputStream>(primaryInMemory);
-    auto primaryInMemoryOut = std::make_shared<BitOutputStream>(primaryInMemory);
-
-    auto secondaryInMemoryIn = std::make_shared<BitInputStream>(secondaryInMemory);
-    auto secondaryInMemoryOut = std::make_shared<BitOutputStream>(secondaryInMemory);
-
-    auto markupInMemoryIn = std::make_shared<BitInputStream>(markupInMemory);
-    auto markupInMemoryOut = std::make_shared<BitOutputStream>(markupInMemory);
-
-    auto secondaryDecoder = std::make_unique<PPMSecondaryLogDecoder>(secondaryInMemoryIn);
-    auto primaryDecoder = std::make_unique<PrimaryLogDecoder>(std::move(linkDecoder), std::move(storage), std::move(secondaryDecoder), primaryInMemoryIn, markupInMemoryIn);
-
-    auto primaryGenericDecoder = ModellingDecoder::CreateDefault(primary);
-    auto secondaryGenericDecoder = std::make_unique<IdentityDecoder>(secondary);
-    auto markupGenericDecoder = ModellingDecoder::CreateDefault(markup);
-
-    return SubPrePcsDecoder(std::move(primaryDecoder), std::move(secondaryDecoder), std::move(primaryInMemoryOut), std::move(secondaryInMemoryOut), std::move(markupInMemoryOut),
-                            std::move(primaryGenericDecoder), std::move(secondaryGenericDecoder), std::move(markupGenericDecoder));
+SubPrePcsDecoder SubPrePcsDecoder::CreatePPM(std::shared_ptr<BitInputStream> primary,
+                                             std::shared_ptr<BitInputStream> secondary,
+                                             std::shared_ptr<BitInputStream> markup,
+                                             std::unique_ptr<LogLinkDecoder> linkDecoder,
+                                             std::unique_ptr<LogStorage> storage) {
+    return Create(
+            primary,
+            secondary,
+            markup,
+            [](std::unique_ptr<LogLinkDecoder> linkDecoder, std::unique_ptr<LogStorage> storage, std::unique_ptr<SecondaryLogDecoder> secondaryDecoder, std::shared_ptr<BitInputStream> primaryIn, std::shared_ptr<BitInputStream> markupIn) {
+                return std::make_unique<PrimaryLogDecoder>(std::move(linkDecoder), std::move(storage), std::move(secondaryDecoder), primaryIn, markupIn);
+            },
+            [](std::shared_ptr<BitInputStream> in) { return std::make_unique<PPMSecondaryLogDecoder>(in); },
+            ModellingDecoder::CreateDefault,
+            [](std::shared_ptr<BitInputStream> in) { return std::make_unique<IdentityDecoder>(in); },
+            ModellingDecoder::CreateDefault,
+            std::move(linkDecoder),
+            std::move(storage)
+    );
 }
 
 SubPrePcsDecoder::SubPrePcsDecoder(std::unique_ptr<PrimaryLogDecoder>&& primaryDecoder, std::unique_ptr<SecondaryLogDecoder>&& secondaryDecoder,

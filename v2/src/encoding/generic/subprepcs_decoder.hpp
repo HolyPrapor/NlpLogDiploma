@@ -6,11 +6,21 @@
 #define DIPLOMA_SUBPREPCS_DECODER_HPP
 
 #include <memory>
+#include <functional>
 #include "generic_decoder.hpp"
 #include "encoding/utils/bit_input_stream.hpp"
 #include "encoding/log/secondary/secondary_log_decoder.hpp"
 #include "encoding/log/primary_log_decoder.hpp"
 #include "encoding/log/link/log_link_encoder.hpp"
+
+using PrimaryLogDecoderFactory = std::function<std::unique_ptr<PrimaryLogDecoder>(
+        std::unique_ptr<LogLinkDecoder>, std::unique_ptr<LogStorage>, std::unique_ptr<SecondaryLogDecoder>,
+        std::shared_ptr<BitInputStream>, std::shared_ptr<BitInputStream>)>;
+
+using SecondaryLogDecoderFactory = std::function<std::unique_ptr<SecondaryLogDecoder>(std::shared_ptr<BitInputStream>)>;
+
+using GenericDecoderFactory = std::function<std::unique_ptr<GenericDecoder>(std::shared_ptr<BitInputStream>)>;
+
 
 class SubPrePcsDecoder : public GenericDecoder {
 public:
@@ -22,12 +32,19 @@ public:
     void Decode(BitOutputStream& data) override;
     void Finish() override;
 
-    static SubPrePcsDecoder CreateNaive(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup, std::unique_ptr<LogLinkDecoder> linkDecoder = nullptr,
-                                        std::unique_ptr<LogStorage> storage = nullptr);
-    static SubPrePcsDecoder CreateResidue(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup, std::unique_ptr<LogLinkDecoder> linkDecoder = nullptr,
-                                          std::unique_ptr<LogStorage> storage = nullptr);
-    static SubPrePcsDecoder CreatePPM(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup, std::unique_ptr<LogLinkDecoder> linkDecoder = nullptr,
-                                      std::unique_ptr<LogStorage> storage = nullptr);
+    static SubPrePcsDecoder Create(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
+                                   PrimaryLogDecoderFactory primaryFactory, SecondaryLogDecoderFactory secondaryFactory, GenericDecoderFactory primaryGenericFactory,
+                                   GenericDecoderFactory secondaryGenericFactory, GenericDecoderFactory markupGenericFactory, std::unique_ptr<LogLinkDecoder> linkDecoder = nullptr,
+                                   std::unique_ptr<LogStorage> storage = nullptr);
+
+    static SubPrePcsDecoder CreateNaive(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
+                                        std::unique_ptr<LogLinkDecoder> linkDecoder = nullptr, std::unique_ptr<LogStorage> storage = nullptr);
+
+    static SubPrePcsDecoder CreateResidue(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
+                                          std::unique_ptr<LogLinkDecoder> linkDecoder = nullptr, std::unique_ptr<LogStorage> storage = nullptr);
+
+    static SubPrePcsDecoder CreatePPM(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
+                                      std::unique_ptr<LogLinkDecoder> linkDecoder = nullptr, std::unique_ptr<LogStorage> storage = nullptr);
 
 private:
     std::unique_ptr<PrimaryLogDecoder> primaryDecoder;
