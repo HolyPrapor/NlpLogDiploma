@@ -1,5 +1,0 @@
-syntax = "proto3";
-
-message CompressionConfig {
-  int32 stub = 1;
-};

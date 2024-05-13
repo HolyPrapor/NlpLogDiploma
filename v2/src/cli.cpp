@@ -11,7 +11,8 @@
 #include "encoding/generic/subprepcs_decoder.hpp"
 #include "encoding/utils/bit_input_stream.hpp"
 #include "encoding/utils/bit_output_stream.hpp"
-#include "config.pb.h"
+#include "compression_config.pb.h"
+#include "src/default_compression_config_textproto.h"
 
 namespace fs = std::filesystem;
 
@@ -23,9 +24,13 @@ void createDirectoriesForFile(const std::string& filePath) {
     }
 }
 
-CompressionConfig getDefaultCompressionConfig() {
-    CompressionConfig defaultConfig;
-    return defaultConfig;
+CompressionConfig parseEmbeddedConfig() {
+    CompressionConfig compressionConfig;
+    std::string protoStr(reinterpret_cast<const char*>(default_compression_config_textproto), default_compression_config_textproto_len);
+    if (!google::protobuf::TextFormat::ParseFromString(protoStr, &compressionConfig)) {
+        throw std::runtime_error("Error: Failed to parse embedded textproto");
+    }
+    return compressionConfig;
 }
 
 CompressionConfig parseCompressionConfig() {
@@ -41,7 +46,7 @@ CompressionConfig parseCompressionConfig() {
             throw std::runtime_error("Error: Failed to parse textproto from stdin");
         }
     } else {
-        compressionConfig = getDefaultCompressionConfig();
+        compressionConfig = parseEmbeddedConfig();
     }
 
     return compressionConfig;

@@ -3,14 +3,6 @@ project(diploma)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Protobuf REQUIRED)
-include_directories(${PROTOBUF_INCLUDE_DIRS})
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
-set(CONFIG_PROTO_FILE ${CMAKE_SOURCE_DIR}/src/config.proto)
-
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CONFIG_PROTO_FILE})
-
 add_library(${PROJECT_NAME}
         src/encoding/utils/bit_input_stream.cpp
         src/encoding/utils/bit_output_stream.cpp
@@ -37,20 +29,31 @@ add_library(${PROJECT_NAME}
         src/encoding/log/link/storage/mtf_log_storage.cpp
         src/encoding/generic/identity_encoder.cpp
         src/encoding/generic/identity_decoder.cpp
-        ${PROTO_SRCS}
         )
 
 target_include_directories(${PROJECT_NAME}
         PUBLIC
         src/
-        ${CMAKE_CURRENT_BINARY_DIR}
         )
 
-target_link_libraries(${PROJECT_NAME}
-        ${PROTOBUF_LIBRARIES}
-        )
+find_package(Protobuf REQUIRED)
+include_directories(${PROTOBUF_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-add_executable(cli src/cli.cpp)
+set(CONFIG_PROTO_FILE ${CMAKE_SOURCE_DIR}/src/compression_config.proto)
+
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CONFIG_PROTO_FILE})
+
+add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/src/default_compression_config_textproto.h
+        COMMAND xxd -i ${CMAKE_SOURCE_DIR}/src/default_compression_config.textproto ${CMAKE_CURRENT_BINARY_DIR}/src/default_compression_config_textproto.h
+        COMMAND sed -i 's/unsigned char .* = {/unsigned char default_compression_config_textproto[] = {/g' ${CMAKE_CURRENT_BINARY_DIR}/src/default_compression_config_textproto.h
+        COMMAND sed -i 's/unsigned int .* =/unsigned int default_compression_config_textproto_len =/g' ${CMAKE_CURRENT_BINARY_DIR}/src/default_compression_config_textproto.h
+        DEPENDS ${CMAKE_SOURCE_DIR}/src/default_compression_config.textproto
+        COMMENT "Generating default_compression_config_textproto.h from default_compression_config.textproto"
+)
+
+add_executable(cli src/cli.cpp ${CMAKE_CURRENT_BINARY_DIR}/src/default_compression_config_textproto.h ${PROTO_SRCS})
 target_include_directories(cli
         PRIVATE
         src/

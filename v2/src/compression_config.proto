@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+// Top-level configuration for compression
+message CompressionConfig {
+  PrimaryLogCoderConfig primary_log_coder = 1;
+  SecondaryLogCoderConfig secondary_log_coder = 2;
+
+  GenericCoderConfig generic_primary_coder = 3;
+  GenericCoderConfig generic_secondary_coder = 4;
+  GenericCoderConfig generic_markup_coder = 5;
+
+  // non-algorithmic parameters, such as verbosity, etc.
+}
+
+message PrimaryLogCoderConfig {
+  oneof log_link_coder {
+    ResidueLogLinkCoder residue_log_link_coder = 1;
+  }
+
+  oneof storage {
+    GreedySlidingWindowStorage greedy_sliding_window_storage = 2;
+    GreedyMoveToFrontStorage greedy_move_to_front_storage = 3;
+  }
+
+  int32 storage_size = 4;
+  int32 min_link_length = 5;
+}
+
+// Specific configurations for the primary log link coder
+message ResidueLogLinkCoder {
+}
+
+// Configurations for different types of storage
+message GreedySlidingWindowStorage {
+}
+
+message GreedyMoveToFrontStorage {
+}
+
+message SecondaryLogCoderConfig {
+  oneof secondary_log_coder {
+    PPMSecondaryLogCoder ppm_secondary_log_coder = 1;
+    ResidueSecondaryLogCoder residue_secondary_log_coder = 2;
+    NaiveSecondaryLogCoder naive_secondary_log_coder = 3;
+  }
+}
+
+// Configurations for specific types of secondary log coders
+message PPMSecondaryLogCoder {
+  int32 window_size = 1;
+}
+
+message ResidueSecondaryLogCoder {
+}
+
+message NaiveSecondaryLogCoder {
+}
+
+message GenericCoderConfig {
+  oneof coder {
+    ModellingCoder modelling_coder = 1;
+    IdentityCoder identity_coder = 2;
+  }
+}
+
+// Generic coder configurations
+message ModellingCoder {
+  int32 context_size = 1;
+}
+
+message IdentityCoder {
+}
