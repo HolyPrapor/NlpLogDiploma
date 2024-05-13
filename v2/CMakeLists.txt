@@ -3,84 +3,60 @@ project(diploma)
 
 set(CMAKE_CXX_STANDARD 17)
 
+find_package(Protobuf REQUIRED)
+include_directories(${PROTOBUF_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+set(CONFIG_PROTO_FILE ${CMAKE_SOURCE_DIR}/src/config.proto)
+
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CONFIG_PROTO_FILE})
+
 add_library(${PROJECT_NAME}
         src/encoding/utils/bit_input_stream.cpp
-        src/encoding/utils/bit_input_stream.hpp
-        src/encoding/utils/bit_output_stream.hpp
         src/encoding/utils/bit_output_stream.cpp
         src/encoding/arithmetic/base_coder.cpp
-        src/encoding/arithmetic/base_coder.hpp
-        src/encoding/arithmetic/arithmetic_encoder.hpp
         src/encoding/arithmetic/arithmetic_encoder.cpp
         src/encoding/arithmetic/arithmetic_decoder.cpp
-        src/encoding/arithmetic/arithmetic_decoder.hpp
-        src/modelling/base_model.hpp
-        src/modelling/distribution.hpp
-        src/defs.hpp
         src/modelling/ppm_model.cpp
-        src/modelling/ppm_model.hpp
         src/modelling/naive_model.cpp
-        src/modelling/naive_model.hpp
-        src/encoding/log/primary_log_encoder.hpp
-        src/encoding/log/link/log_link_decoder.hpp
-        src/encoding/log/link/storage/log_storage.hpp
         src/encoding/log/link/storage/greedy_log_storage.cpp
-        src/encoding/log/link/storage/greedy_log_storage.hpp
         src/encoding/log/link/residue_link_decoder.cpp
-        src/encoding/log/link/residue_link_decoder.hpp
-        src/encoding/generic/generic_encoder.hpp
-        src/encoding/log/secondary/secondary_log_coder.hpp
-        src/encoding/log/secondary/secondary_log_coder.hpp
-        src/encoding/log/link/log_link_encoder.hpp
-        src/encoding/log/link/log_link.hpp
-        src/encoding/log/link/residue_link_encoder.hpp
         src/encoding/log/link/residue_link_encoder.cpp
         src/encoding/log/primary_log_encoder.cpp
         src/encoding/log/primary_log_decoder.cpp
-        src/encoding/log/primary_log_decoder.hpp
-        src/encoding/log/secondary/secondary_log_encoder.hpp
-        src/encoding/log/secondary/secondary_log_decoder.hpp
         src/encoding/log/secondary/naive_secondary_log_encoder.cpp
-        src/encoding/log/secondary/naive_secondary_log_encoder.hpp
         src/encoding/log/secondary/naive_secondary_log_decoder.cpp
-        src/encoding/log/secondary/naive_secondary_log_decoder.hpp
         src/encoding/generic/subprepcs_encoder.cpp
-        src/encoding/generic/subprepcs_encoder.hpp
-        src/encoding/generic/generic_decoder.hpp
         src/encoding/generic/modelling_encoder.cpp
-        src/encoding/generic/modelling_encoder.hpp
         src/encoding/generic/subprepcs_decoder.cpp
-        src/encoding/generic/subprepcs_decoder.hpp
         src/encoding/generic/modelling_decoder.cpp
-        src/encoding/generic/modelling_decoder.hpp
-        src/encoding/residue_coder.hpp
         src/encoding/log/secondary/residue_secondary_log_encoder.cpp
-        src/encoding/log/secondary/residue_secondary_log_encoder.hpp
         src/encoding/log/secondary/residue_secondary_log_decoder.cpp
-        src/encoding/log/secondary/residue_secondary_log_decoder.hpp
         src/encoding/log/secondary/ppm_secondary_log_encoder.cpp
-        src/encoding/log/secondary/ppm_secondary_log_encoder.hpp
         src/encoding/log/secondary/ppm_secondary_log_decoder.cpp
-        src/encoding/log/secondary/ppm_secondary_log_decoder.hpp
-        src/encoding/log/link/storage/vector_search.hpp
         src/encoding/log/link/storage/mtf_log_storage.cpp
-        src/encoding/log/link/storage/mtf_log_storage.hpp
-        src/encoding/generic/identity_encoder.hpp
         src/encoding/generic/identity_encoder.cpp
         src/encoding/generic/identity_decoder.cpp
-        src/encoding/generic/identity_decoder.hpp)
+        ${PROTO_SRCS}
+        )
 
 target_include_directories(${PROJECT_NAME}
         PUBLIC
         src/
+        ${CMAKE_CURRENT_BINARY_DIR}
+        )
+
+target_link_libraries(${PROJECT_NAME}
+        ${PROTOBUF_LIBRARIES}
         )
 
 add_executable(cli src/cli.cpp)
 target_include_directories(cli
         PRIVATE
         src/
+        ${CMAKE_CURRENT_BINARY_DIR}
         )
-target_link_libraries(cli ${PROJECT_NAME})
+target_link_libraries(cli ${PROJECT_NAME} ${PROTOBUF_LIBRARIES})
 
 find_package(Catch2 REQUIRED)
 add_executable(tests

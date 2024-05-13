@@ -5,10 +5,13 @@
 #include <vector>
 #include <stdexcept>
 #include <filesystem>
+#include <sstream>
+#include <google/protobuf/text_format.h>
 #include "encoding/generic/subprepcs_encoder.hpp"
 #include "encoding/generic/subprepcs_decoder.hpp"
 #include "encoding/utils/bit_input_stream.hpp"
 #include "encoding/utils/bit_output_stream.hpp"
+#include "config.pb.h"
 
 namespace fs = std::filesystem;
 
@@ -20,23 +23,53 @@ void createDirectoriesForFile(const std::string& filePath) {
     }
 }
 
-void compress(const std::string& inputFile, const std::string& outputPrefix) {
-    auto inFile = std::make_shared<std::ifstream>(inputFile, std::ios::binary);
-    if (!inFile) {
-        throw std::runtime_error("Error: Cannot open input file " + inputFile);
+CompressionConfig getDefaultCompressionConfig() {
+    CompressionConfig defaultConfig;
+    return defaultConfig;
+}
+
+CompressionConfig parseCompressionConfig() {
+    CompressionConfig compressionConfig;
+
+    // Check if std::cin has data
+    if (std::cin.rdbuf()->in_avail() > 0) {
+        std::ostringstream inputBuffer;
+        inputBuffer << std::cin.rdbuf();
+        std::string protoStr = inputBuffer.str();
+
+        if (!google::protobuf::TextFormat::ParseFromString(protoStr, &compressionConfig)) {
+            throw std::runtime_error("Error: Failed to parse textproto from stdin");
+        }
+    } else {
+        compressionConfig = getDefaultCompressionConfig();
     }
 
-    createDirectoriesForFile(outputPrefix + "_primary");
-    createDirectoriesForFile(outputPrefix + "_secondary");
-    createDirectoriesForFile(outputPrefix + "_markup");
+    return compressionConfig;
+}
 
-    auto primaryFile = std::make_shared<std::ofstream>(outputPrefix + "_primary", std::ios::binary);
-    auto secondaryFile = std::make_shared<std::ofstream>(outputPrefix + "_secondary", std::ios::binary);
-    auto markupFile = std::make_shared<std::ofstream>(outputPrefix + "_markup", std::ios::binary);
-
-    if (!primaryFile || !secondaryFile || !markupFile) {
-        throw std::runtime_error("Error: Cannot open output files with prefix " + outputPrefix);
+std::shared_ptr<std::ifstream> openInputFile(const std::string& filePath) {
+    auto file = std::make_shared<std::ifstream>(filePath, std::ios::binary);
+    if (!file->is_open()) {
+        throw std::runtime_error("Error: Cannot open input file " + filePath);
     }
+    return file;
+}
+
+std::shared_ptr<std::ofstream> openOutputFile(const std::string& filePath) {
+    createDirectoriesForFile(filePath);
+    auto file = std::make_shared<std::ofstream>(filePath, std::ios::binary);
+    if (!file->is_open()) {
+        throw std::runtime_error("Error: Cannot open output file " + filePath);
+    }
+    return file;
+}
+
+void compress(const std::string& inputFile, const std::string& outputPrefix, const CompressionConfig& compressionConfig) {
+    auto inFile = openInputFile(inputFile);
+
+    auto primaryFile = openOutputFile(outputPrefix + "_primary");
+    auto secondaryFile = openOutputFile(outputPrefix + "_secondary");
+    auto markupFile = openOutputFile(outputPrefix + "_markup");
 
     auto primaryStream = std::make_shared<BitOutputStream>(primaryFile);
     auto secondaryStream = std::make_shared<BitOutputStream>(secondaryFile);
@@ -49,21 +82,12 @@ void compress(const std::string& inputFile, const std::string& outputPrefix) {
     encoder.Finish();
 }
 
-void decompress(const std::string& inputPrefix, const std::string& outputFile) {
-    auto primaryFile = std::make_shared<std::ifstream>(inputPrefix + "_primary", std::ios::binary);
-    auto secondaryFile = std::make_shared<std::ifstream>(inputPrefix + "_secondary", std::ios::binary);
-    auto markupFile = std::make_shared<std::ifstream>(inputPrefix + "_markup", std::ios::binary);
+void decompress(const std::string& inputPrefix, const std::string& outputFile, const CompressionConfig& compressionConfig) {
+    auto primaryFile = openInputFile(inputPrefix + "_primary");
+    auto secondaryFile = openInputFile(inputPrefix + "_secondary");
+    auto markupFile = openInputFile(inputPrefix + "_markup");
 
-    if (!primaryFile || !secondaryFile || !markupFile) {
-        throw std::runtime_error("Error: Cannot open input files with prefix " + inputPrefix);
-    }
-
-    createDirectoriesForFile(outputFile);
-
-    auto outFile = std::make_shared<std::ofstream>(outputFile, std::ios::binary);
-    if (!outFile) {
-        throw std::runtime_error("Error: Cannot open output file " + outputFile);
-    }
+    auto outFile = openOutputFile(outputFile);
 
     auto primaryStream = std::make_shared<BitInputStream>(primaryFile);
     auto secondaryStream = std::make_shared<BitInputStream>(secondaryFile);
@@ -88,11 +112,19 @@ int main(int argc, char* argv[]) {
     std::string inputFile = argv[2];
     std::string outputFile = argv[3];
 
+    CompressionConfig compressionConfig;
+    try {
+        compressionConfig = parseCompressionConfig();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << "\n";
+        return 1;
+    }
+
     try {
         if (command == "compress") {
-            compress(inputFile, outputFile);
+            compress(inputFile, outputFile, compressionConfig);
         } else if (command == "decompress") {
-            decompress(inputFile, outputFile);
+            decompress(inputFile, outputFile, compressionConfig);
         } else {
             std::cerr << "Error: Unknown command " << command << "\n";
             return 1;
