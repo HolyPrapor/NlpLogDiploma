@@ -20,6 +20,10 @@ jobs:
           cmake -Bbuild -H. -DBUILD_TESTING=OFF
           sudo cmake --build build/ --target install
 
+      - name: Install Protobuf
+        run: |
+          sudo apt-get install -y protobuf-compiler libprotobuf-dev
+
       - name: Configure CMake
         run: cmake -B build -S v2 -DCMAKE_BUILD_TYPE=Release
         working-directory: ${{ github.workspace }}
