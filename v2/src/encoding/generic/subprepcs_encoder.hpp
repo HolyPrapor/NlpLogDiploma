@@ -16,7 +16,7 @@
 
 using PrimaryLogEncoderFactory = std::function<std::unique_ptr<PrimaryLogEncoder>(
         std::unique_ptr<LogLinkEncoder>, std::unique_ptr<LogStorage>, std::unique_ptr<SecondaryLogEncoder>,
-        std::shared_ptr<BitOutputStream>, std::shared_ptr<BitOutputStream>, int)>;
+        std::shared_ptr<BitOutputStream>, std::shared_ptr<BitOutputStream>)>;
 
 using SecondaryLogEncoderFactory = std::function<std::unique_ptr<SecondaryLogEncoder>(std::shared_ptr<BitOutputStream>)>;
 

@@ -19,7 +19,7 @@ public:
     void Feed(const Token& token);
     void Finish() override;
 
-    static std::unique_ptr<ModellingDecoder> CreateDefault(const std::shared_ptr<BitInputStream> &inputStream);
+    static std::unique_ptr<ModellingDecoder> CreateDefault(const std::shared_ptr<BitInputStream> &inputStream, int context_size = 5);
 
 private:
     std::unique_ptr<PPMDecoderModel> model;

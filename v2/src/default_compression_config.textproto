@@ -2,23 +2,23 @@
 # proto-message: CompressionConfig
 
 primary_log_coder {
-  residue_log_link_coder {  # Directly specify the field inside the `oneof`
+  residue_log_link_coder {
   }
-  greedy_sliding_window_storage {  # Directly specify the field inside the `oneof`
+  greedy_sliding_window_storage {
   }
-  storage_size: 256
-  min_link_length: 4
+  storage_size: 255
+  min_link_length: 10
 }
 
 secondary_log_coder {
-  ppm_secondary_log_coder {  # Directly specify the field inside the `oneof`
-    window_size: 128
+  ppm_secondary_log_coder {
+    window_size: 3
   }
 }
 
 generic_primary_coder {
   modelling_coder {
-    context_size: 5
+    context_size: 3
   }
 }
 

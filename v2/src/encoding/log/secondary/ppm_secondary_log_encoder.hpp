@@ -10,7 +10,7 @@
 
 class PPMSecondaryLogEncoder : public SecondaryLogEncoder {
 public:
-    explicit PPMSecondaryLogEncoder(const std::shared_ptr<BitOutputStream>& outputStream);
+    explicit PPMSecondaryLogEncoder(const std::shared_ptr<BitOutputStream>& outputStream, int context_size = 5);
     ~PPMSecondaryLogEncoder() override = default;
 
     void EncodeToken(const Token& token) override;

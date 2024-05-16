@@ -68,9 +68,9 @@ SubPrePcsDecoder SubPrePcsDecoder::CreateNaive(std::shared_ptr<BitInputStream> p
                 return std::make_unique<PrimaryLogDecoder>(std::move(linkDecoder), std::move(storage), std::move(secondaryDecoder), primaryIn, markupIn);
             },
             [](std::shared_ptr<BitInputStream> in) { return std::make_unique<NaiveSecondaryLogDecoder>(in); },
-            ModellingDecoder::CreateDefault,
-            ModellingDecoder::CreateDefault,
-            ModellingDecoder::CreateDefault,
+            [](std::shared_ptr<BitInputStream> in) { return ModellingDecoder::CreateDefault(in); },
+            [](std::shared_ptr<BitInputStream> in) { return ModellingDecoder::CreateDefault(in); },
+            [](std::shared_ptr<BitInputStream> in) { return ModellingDecoder::CreateDefault(in); },
             std::move(linkDecoder),
             std::move(storage)
     );
@@ -89,9 +89,9 @@ SubPrePcsDecoder SubPrePcsDecoder::CreateResidue(std::shared_ptr<BitInputStream>
                 return std::make_unique<PrimaryLogDecoder>(std::move(linkDecoder), std::move(storage), std::move(secondaryDecoder), primaryIn, markupIn);
             },
             [](std::shared_ptr<BitInputStream> in) { return std::make_unique<ResidueSecondaryLogDecoder>(in); },
-            ModellingDecoder::CreateDefault,
-            ModellingDecoder::CreateDefault,
-            ModellingDecoder::CreateDefault,
+            [](std::shared_ptr<BitInputStream> in) { return ModellingDecoder::CreateDefault(in); },
+            [](std::shared_ptr<BitInputStream> in) { return ModellingDecoder::CreateDefault(in); },
+            [](std::shared_ptr<BitInputStream> in) { return ModellingDecoder::CreateDefault(in); },
             std::move(linkDecoder),
             std::move(storage)
     );
@@ -110,9 +110,9 @@ SubPrePcsDecoder SubPrePcsDecoder::CreatePPM(std::shared_ptr<BitInputStream> pri
                 return std::make_unique<PrimaryLogDecoder>(std::move(linkDecoder), std::move(storage), std::move(secondaryDecoder), primaryIn, markupIn);
             },
             [](std::shared_ptr<BitInputStream> in) { return std::make_unique<PPMSecondaryLogDecoder>(in); },
-            ModellingDecoder::CreateDefault,
+            [](std::shared_ptr<BitInputStream> in) { return ModellingDecoder::CreateDefault(in); },
             [](std::shared_ptr<BitInputStream> in) { return std::make_unique<IdentityDecoder>(in); },
-            ModellingDecoder::CreateDefault,
+            [](std::shared_ptr<BitInputStream> in) { return ModellingDecoder::CreateDefault(in); },
             std::move(linkDecoder),
             std::move(storage)
     );

@@ -19,7 +19,7 @@ public:
     void Feed(const Token& token);
     void Finish() override;
 
-    static std::unique_ptr<ModellingEncoder> CreateDefault(const std::shared_ptr<BitOutputStream> &outputStream);
+    static std::unique_ptr<ModellingEncoder> CreateDefault(const std::shared_ptr<BitOutputStream> &outputStream, int context_size = 5);
 
 private:
     std::vector<unsigned char> buffer;

@@ -44,7 +44,7 @@ SubPrePcsEncoder SubPrePcsEncoder::Create(std::shared_ptr<BitOutputStream> prima
     auto markupInMemoryOut = std::make_shared<BitOutputStream>(markupInMemory);
 
     auto secondaryEncoder = secondaryFactory(secondaryInMemoryOut);
-    auto primaryEncoder = primaryFactory(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryInMemoryOut, markupInMemoryOut, 6);
+    auto primaryEncoder = primaryFactory(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryInMemoryOut, markupInMemoryOut);
 
     auto primaryGenericEncoder = primaryGenericFactory(primary);
     auto secondaryGenericEncoder = secondaryGenericFactory(secondary);
@@ -72,13 +72,13 @@ SubPrePcsEncoder SubPrePcsEncoder::CreateNaive(
             primary,
             secondary,
             markup,
-            [](std::unique_ptr<LogLinkEncoder> linkEncoder, std::unique_ptr<LogStorage> storage, std::unique_ptr<SecondaryLogEncoder> secondaryEncoder, std::shared_ptr<BitOutputStream> primaryOut, std::shared_ptr<BitOutputStream> markupOut, int someInt) {
-                return std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryOut, markupOut, someInt);
+            [](std::unique_ptr<LogLinkEncoder> linkEncoder, std::unique_ptr<LogStorage> storage, std::unique_ptr<SecondaryLogEncoder> secondaryEncoder, std::shared_ptr<BitOutputStream> primaryOut, std::shared_ptr<BitOutputStream> markupOut) {
+                return std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryOut, markupOut);
             },
             [](std::shared_ptr<BitOutputStream> out) { return std::make_unique<NaiveSecondaryLogEncoder>(out); },
-            ModellingEncoder::CreateDefault,
-            ModellingEncoder::CreateDefault,
-            ModellingEncoder::CreateDefault,
+            [](std::shared_ptr<BitOutputStream> out) { return ModellingEncoder::CreateDefault(out); },
+            [](std::shared_ptr<BitOutputStream> out) { return ModellingEncoder::CreateDefault(out); },
+            [](std::shared_ptr<BitOutputStream> out) { return ModellingEncoder::CreateDefault(out); },
             std::move(linkEncoder),
             std::move(storage)
     );
@@ -95,13 +95,13 @@ SubPrePcsEncoder SubPrePcsEncoder::CreateResidue(
             primary,
             secondary,
             markup,
-            [](std::unique_ptr<LogLinkEncoder> linkEncoder, std::unique_ptr<LogStorage> storage, std::unique_ptr<SecondaryLogEncoder> secondaryEncoder, std::shared_ptr<BitOutputStream> primaryOut, std::shared_ptr<BitOutputStream> markupOut, int someInt) {
-                return std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryOut, markupOut, someInt);
+            [](std::unique_ptr<LogLinkEncoder> linkEncoder, std::unique_ptr<LogStorage> storage, std::unique_ptr<SecondaryLogEncoder> secondaryEncoder, std::shared_ptr<BitOutputStream> primaryOut, std::shared_ptr<BitOutputStream> markupOut) {
+                return std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryOut, markupOut);
             },
             [](std::shared_ptr<BitOutputStream> out) { return std::make_unique<ResidueSecondaryLogEncoder>(out); },
-            ModellingEncoder::CreateDefault,
-            ModellingEncoder::CreateDefault,
-            ModellingEncoder::CreateDefault,
+            [](std::shared_ptr<BitOutputStream> out) { return ModellingEncoder::CreateDefault(out); },
+            [](std::shared_ptr<BitOutputStream> out) { return ModellingEncoder::CreateDefault(out); },
+            [](std::shared_ptr<BitOutputStream> out) { return ModellingEncoder::CreateDefault(out); },
             std::move(linkEncoder),
             std::move(storage)
     );
@@ -118,13 +118,13 @@ SubPrePcsEncoder SubPrePcsEncoder::CreatePPM(
             primary,
             secondary,
             markup,
-            [](std::unique_ptr<LogLinkEncoder> linkEncoder, std::unique_ptr<LogStorage> storage, std::unique_ptr<SecondaryLogEncoder> secondaryEncoder, std::shared_ptr<BitOutputStream> primaryOut, std::shared_ptr<BitOutputStream> markupOut, int someInt) {
-                return std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryOut, markupOut, someInt);
+            [](std::unique_ptr<LogLinkEncoder> linkEncoder, std::unique_ptr<LogStorage> storage, std::unique_ptr<SecondaryLogEncoder> secondaryEncoder, std::shared_ptr<BitOutputStream> primaryOut, std::shared_ptr<BitOutputStream> markupOut) {
+                return std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryOut, markupOut);
             },
             [](std::shared_ptr<BitOutputStream> out) { return std::make_unique<PPMSecondaryLogEncoder>(out); },
-            ModellingEncoder::CreateDefault,
+            [](std::shared_ptr<BitOutputStream> out) { return ModellingEncoder::CreateDefault(out); },
             [](std::shared_ptr<BitOutputStream> out) { return std::make_unique<IdentityEncoder>(out); },
-            ModellingEncoder::CreateDefault,
+            [](std::shared_ptr<BitOutputStream> out) { return ModellingEncoder::CreateDefault(out); },
             std::move(linkEncoder),
             std::move(storage)
     );

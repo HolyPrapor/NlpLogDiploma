@@ -4,8 +4,8 @@
 
 #include "modelling_encoder.hpp"
 
-std::unique_ptr<ModellingEncoder> ModellingEncoder::CreateDefault(const std::shared_ptr<BitOutputStream> &outputStream) {
-    auto model = std::make_unique<PPMEncoderModel>(5);
+std::unique_ptr<ModellingEncoder> ModellingEncoder::CreateDefault(const std::shared_ptr<BitOutputStream> &outputStream, int context_size) {
+    auto model = std::make_unique<PPMEncoderModel>(context_size);
     auto encoder = std::make_unique<ArithmeticEncoder>(32, outputStream);
     return std::make_unique<ModellingEncoder>(std::move(model), std::move(encoder));
 }
