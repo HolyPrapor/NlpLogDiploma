@@ -12,7 +12,8 @@ def create_cli_instances():
             "storage_size": 2
         }
     }
-    return [Bzip2(), SubPrePCS(), SubPrePCS(test_instance_params)]
+    # return [Bzip2(), SubPrePCS(), SubPrePCS(test_instance_params)]
+    return [SubPrePCS(test_instance_params)]
 
 
 def benchmark_clis(input_dir, output_dir):

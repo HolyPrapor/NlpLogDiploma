@@ -67,4 +67,7 @@ def save_textproto(config, filepath):
     """Saves a dictionary as a textproto file."""
     textproto_str = dict_to_textproto(config)
     with open(filepath, 'w') as f:
+        f.writelines(["# proto-file: compression_config.proto\n",
+                      "# proto-message: CompressionConfig\n",
+                      "\n"])
         f.write(textproto_str)

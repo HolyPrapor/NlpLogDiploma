@@ -39,7 +39,9 @@ void createDirectoriesForFile(const std::string& filePath) {
 CompressionConfig parseEmbeddedConfig() {
     CompressionConfig compressionConfig;
     std::string protoStr(reinterpret_cast<const char*>(default_compression_config_textproto), default_compression_config_textproto_len);
-    if (!google::protobuf::TextFormat::ParseFromString(protoStr, &compressionConfig)) {
+    google::protobuf::TextFormat::Parser parser;
+    parser.AllowUnknownField(false); // Disallow unknown fields
+    if (!parser.ParseFromString(protoStr, &compressionConfig)) {
         throw std::runtime_error("Error: Failed to parse embedded textproto");
     }
     return compressionConfig;
@@ -49,15 +51,19 @@ CompressionConfig parseCompressionConfig() {
     CompressionConfig compressionConfig;
 
     // Check if std::cin has data
-    if (std::cin.rdbuf()->in_avail() > 0) {
+    if (std::cin.peek() != std::char_traits<char>::eof()) {
         std::ostringstream inputBuffer;
         inputBuffer << std::cin.rdbuf();
         std::string protoStr = inputBuffer.str();
+        std::cout << "Parsing textproto from stdin\n";
 
-        if (!google::protobuf::TextFormat::ParseFromString(protoStr, &compressionConfig)) {
+        google::protobuf::TextFormat::Parser parser;
+        parser.AllowUnknownField(false); // Disallow unknown fields
+        if (!parser.ParseFromString(protoStr, &compressionConfig)) {
             throw std::runtime_error("Error: Failed to parse textproto from stdin");
         }
     } else {
+        std::cout << "Parsing embedded textproto\n";
         compressionConfig = parseEmbeddedConfig();
     }
 
