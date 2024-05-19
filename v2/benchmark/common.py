@@ -6,6 +6,7 @@ import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from abc import ABC, abstractmethod
+from tqdm import tqdm
 
 
 class CompressionResult:
@@ -105,7 +106,7 @@ def run_commands_in_parallel(clis, dataset_path, max_workers=6):
         dataset = load_dataset(dataset_path)
         futures = {executor.submit(run_command_with_temp_dir, cli, test_type, input_file): (cli, test_type, input_file) for cli in clis for test_type, input_files in dataset.items() for input_file in input_files}
 
-        for future in as_completed(futures):
+        for future in tqdm(as_completed(futures), total=len(futures), desc="Running commands"):
             command = futures[future]
             try:
                 output = future.result()

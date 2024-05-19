@@ -39,7 +39,8 @@ class SubPrePCS(CompressionCLI):
         return config_file_path
 
     def __str__(self):
-        return f"SubPrePCS({self.params})"
+        # remove all commas and newlines
+        return f"SubPrePCS({self.params})".replace(',', '').replace('\n', '')
 
 
 def dict_to_textproto(d, indent=0):

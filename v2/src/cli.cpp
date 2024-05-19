@@ -55,7 +55,6 @@ CompressionConfig parseCompressionConfig() {
         std::ostringstream inputBuffer;
         inputBuffer << std::cin.rdbuf();
         std::string protoStr = inputBuffer.str();
-        std::cout << "Parsing textproto from stdin\n";
 
         google::protobuf::TextFormat::Parser parser;
         parser.AllowUnknownField(false); // Disallow unknown fields
@@ -63,7 +62,6 @@ CompressionConfig parseCompressionConfig() {
             throw std::runtime_error("Error: Failed to parse textproto from stdin");
         }
     } else {
-        std::cout << "Parsing embedded textproto\n";
         compressionConfig = parseEmbeddedConfig();
     }
 
