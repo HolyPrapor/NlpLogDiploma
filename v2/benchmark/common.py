@@ -66,7 +66,6 @@ def calculate_entropy(filenames):
     return entropy
 
 
-
 def save_results(results, path):
     """Saves results as csv to the specified path."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
