@@ -2,28 +2,32 @@ import os
 from v2.benchmark.common import CompressionCLI, calculate_entropy
 
 
-class SubPrePCSCLI(CompressionCLI):
-    def __init__(self, executable, params):
-        self.executable = executable
-        self.params = params
+class SubPrePCS(CompressionCLI):
+    def __init__(self, params=None):
+        self.executable = "../../build/cli"
+        self.params = params or {}
 
     def compress_command(self, input_file, output_dir):
         config_file = self.create_config_file(output_dir)
-        return f"cat {config_file} | {self.executable} compress {input_file} {output_dir}"
+        filename = os.path.splitext(os.path.basename(input_file))[0]
+        output_prefix = os.path.join(output_dir, filename)
+        return f"cat {config_file} | {self.executable} compress {input_file} {output_prefix}"
 
     def decompress_command(self, input_file, output_dir):
         config_file = self.create_config_file(output_dir)
-        return f"cat {config_file} | {self.executable} decompress {output_dir} {input_file}"
+        filename = os.path.splitext(os.path.basename(input_file))[0]
+        output_prefix = os.path.join(output_dir, filename)
+        return f"cat {config_file} | {self.executable} decompress {output_prefix} {input_file}"
 
     def compressed_size(self, input_file, output_dir):
-        filename = os.path.basename(input_file)
+        filename = os.path.splitext(os.path.basename(input_file))[0]
         primary = os.path.join(output_dir, f'{filename}_primary')
         secondary = os.path.join(output_dir, f'{filename}_secondary')
         markup = os.path.join(output_dir, f'{filename}_markup')
         return os.path.getsize(primary) + os.path.getsize(secondary) + os.path.getsize(markup)
 
     def entropy(self, input_file, output_dir):
-        filename = os.path.basename(input_file)
+        filename = os.path.splitext(os.path.basename(input_file))[0]
         primary = os.path.join(output_dir, f'{filename}_primary')
         secondary = os.path.join(output_dir, f'{filename}_secondary')
         markup = os.path.join(output_dir, f'{filename}_markup')
@@ -35,7 +39,7 @@ class SubPrePCSCLI(CompressionCLI):
         return config_file_path
 
     def __str__(self):
-        return f"SubPrePCSCLI({self.params})"
+        return f"SubPrePCS({self.params})"
 
 
 def dict_to_textproto(d, indent=0):

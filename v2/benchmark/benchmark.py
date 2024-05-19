@@ -1,18 +1,29 @@
+import os
+from datetime import datetime
+
 import common
+from CLIs.subprepcs import SubPrePCS
+from CLIs.bzip import Bzip2
 
-# List of CLIs to benchmark with parameters
-cli_commands = [
-    {'executable': './my_compression_cli', 'params': {'param1': 1, 'param2': 0.1, 'param3': 'option1'}},
-    {'executable': './another_compression_cli', 'params': {'paramA': 1, 'paramB': 0.1, 'paramC': 'option1'}},
-    {'executable': './yet_another_compression_cli', 'params': {'opt1': 1, 'opt2': 0.1, 'opt3': 'option1'}}
-]
 
-def benchmark_clis(input_dir):
-    cli_instances = create_cli_instances(cli_commands)
+def create_cli_instances():
+    test_instance_params = {
+        "primary_log_coder": {
+            "storage_size": 2
+        }
+    }
+    return [Bzip2(), SubPrePCS(), SubPrePCS(test_instance_params)]
+
+
+def benchmark_clis(input_dir, output_dir):
+    formatted_now = datetime.now().strftime("%Y%m%d_%H%M%S")
+    cli_instances = create_cli_instances()
     results = common.run_commands_in_parallel(cli_instances, input_dir)
-    common.save_results(results, 'benchmark_results.csv')
+    output = os.path.join(output_dir, f'benchmark_results-{formatted_now}.csv')
+    common.save_results(results, output)
 
 
 if __name__ == '__main__':
-    input_directory = '../../test_files'
-    benchmark_clis(input_directory)
+    input_directory = '../../test_files/logs'
+    output_directory = "/tmp/subprepcs"
+    benchmark_clis(input_directory, output_directory)

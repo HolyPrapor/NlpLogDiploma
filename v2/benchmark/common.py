@@ -18,7 +18,7 @@ class CompressionResult:
         self.filename = filename
 
     def __str__(self):
-        return f"{self.algo} - {self.filename}: Compress: {self.compressMs}ms, Decompress: {self.decompressMs}ms, Compression Ratio: {self.compressionRatio}, Entropy: {self.entropy}"
+        return f"{self.algo} - {self.filename}: Compress: {self.compressMs:.0f}ms, Decompress: {self.decompressMs:.0f}ms, Compression Ratio: {self.compressionRatio:.3f}, Entropy: {self.entropy:.3f}"
 
 
 class CompressionCLI(ABC):
@@ -90,13 +90,14 @@ def run_command_with_temp_dir(cli, test_type, input_file):
 
         compressed_size = cli.compressed_size(input_file, temp_dir)
         original_size = os.path.getsize(input_file)
-        compression_ratio = compressed_size / original_size if original_size != 0 else 0
+        compression_ratio = original_size / compressed_size if compressed_size != 0 else 0
         entropy = cli.entropy(input_file, temp_dir)
 
-        return CompressionResult(str(cli), f"{test_type}-{input_file}", compress_ms, decompress_ms, compression_ratio, entropy)
+        formatted_filename = os.path.basename(input_file)
+        return CompressionResult(str(cli), f"{test_type}-{formatted_filename}", compress_ms, decompress_ms, compression_ratio, entropy)
 
 
-def run_commands_in_parallel(clis, dataset_path, max_workers=6):
+def run_commands_in_parallel(clis, dataset_path, max_workers=12):
     """Runs a list of commands in parallel and returns the results."""
     results = []
 
