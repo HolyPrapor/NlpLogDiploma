@@ -80,7 +80,10 @@ def create_cli_instances():
         SingleCell("secondary_log_coder",
                    OneOfCell("secondary_log_coder",
                              # SingleCell("residue_secondary_log_coder"),
-                             SingleCell("ppm_secondary_log_coder", ListCell("window_size", *[2, 3, 4]))))
+                             SingleCell("ppm_secondary_log_coder", ListCell("window_size", *[2, 3, 4])))),
+        SingleCell("generic_primary_coder", SingleCell("modelling_coder", ListCell("context_size", *[2, 3, 4]))),
+        SingleCell("generic_secondary_coder", SingleCell("identity_coder")),
+        SingleCell("generic_markup_coder", SingleCell("modelling_coder", ListCell("context_size", *[2, 3, 4]))),
           )
 
     return [SubPrePCS(params) for params in expand_cell({}, grid)]
@@ -96,7 +99,7 @@ def hyperparameter_search(input_dir, output_dir):
 
 if __name__ == '__main__':
     input_directory = '../../test_files/logs'
-    output_directory = '/tmp/subprepcs'
+    output_directory = 'results'
     hyperparameter_search(input_directory, output_directory)
 
 

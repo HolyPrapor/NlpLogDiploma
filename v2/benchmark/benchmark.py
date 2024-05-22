@@ -12,19 +12,18 @@ def create_cli_instances():
             "storage_size": 2
         }
     }
-    # return [Bzip2(), SubPrePCS(), SubPrePCS(test_instance_params)]
-    return [SubPrePCS(test_instance_params)]
+    return [Bzip2(), SubPrePCS(), SubPrePCS(test_instance_params)]
 
 
 def benchmark_clis(input_dir, output_dir):
     formatted_now = datetime.now().strftime("%Y%m%d_%H%M%S")
     cli_instances = create_cli_instances()
-    results = common.run_commands_in_parallel(cli_instances, input_dir)
+    results = common.run_commands_in_parallel(cli_instances, input_dir, 2)
     output = os.path.join(output_dir, f'benchmark_results-{formatted_now}.csv')
     common.save_results(results, output)
 
 
 if __name__ == '__main__':
     input_directory = '../../test_files/logs'
-    output_directory = "/tmp/subprepcs"
+    output_directory = "results"
     benchmark_clis(input_directory, output_directory)
