@@ -286,12 +286,12 @@ vector<Token> BWT::zleEncode(std::vector<Token>& bytes)
         {
             while (count > 0)
             {
-                result.push_back((count & 1) ? 257 : 256);
+                result.push_back((count & 1) ? 254 : 253);
                 count >>= 1;
             }
             count = 0;
         }
-        if (byte == 257 || byte == 256)
+        if (byte == 254 || byte == 253)
         {
             result.push_back(0);
         }
@@ -302,7 +302,7 @@ vector<Token> BWT::zleEncode(std::vector<Token>& bytes)
     {
         while (count > 0)
         {
-            result.push_back((count & 1) == 1 ? 257 : 256);
+            result.push_back((count & 1) == 1 ? 254 : 253);
             count >>= 1;
         }
     }
@@ -321,9 +321,9 @@ vector<Token> BWT::zleDecode(std::vector<Token>& bytes)
     while (i < size)
     {
         auto byte = bytes[i];
-        if (byte == 257 || byte == 256)
+        if (byte == 254 || byte == 253)
         {
-            run_length |= (byte == 257 ? 1 : 0) << run_bin_len;
+            run_length |= (byte == 254 ? 1 : 0) << run_bin_len;
             run_bin_len += 1;
             i += 1;
             continue;

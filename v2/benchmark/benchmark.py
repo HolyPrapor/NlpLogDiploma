@@ -9,7 +9,30 @@ from CLIs.bzip import Bzip2
 def create_cli_instances():
     test_instance_params = {
         "primary_log_coder": {
-            "storage_size": 2
+            "storage_size": 255,
+            "min_link_length": 10,
+            "greedy_move_to_front_storage": {
+            }
+        },
+        "secondary_log_coder": {
+            "ppm_secondary_log_coder": {
+                "window_size": 5
+            }
+        },
+        "generic_primary_coder": {
+            "bwt_modelling_coder": {
+                "context_size": 3,
+                "chunk_size": 1000000
+            }
+        },
+        "generic_secondary_coder": {
+            "identity_coder": {}
+        },
+        "generic_markup_coder": {
+            "bwt_modelling_coder": {
+                "context_size": 2,
+                "chunk_size": 1000000
+            }
         }
     }
     return [Bzip2(), SubPrePCS(), SubPrePCS(test_instance_params)]
