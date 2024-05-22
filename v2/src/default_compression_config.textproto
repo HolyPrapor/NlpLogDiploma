@@ -17,8 +17,9 @@ secondary_log_coder {
 }
 
 generic_primary_coder {
-  modelling_coder {
+  bwt_modelling_coder {
     context_size: 3
+    chunk_size: 900000
   }
 }
 
@@ -28,7 +29,8 @@ generic_secondary_coder {
 }
 
 generic_markup_coder {
-  modelling_coder {
+  bwt_modelling_coder {
     context_size: 3
+    chunk_size: 900000
   }
 }

@@ -60,12 +60,18 @@ message GenericCoderConfig {
   oneof coder {
     ModellingCoder modelling_coder = 1;
     IdentityCoder identity_coder = 2;
+    BwtModellingCoder bwt_modelling_coder = 3;
   }
 }
 
 // Generic coder configurations
 message ModellingCoder {
   int32 context_size = 1;
+}
+
+message BwtModellingCoder {
+  int32 context_size = 1;
+  int32 chunk_size = 2;
 }
 
 message IdentityCoder {

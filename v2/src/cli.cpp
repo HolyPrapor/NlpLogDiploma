@@ -25,6 +25,8 @@
 #include "encoding/log/secondary/residue_secondary_log_decoder.hpp"
 #include "encoding/log/secondary/naive_secondary_log_decoder.hpp"
 #include "encoding/generic/identity_decoder.hpp"
+#include "encoding/generic/modelling_bwt_encoder.hpp"
+#include "encoding/generic/modelling_bwt_decoder.hpp"
 
 namespace fs = std::filesystem;
 
@@ -51,7 +53,7 @@ CompressionConfig parseCompressionConfig() {
     CompressionConfig compressionConfig;
 
     // Check if std::cin has data
-    if (std::cin.peek() != std::char_traits<char>::eof()) {
+    if (std::cin.rdbuf()->in_avail() && std::cin.peek() != std::char_traits<char>::eof()) {
         std::ostringstream inputBuffer;
         inputBuffer << std::cin.rdbuf();
         std::string protoStr = inputBuffer.str();
@@ -144,6 +146,9 @@ std::unique_ptr<GenericEncoder> createGenericEncoder(const GenericCoderConfig& c
     if (config.has_modelling_coder()) {
         return ModellingEncoder::CreateDefault(stream, config.modelling_coder().context_size());
     }
+    if (config.has_bwt_modelling_coder()) {
+        return std::make_unique<ModellingBwtEncoder>(stream, config.bwt_modelling_coder().context_size(), config.bwt_modelling_coder().chunk_size());
+    }
     return ModellingEncoder::CreateDefault(stream);
 }
 
@@ -221,6 +226,9 @@ std::unique_ptr<GenericDecoder> createGenericDecoder(const GenericCoderConfig& c
     }
     if (config.has_modelling_coder()) {
         return ModellingDecoder::CreateDefault(stream, config.modelling_coder().context_size());
+    }
+    if (config.has_bwt_modelling_coder()) {
+        return std::make_unique<ModellingBwtDecoder>(stream, config.bwt_modelling_coder().context_size(), config.bwt_modelling_coder().chunk_size());
     }
     return ModellingDecoder::CreateDefault(stream);
 }
