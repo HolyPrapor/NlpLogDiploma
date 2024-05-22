@@ -12,6 +12,7 @@
 #include "encoding/log/secondary/ppm_secondary_log_decoder.hpp"
 #include "encoding/log/link/residue_link_encoder.hpp"
 #include "identity_decoder.hpp"
+#include "modelling_bwt_decoder.hpp"
 
 SubPrePcsDecoder SubPrePcsDecoder::Create(std::shared_ptr<BitInputStream> primary,
                                           std::shared_ptr<BitInputStream> secondary,
@@ -118,6 +119,27 @@ SubPrePcsDecoder SubPrePcsDecoder::CreatePPM(std::shared_ptr<BitInputStream> pri
     );
 }
 
+SubPrePcsDecoder SubPrePcsDecoder::CreateBWTPPM(std::shared_ptr<BitInputStream> primary,
+                                                std::shared_ptr<BitInputStream> secondary,
+                                                std::shared_ptr<BitInputStream> markup,
+                                                std::unique_ptr<LogLinkDecoder> linkDecoder,
+                                                std::unique_ptr<LogStorage> storage) {
+    return Create(
+            primary,
+            secondary,
+            markup,
+            [](std::unique_ptr<LogLinkDecoder> linkDecoder, std::unique_ptr<LogStorage> storage, std::unique_ptr<SecondaryLogDecoder> secondaryDecoder, std::shared_ptr<BitInputStream> primaryIn, std::shared_ptr<BitInputStream> markupIn) {
+                return std::make_unique<PrimaryLogDecoder>(std::move(linkDecoder), std::move(storage), std::move(secondaryDecoder), primaryIn, markupIn);
+            },
+            [](std::shared_ptr<BitInputStream> in) { return std::make_unique<PPMSecondaryLogDecoder>(in); },
+            [](std::shared_ptr<BitInputStream> in) { return std::make_unique<ModellingBwtDecoder>(in); },
+            [](std::shared_ptr<BitInputStream> in) { return ModellingDecoder::CreateDefault(in); },
+            [](std::shared_ptr<BitInputStream> in) { return std::make_unique<ModellingBwtDecoder>(in); },
+            std::move(linkDecoder),
+            std::move(storage)
+    );
+}
+
 SubPrePcsDecoder::SubPrePcsDecoder(std::unique_ptr<PrimaryLogDecoder>&& primaryDecoder, std::unique_ptr<SecondaryLogDecoder>&& secondaryDecoder,
                                    std::shared_ptr<BitOutputStream> primary, std::shared_ptr<BitOutputStream> secondary, std::shared_ptr<BitOutputStream> markup,
                                    std::unique_ptr<GenericDecoder>&& primaryGenericDecoder, std::unique_ptr<GenericDecoder>&& secondaryGenericDecoder, std::unique_ptr<GenericDecoder>&& markupGenericDecoder)
@@ -139,9 +161,9 @@ void SubPrePcsDecoder::Decode(BitOutputStream& data) {
     primaryGenericDecoder->Decode(*primary);
     secondaryGenericDecoder->Decode(*secondary);
     markupGenericDecoder->Decode(*markup);
-    primaryGenericDecoder->Finish(data);
-    secondaryGenericDecoder->Finish(data);
-    markupGenericDecoder->Finish(data);
+    primaryGenericDecoder->Finish(*primary);
+    secondaryGenericDecoder->Finish(*secondary);
+    markupGenericDecoder->Finish(*markup);
 
     while (true) {
         auto tokens = primaryDecoder->DecodeLine();

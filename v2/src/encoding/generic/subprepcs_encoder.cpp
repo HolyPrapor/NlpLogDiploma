@@ -12,6 +12,7 @@
 #include "encoding/log/secondary/residue_secondary_log_encoder.hpp"
 #include "encoding/log/secondary/ppm_secondary_log_encoder.hpp"
 #include "identity_encoder.hpp"
+#include "modelling_bwt_encoder.hpp"
 
 SubPrePcsEncoder SubPrePcsEncoder::Create(std::shared_ptr<BitOutputStream> primary,
                                           std::shared_ptr<BitOutputStream> secondary,
@@ -125,6 +126,29 @@ SubPrePcsEncoder SubPrePcsEncoder::CreatePPM(
             [](std::shared_ptr<BitOutputStream> out) { return ModellingEncoder::CreateDefault(out); },
             [](std::shared_ptr<BitOutputStream> out) { return std::make_unique<IdentityEncoder>(out); },
             [](std::shared_ptr<BitOutputStream> out) { return ModellingEncoder::CreateDefault(out); },
+            std::move(linkEncoder),
+            std::move(storage)
+    );
+}
+
+SubPrePcsEncoder SubPrePcsEncoder::CreateBWTPPM(
+        std::shared_ptr<BitOutputStream> primary,
+        std::shared_ptr<BitOutputStream> secondary,
+        std::shared_ptr<BitOutputStream> markup,
+        std::unique_ptr<LogLinkEncoder> linkEncoder,
+        std::unique_ptr<LogStorage> storage)
+{
+    return Create(
+            primary,
+            secondary,
+            markup,
+            [](std::unique_ptr<LogLinkEncoder> linkEncoder, std::unique_ptr<LogStorage> storage, std::unique_ptr<SecondaryLogEncoder> secondaryEncoder, std::shared_ptr<BitOutputStream> primaryOut, std::shared_ptr<BitOutputStream> markupOut) {
+                return std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryOut, markupOut);
+            },
+            [](std::shared_ptr<BitOutputStream> out) { return std::make_unique<PPMSecondaryLogEncoder>(out); },
+            [](std::shared_ptr<BitOutputStream> out) { return std::make_unique<ModellingBwtEncoder>(out); },
+            [](std::shared_ptr<BitOutputStream> out) { return std::make_unique<IdentityEncoder>(out); },
+            [](std::shared_ptr<BitOutputStream> out) { return std::make_unique<ModellingBwtEncoder>(out); },
             std::move(linkEncoder),
             std::move(storage)
     );

@@ -12,4 +12,5 @@ void IdentityDecoder::Decode(BitOutputStream& data) {
     while (!inputStream_->IsEOF()) {
         data.Write(inputStream_->ReadWithoutEOF());
     }
+    data.Flush();
 }

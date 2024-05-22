@@ -11,7 +11,7 @@
 
 class BwtEncoder : public GenericEncoder {
 public:
-    explicit BwtEncoder(const std::shared_ptr<BitOutputStream>& outputStream, int chunkSize = 900000);
+    explicit BwtEncoder(const std::shared_ptr<BitOutputStream> outputStream, int chunkSize = 900000);
     ~BwtEncoder() override = default;
 
     void Encode(BitInputStream& data) override;

@@ -44,6 +44,8 @@ public:
 
     static SubPrePcsDecoder CreatePPM(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
                                       std::unique_ptr<LogLinkDecoder> linkDecoder = nullptr, std::unique_ptr<LogStorage> storage = nullptr);
+    static SubPrePcsDecoder CreateBWTPPM(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
+                                         std::unique_ptr<LogLinkDecoder> linkDecoder = nullptr, std::unique_ptr<LogStorage> storage = nullptr);
 
 private:
     std::unique_ptr<PrimaryLogDecoder> primaryDecoder;

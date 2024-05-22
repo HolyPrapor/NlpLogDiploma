@@ -28,6 +28,7 @@ void ModellingDecoder::Decode(BitOutputStream &data) {
 
     auto buffer = model->DetokenizeChunk(tokens);
     data.WriteAll(buffer);
+    data.Flush();
 }
 
 Token ModellingDecoder::Decode() {

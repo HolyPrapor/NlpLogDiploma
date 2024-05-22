@@ -3,14 +3,15 @@
 //
 
 #include "bwt_decoder.hpp"
+#include "encoding/residue_coder.hpp"
 
-BwtDecoder::BwtDecoder(const std::shared_ptr<BitInputStream>& inputStream, int chunkSize) : chunkSize(chunkSize), bwt(chunkSize), inputStream(inputStream) {
+BwtDecoder::BwtDecoder(const std::shared_ptr<BitInputStream> inputStream, int chunkSize) : chunkSize(chunkSize), bwt(chunkSize), inputStream(inputStream) {
     buffer.reserve(chunkSize);
 }
 
 void BwtDecoder::Decode(BitOutputStream& data) {
     while (!inputStream->IsEOF()) {
-        auto byte = inputStream->ReadByte();
+        auto byte = ResidueCoder::DecodeInt(*inputStream, 255);
         buffer.push_back(byte);
         if (buffer.size() == chunkSize) {
             auto decoded = bwt.Decode(buffer);
@@ -20,6 +21,7 @@ void BwtDecoder::Decode(BitOutputStream& data) {
             buffer.clear();
         }
     }
+    data.Flush();
 }
 
 void BwtDecoder::Finish(BitOutputStream& data) {
@@ -29,4 +31,5 @@ void BwtDecoder::Finish(BitOutputStream& data) {
             data.WriteByte(token);
         }
     }
+    data.Flush();
 }

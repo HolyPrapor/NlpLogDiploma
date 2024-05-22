@@ -125,7 +125,7 @@ PPMBaseModel::PPMBaseModel(int context_size, int alphabet_size)
 PPMBaseModel::~PPMBaseModel() = default;
 
 Token PPMBaseModel::GetEndOfFileToken() {
-    return Token(alphabet_size - 1);
+    return Token(PPMEndOfFileToken);
 }
 
 Token PPMBaseModel::GetEscapeToken() const {

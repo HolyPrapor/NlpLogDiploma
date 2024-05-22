@@ -13,7 +13,7 @@
 
 class BwtDecoder : public GenericDecoder {
 public:
-    explicit BwtDecoder(const std::shared_ptr<BitInputStream>& inputStream, int chunkSize = 900000);
+    explicit BwtDecoder(const std::shared_ptr<BitInputStream> inputStream, int chunkSize = 900000);
     ~BwtDecoder() override = default;
 
     void Decode(BitOutputStream& data) override;
