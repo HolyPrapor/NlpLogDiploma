@@ -263,7 +263,7 @@ void decompress(const std::string& inputPrefix, const std::string& outputFile, c
 
     BitOutputStream outputStream(outFile);
     decoder.Decode(outputStream);
-    decoder.Finish();
+    decoder.Finish(outputStream);
 }
 
 int main(int argc, char* argv[]) {

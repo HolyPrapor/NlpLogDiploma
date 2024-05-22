@@ -30,7 +30,6 @@ public:
     ~SubPrePcsDecoder() override = default;
 
     void Decode(BitOutputStream& data) override;
-    void Finish() override;
 
     static SubPrePcsDecoder Create(std::shared_ptr<BitInputStream> primary, std::shared_ptr<BitInputStream> secondary, std::shared_ptr<BitInputStream> markup,
                                    PrimaryLogDecoderFactory primaryFactory, SecondaryLogDecoderFactory secondaryFactory, GenericDecoderFactory primaryGenericFactory,

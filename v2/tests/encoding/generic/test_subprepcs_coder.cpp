@@ -71,7 +71,7 @@ void decode(const std::string& primary, const std::string& secondary, const std:
     auto logData = std::make_shared<std::ofstream>(decoded, std::ios::binary);
     auto logBitData = std::make_shared<BitOutputStream>(logData);
     subPrePcsDecoder.Decode(*logBitData);
-    subPrePcsDecoder.Finish();
+    subPrePcsDecoder.Finish(*logBitData);
 }
 
 void compressAndDecompressFile(const std::string &basePath, const std::string &logSize, const std::string &logType,

@@ -17,7 +17,6 @@ public:
     void Decode(BitOutputStream& data) override;
     Token Decode();
     void Feed(const Token& token);
-    void Finish() override;
 
     static std::unique_ptr<ModellingDecoder> CreateDefault(const std::shared_ptr<BitInputStream> &inputStream, int context_size = 5);
 

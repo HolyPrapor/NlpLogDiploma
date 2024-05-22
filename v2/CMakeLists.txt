@@ -29,7 +29,7 @@ add_library(${PROJECT_NAME}
         src/encoding/log/link/storage/mtf_log_storage.cpp
         src/encoding/generic/identity_encoder.cpp
         src/encoding/generic/identity_decoder.cpp
-        src/encoding/generic/bwt_encoder.cpp src/encoding/generic/bwt_encoder.hpp src/utils/bwt.cpp src/utils/bwt.hpp)
+        src/encoding/generic/bwt_encoder.cpp src/encoding/generic/bwt_encoder.hpp src/utils/bwt.cpp src/utils/bwt.hpp src/encoding/generic/bwt_decoder.cpp src/encoding/generic/bwt_decoder.hpp)
 
 target_include_directories(${PROJECT_NAME}
         PUBLIC

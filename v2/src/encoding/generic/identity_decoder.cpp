@@ -13,7 +13,3 @@ void IdentityDecoder::Decode(BitOutputStream& data) {
         data.Write(inputStream_->ReadWithoutEOF());
     }
 }
-
-void IdentityDecoder::Finish() {
-    inputStream_->Close();
-}

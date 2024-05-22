@@ -139,9 +139,9 @@ void SubPrePcsDecoder::Decode(BitOutputStream& data) {
     primaryGenericDecoder->Decode(*primary);
     secondaryGenericDecoder->Decode(*secondary);
     markupGenericDecoder->Decode(*markup);
-    primaryGenericDecoder->Finish();
-    secondaryGenericDecoder->Finish();
-    markupGenericDecoder->Finish();
+    primaryGenericDecoder->Finish(data);
+    secondaryGenericDecoder->Finish(data);
+    markupGenericDecoder->Finish(data);
 
     while (true) {
         auto tokens = primaryDecoder->DecodeLine();
@@ -152,7 +152,4 @@ void SubPrePcsDecoder::Decode(BitOutputStream& data) {
     }
 
     data.Flush();
-}
-
-void SubPrePcsDecoder::Finish() {
 }

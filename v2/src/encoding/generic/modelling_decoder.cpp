@@ -40,6 +40,3 @@ void ModellingDecoder::Feed(const Token &token) {
     model->UpdateTrie();
     model->Feed(token);
 }
-
-void ModellingDecoder::Finish() {
-}

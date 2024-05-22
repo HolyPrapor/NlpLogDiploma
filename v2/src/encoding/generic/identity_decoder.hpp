@@ -15,7 +15,6 @@ public:
     ~IdentityDecoder() override = default;
 
     void Decode(BitOutputStream& data) override;
-    void Finish() override;
 
 private:
     std::shared_ptr<BitInputStream> inputStream_;

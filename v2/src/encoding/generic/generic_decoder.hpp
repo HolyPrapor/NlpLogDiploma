@@ -12,7 +12,7 @@ public:
     virtual ~GenericDecoder() = default;
 
     virtual void Decode(BitOutputStream& data) = 0;
-    virtual void Finish() {}
+    virtual void Finish(BitOutputStream& data) {}
 };
 
 #endif //DIPLOMA_GENERIC_DECODER_HPP

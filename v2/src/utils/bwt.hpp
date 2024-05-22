@@ -27,6 +27,7 @@ class BWT
 {
 public:
     BWT(int chunkSize);
+    ~BWT();
 
     std::vector<Token> Encode(std::vector<Token>& input);
 
