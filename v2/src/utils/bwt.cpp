@@ -148,7 +148,7 @@ int getTokenIndex(vector<Token> vector, Token token)
     return -1;
 }
 
-BWT::BWT(int chunkSize) : chunkSize(chunkSize), nodes{nullptr}, suffixes(new rotation[chunkSize]) {}
+BWT::BWT(int chunkSize) : chunkSize(chunkSize), nodes{nullptr}, suffixes(new rotation[chunkSize + 1]) {}
 
 std::vector<Token> BWT::Encode(std::vector<Token>& inputText) {
     auto chunksCount = inputText.size() / chunkSize + 1;
