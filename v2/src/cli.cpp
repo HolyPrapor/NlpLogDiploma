@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <sstream>
 #include <google/protobuf/text_format.h>
+#include <fcntl.h>
 #include "encoding/generic/subprepcs_encoder.hpp"
 #include "encoding/generic/subprepcs_decoder.hpp"
 #include "encoding/utils/bit_input_stream.hpp"
@@ -27,6 +28,7 @@
 #include "encoding/generic/identity_decoder.hpp"
 #include "encoding/generic/modelling_bwt_encoder.hpp"
 #include "encoding/generic/modelling_bwt_decoder.hpp"
+#include "encoding/log/link/storage/mtf2_log_storage.hpp"
 
 namespace fs = std::filesystem;
 
@@ -52,8 +54,11 @@ CompressionConfig parseEmbeddedConfig() {
 CompressionConfig parseCompressionConfig() {
     CompressionConfig compressionConfig;
 
+    int flags = fcntl(0, F_GETFL, 0);
+    fcntl(0, F_SETFL, flags | O_NONBLOCK);
+
     // Check if std::cin has data
-    if (std::cin.rdbuf()->in_avail() && std::cin.peek() != std::char_traits<char>::eof()) {
+    if (std::cin.peek() != std::char_traits<char>::eof()) {
         std::ostringstream inputBuffer;
         inputBuffer << std::cin.rdbuf();
         std::string protoStr = inputBuffer.str();
@@ -106,6 +111,9 @@ std::unique_ptr<LogStorage> createLogStorage(const PrimaryLogCoderConfig& config
     }
     else if (config.has_greedy_move_to_front_storage()) {
         return std::make_unique<MtfLogStorage>(storageSize);
+    }
+    else if (config.has_greedy_move_to_front_2_storage()) {
+        return std::make_unique<Mtf2LogStorage>(storageSize, config.greedy_move_to_front_2_storage().use_dynamic_movement());
     }
 
     return std::make_unique<GreedyLogStorage>(storageSize);

@@ -29,7 +29,7 @@ add_library(${PROJECT_NAME}
         src/encoding/log/link/storage/mtf_log_storage.cpp
         src/encoding/generic/identity_encoder.cpp
         src/encoding/generic/identity_decoder.cpp
-        src/encoding/generic/bwt_encoder.cpp src/encoding/generic/bwt_encoder.hpp src/utils/bwt.cpp src/utils/bwt.hpp src/encoding/generic/bwt_decoder.cpp src/encoding/generic/bwt_decoder.hpp src/encoding/generic/chained_generic_encoder.cpp src/encoding/generic/chained_generic_encoder.hpp src/encoding/generic/chained_generic_decoder.cpp src/encoding/generic/chained_generic_decoder.hpp src/encoding/generic/modelling_bwt_encoder.cpp src/encoding/generic/modelling_bwt_encoder.hpp src/encoding/generic/modelling_bwt_decoder.cpp src/encoding/generic/modelling_bwt_decoder.hpp src/utils/mtf2_storage.hpp)
+        src/encoding/generic/bwt_encoder.cpp src/encoding/generic/bwt_encoder.hpp src/utils/bwt.cpp src/utils/bwt.hpp src/encoding/generic/bwt_decoder.cpp src/encoding/generic/bwt_decoder.hpp src/encoding/generic/chained_generic_encoder.cpp src/encoding/generic/chained_generic_encoder.hpp src/encoding/generic/chained_generic_decoder.cpp src/encoding/generic/chained_generic_decoder.hpp src/encoding/generic/modelling_bwt_encoder.cpp src/encoding/generic/modelling_bwt_encoder.hpp src/encoding/generic/modelling_bwt_decoder.cpp src/encoding/generic/modelling_bwt_decoder.hpp src/utils/mtf2_storage.hpp src/encoding/log/link/storage/mtf2_log_storage.cpp src/encoding/log/link/storage/mtf2_log_storage.hpp)
 
 target_include_directories(${PROJECT_NAME}
         PUBLIC

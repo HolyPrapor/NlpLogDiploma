@@ -11,7 +11,7 @@
 #include "encoding/log/link/log_link.hpp"
 #include "defs.hpp"
 
-static std::optional<LogLink> TryLinkGreedily(const std::list<std::vector<Token>> &storage, const std::vector<Token>& log, const int& startIndex) {
+template<typename T> static std::optional<LogLink> TryLinkGreedily(const T &storage, const std::vector<Token>& log, const int& startIndex) {
     LogLink link{-1, -1, -1};
     auto logIndex = 0;
     for (auto &line : storage) {

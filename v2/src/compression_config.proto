@@ -20,10 +20,11 @@ message PrimaryLogCoderConfig {
   oneof storage {
     GreedySlidingWindowStorage greedy_sliding_window_storage = 2;
     GreedyMoveToFrontStorage greedy_move_to_front_storage = 3;
+    GreedyMoveToFront2Storage greedy_move_to_front_2_storage = 4;
   }
 
-  int32 storage_size = 4;
-  int32 min_link_length = 5;
+  int32 storage_size = 5;
+  int32 min_link_length = 6;
 }
 
 // Specific configurations for the primary log link coder
@@ -35,6 +36,10 @@ message GreedySlidingWindowStorage {
 }
 
 message GreedyMoveToFrontStorage {
+}
+
+message GreedyMoveToFront2Storage {
+  bool use_dynamic_movement = 1;
 }
 
 message SecondaryLogCoderConfig {

@@ -4,7 +4,7 @@
 primary_log_coder {
   residue_log_link_coder {
   }
-  greedy_sliding_window_storage {
+  greedy_move_to_front_2_storage {
   }
   storage_size: 255
   min_link_length: 10

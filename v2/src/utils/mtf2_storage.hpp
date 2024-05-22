@@ -9,38 +9,72 @@
 #include <iostream>
 #include <unordered_map>
 #include <algorithm>
+#include <map>
 
 template <typename T>
 class MTF2Storage {
 public:
-    MTF2Storage(std::vector<T> elements) : MTF2Storage(elements, elements.size()) {}
-    MTF2Storage(std::vector<T> elements, int maxSize) : Elements(elements), maxSize(maxSize) {}
+    MTF2Storage(int maxSize, bool useDynamicMovement = false) : MTF2Storage(std::vector<T>(), maxSize, useDynamicMovement) {}
+    MTF2Storage(std::vector<T> elements, bool useDynamicMovement = false) : MTF2Storage(elements, elements.size(), useDynamicMovement) {}
+    MTF2Storage(std::vector<T> elements, int maxSize, bool useDynamicMovement = false) : Elements(elements), maxSize(maxSize), useDynamicMovement(useDynamicMovement) {}
     std::vector<T> Elements;
 
     void PushAndOverflow(const T& new_element) {
-        if (collection.size() < maxSize) {
-            collection.push_back(new_element);
+        if (Elements.size() < maxSize) {
+            Elements.push_back(new_element);
         } else {
             const float insert_location_ratio = 0.75;
             int insert_location = insert_location_ratio * maxSize;
             Elements.insert(Elements.begin() + insert_location, new_element);
-            frequency.erase(Elements.pop_back());
+            frequency.erase(Elements.back());
+            Elements.pop_back();
         }
         frequency[new_element] = 1;
     }
 
-    void MoveToFront(const T accessed_element) {
-        auto elementLocation = Find(accessed_element);
-        MoveToFront(elementLocation);
+    int MoveToFrontByIndex(int index) {
+        return MoveToFront(Elements.begin() + index);
     }
 
-    void MoveToFront(typename std::vector<T>::iterator element) {
-        if (element != Elements.begin()) {
-            auto freq = frequency[*element];
+    int MoveToFront(const T accessed_element) {
+        auto elementLocation = Find(accessed_element);
+        return MoveToFront(elementLocation);
+    }
+
+//    void MoveToFront(typename std::vector<T>::iterator element) {
+//        frequency[*element]++;
+//        if (element != Elements.begin()) {
+//            auto freq = frequency[*element];
+//            auto dist = static_cast<int>(std::distance(Elements.begin(), element));
+//            move(Elements, dist, std::max(0, dist - freq));
+//        }
+//    }
+
+    int MoveToFront(typename std::vector<T>::iterator element) {
+        if (useDynamicMovement) {
+            // move the element forward by the number of times it was accessed
+            if (element != Elements.begin()) {
+                auto freq = frequency[*element];
+                auto dist = static_cast<int>(std::distance(Elements.begin(), element));
+                auto newIndex = std::max(0, dist - freq);
+                move(Elements, dist, newIndex);
+                frequency[*element]++;
+                return newIndex;
+            }
+            frequency[*element]++;
+            return 0;
+        } else {
+            // move the element forward every second time it is accessed
             auto dist = static_cast<int>(std::distance(Elements.begin(), element));
-            move(Elements, dist, std::max(0, dist - freq));
+            if (frequency[*element] > 1) {
+                frequency[*element] = 0;
+                if (element != Elements.begin()) {
+                    move(Elements, dist, 0);
+                    return 0;
+                }
+            }
+            return dist;
         }
-        frequency[*element]++;
     }
 
     typename std::vector<T>::iterator Find(const T& element) {
@@ -49,15 +83,19 @@ public:
 
 private:
     int maxSize;
-    std::vector<T> collection;
-    std::unordered_map<T, int> frequency;
+    bool useDynamicMovement;
+    std::map<T, int> frequency;
 
-    void move(std::vector<T>& v, int oldIndex, int newIndex)
-    {
-        if (oldIndex > newIndex)
-            std::rotate(v.rend() - oldIndex - 1, v.rend() - oldIndex, v.rend() - newIndex);
-        else
-            std::rotate(v.begin() + oldIndex, v.begin() + oldIndex + 1, v.begin() + newIndex + 1);
+    void move(std::vector<T>& v, int oldIndex, int newIndex) {
+        if (oldIndex < newIndex) {
+            throw std::invalid_argument("oldIndex must be greater than or equal to newIndex");
+        }
+
+        T temp = std::move(v[oldIndex]); // Store the element to move
+        for (int i = oldIndex; i > newIndex; --i) {
+            v[i] = std::move(v[i - 1]); // Shift elements to the right
+        }
+        v[newIndex] = std::move(temp); // Place the element at newIndex
     }
 };
 

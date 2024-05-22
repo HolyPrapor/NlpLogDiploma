@@ -10,8 +10,9 @@ def create_cli_instances():
     test_instance_params = {
         "primary_log_coder": {
             "storage_size": 255,
-            "min_link_length": 10,
-            "greedy_move_to_front_storage": {
+            "min_link_length": 6,
+            "greedy_move_to_front_2_storage": {
+                "use_dynamic_movement": "true"
             }
         },
         "secondary_log_coder": {
@@ -30,12 +31,13 @@ def create_cli_instances():
         },
         "generic_markup_coder": {
             "bwt_modelling_coder": {
-                "context_size": 2,
+                "context_size": 3,
                 "chunk_size": 1000000
             }
         }
     }
-    return [Bzip2(), SubPrePCS(), SubPrePCS(test_instance_params)]
+    # return [Bzip2(), SubPrePCS(), SubPrePCS(test_instance_params)]
+    return [SubPrePCS(test_instance_params)]
 
 
 def benchmark_clis(input_dir, output_dir):
