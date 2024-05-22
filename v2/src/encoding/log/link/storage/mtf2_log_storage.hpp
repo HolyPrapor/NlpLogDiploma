@@ -10,7 +10,7 @@
 
 class Mtf2LogStorage : public LogStorage {
 public:
-    explicit Mtf2LogStorage(int maxLogSize, bool useDynamicMovement = false);
+    explicit Mtf2LogStorage(int maxLogSize, int staticMovementDegree = 1);
     ~Mtf2LogStorage() override = default;
 
     void Store(const std::vector<Token>& log) override;

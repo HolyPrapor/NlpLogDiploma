@@ -10,14 +10,14 @@ def create_cli_instances():
     test_instance_params = {
         "primary_log_coder": {
             "storage_size": 255,
-            "min_link_length": 6,
+            "min_link_length": 8,
             "greedy_move_to_front_2_storage": {
-                "use_dynamic_movement": "true"
+                "static_movement_degree": 1
             }
         },
         "secondary_log_coder": {
             "ppm_secondary_log_coder": {
-                "window_size": 5
+                "window_size": 4
             }
         },
         "generic_primary_coder": {

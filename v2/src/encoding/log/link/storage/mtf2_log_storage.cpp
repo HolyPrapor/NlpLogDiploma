@@ -5,7 +5,7 @@
 #include "mtf2_log_storage.hpp"
 #include "vector_search.hpp"
 
-Mtf2LogStorage::Mtf2LogStorage(int maxLogSize, bool useDynamicMovement) : storage(maxLogSize, useDynamicMovement) {}
+Mtf2LogStorage::Mtf2LogStorage(int maxLogSize, int staticMovementDegree) : storage(maxLogSize, staticMovementDegree) {}
 
 void Mtf2LogStorage::Store(const std::vector<Token>& log) {
     storage.PushAndOverflow(log);

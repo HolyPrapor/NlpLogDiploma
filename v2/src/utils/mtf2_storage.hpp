@@ -14,16 +14,16 @@
 template <typename T>
 class MTF2Storage {
 public:
-    MTF2Storage(int maxSize, bool useDynamicMovement = false) : MTF2Storage(std::vector<T>(), maxSize, useDynamicMovement) {}
-    MTF2Storage(std::vector<T> elements, bool useDynamicMovement = false) : MTF2Storage(elements, elements.size(), useDynamicMovement) {}
-    MTF2Storage(std::vector<T> elements, int maxSize, bool useDynamicMovement = false) : Elements(elements), maxSize(maxSize), useDynamicMovement(useDynamicMovement) {}
+    MTF2Storage(int maxSize, int staticMovementDegree = 1) : MTF2Storage(std::vector<T>(), maxSize, staticMovementDegree) {}
+    MTF2Storage(std::vector<T> elements, int staticMovementDegree = 1) : MTF2Storage(elements, elements.size(), staticMovementDegree) {}
+    MTF2Storage(std::vector<T> elements, int maxSize, int staticMovementDegree = 1) : Elements(elements), maxSize(maxSize), staticMovementDegree(staticMovementDegree) {}
     std::vector<T> Elements;
 
     void PushAndOverflow(const T& new_element) {
         if (Elements.size() < maxSize) {
             Elements.push_back(new_element);
         } else {
-            const float insert_location_ratio = 0.75;
+            const float insert_location_ratio = 0.5;
             int insert_location = insert_location_ratio * maxSize;
             Elements.insert(Elements.begin() + insert_location, new_element);
             frequency.erase(Elements.back());
@@ -41,17 +41,8 @@ public:
         return MoveToFront(elementLocation);
     }
 
-//    void MoveToFront(typename std::vector<T>::iterator element) {
-//        frequency[*element]++;
-//        if (element != Elements.begin()) {
-//            auto freq = frequency[*element];
-//            auto dist = static_cast<int>(std::distance(Elements.begin(), element));
-//            move(Elements, dist, std::max(0, dist - freq));
-//        }
-//    }
-
     int MoveToFront(typename std::vector<T>::iterator element) {
-        if (useDynamicMovement) {
+        if (staticMovementDegree == -1) {
             // move the element forward by the number of times it was accessed
             if (element != Elements.begin()) {
                 auto freq = frequency[*element];
@@ -64,9 +55,9 @@ public:
             frequency[*element]++;
             return 0;
         } else {
-            // move the element forward every second time it is accessed
+            // move the element forward every 'staticMovementDegree' time it is accessed
             auto dist = static_cast<int>(std::distance(Elements.begin(), element));
-            if (frequency[*element] > 1) {
+            if (frequency[*element] == staticMovementDegree) {
                 frequency[*element] = 0;
                 if (element != Elements.begin()) {
                     move(Elements, dist, 0);
@@ -83,7 +74,7 @@ public:
 
 private:
     int maxSize;
-    bool useDynamicMovement;
+    int staticMovementDegree;
     std::map<T, int> frequency;
 
     void move(std::vector<T>& v, int oldIndex, int newIndex) {

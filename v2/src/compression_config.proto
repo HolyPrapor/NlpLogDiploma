@@ -39,7 +39,7 @@ message GreedyMoveToFrontStorage {
 }
 
 message GreedyMoveToFront2Storage {
-  bool use_dynamic_movement = 1;
+  int32 static_movement_degree = 1;
 }
 
 message SecondaryLogCoderConfig {
