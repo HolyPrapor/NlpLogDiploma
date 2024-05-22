@@ -3,6 +3,7 @@
 //
 
 #include "bwt.hpp"
+#include "mtf2_storage.hpp"
 #include <vector>
 #include <algorithm>
 #include <array>
@@ -13,9 +14,9 @@
 
 using namespace std;
 
-array<Token, BinaryAlphabetSize> getAlphabet()
+std::vector<Token> getAlphabet()
 {
-    array<Token, BinaryAlphabetSize> result{};
+    std::vector<Token> result(BinaryAlphabetSize);
     for (auto i = 0; i < BinaryAlphabetSize; ++i)
         result[i] = (Token)i;
     return result;
@@ -356,28 +357,32 @@ vector<Token> BWT::zleDecode(std::vector<Token>& bytes)
 vector<Token> BWT::mtfEncode(std::vector<Token>& input_text)
 {
     int len_text = static_cast<int>(input_text.size());
-    array<Token, BinaryAlphabetSize> alphabet = getAlphabet();
+    auto mtfAlphabet = MTF2Storage(getAlphabet());
 
     vector<Token> result(len_text);
 
     for (auto i = 0; i < len_text; i++)
     {
-        result[i] = search(input_text[i], alphabet.data());
-        moveToFront(result[i], alphabet.data());
+        auto element = mtfAlphabet.Find(input_text[i]);
+        auto pos = static_cast<int>(std::distance(mtfAlphabet.Elements.begin(), element));
+        result[i] = pos;
+        mtfAlphabet.MoveToFront(element);
     }
+
     return result;
 }
 
 vector<Token> BWT::mtfDecode(std::vector<Token>& arr)
 {
     int n = static_cast<int>(arr.size());
-    array<Token, BinaryAlphabetSize> alphabet = getAlphabet();
-    vector<Token> result(n);
+    auto mtfAlphabet = MTF2Storage(getAlphabet());
 
+    vector<Token> result(n);
     for (auto i = 0; i < n; i++)
     {
-        result[i] = alphabet[arr[i]];
-        moveToFront(arr[i], alphabet.data());
+        result[i] = mtfAlphabet.Elements[arr[i]];
+        mtfAlphabet.MoveToFront(mtfAlphabet.Elements.begin() + arr[i]);
     }
+
     return result;
 }
