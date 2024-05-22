@@ -133,7 +133,7 @@ SubPrePcsDecoder SubPrePcsDecoder::CreateBWTPPM(std::shared_ptr<BitInputStream> 
             },
             [](std::shared_ptr<BitInputStream> in) { return std::make_unique<PPMSecondaryLogDecoder>(in); },
             [](std::shared_ptr<BitInputStream> in) { return std::make_unique<ModellingBwtDecoder>(in); },
-            [](std::shared_ptr<BitInputStream> in) { return ModellingDecoder::CreateDefault(in); },
+            [](std::shared_ptr<BitInputStream> in) { return std::make_unique<IdentityDecoder>(in); },
             [](std::shared_ptr<BitInputStream> in) { return std::make_unique<ModellingBwtDecoder>(in); },
             std::move(linkDecoder),
             std::move(storage)
