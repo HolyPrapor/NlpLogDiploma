@@ -29,7 +29,7 @@ add_library(${PROJECT_NAME}
         src/encoding/log/link/storage/mtf_log_storage.cpp
         src/encoding/generic/identity_encoder.cpp
         src/encoding/generic/identity_decoder.cpp
-        )
+        src/encoding/generic/bwt_encoder.cpp src/encoding/generic/bwt_encoder.hpp src/utils/bwt.cpp src/utils/bwt.hpp)
 
 target_include_directories(${PROJECT_NAME}
         PUBLIC
@@ -77,7 +77,7 @@ add_executable(tests
         tests/encoding/log/link/storage/test_greedy_log_storage.cpp
         tests/encoding/log/link/test_residue_link_coder.cpp
         tests/encoding/log/test_primary_log_coder.cpp
-        tests/encoding/generic/test_subprepcs_coder.cpp)
+        tests/encoding/generic/test_subprepcs_coder.cpp tests/utils/test_bwt.cpp)
 
 target_include_directories(tests
         PUBLIC

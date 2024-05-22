@@ -1,0 +1,614 @@
+//
+// Created by zeliboba on 5/22/24.
+//
+
+#include "bwt.hpp"
+#include <vector>
+#include <algorithm>
+#include <array>
+
+// todo: this code right now is doing lots of unnecessary memory allocations
+// it's also not very efficiently integrated into SubPrePCS
+
+using namespace std;
+
+Token eof = BinaryAlphabetSize;
+
+array<Token, BinaryAlphabetSize + 1> getAlphabet()
+{
+    array<Token, BinaryAlphabetSize + 1> result{};
+    for (auto i = 0; i < BinaryAlphabetSize; ++i)
+        result[i] = (Token)i;
+    result[BinaryAlphabetSize] = eof;
+    return result;
+}
+
+int compareSuffixes(const void *aIn, const void *bIn, void *eofIn)
+{
+    Token a = *(Token *)aIn;
+    Token b = *(Token *)bIn;
+    Token eof = *(Token *)eofIn;
+    if (a == eof && b == eof)
+    {
+        return 0;
+    }
+    if (a == eof)
+    {
+        return -1;
+    }
+    if (b == eof)
+    {
+        return 1;
+    }
+    return a < b ? -1 : a == b ? 0
+                               : 1;
+}
+
+int compareRotations(const void *x, const void *y, void *eofIn)
+{
+    auto firstSuffix = ((struct rotation *)x)->suffix;
+    auto secondSuffix = ((struct rotation *)y)->suffix;
+    auto i = 0;
+    Token eof = *(Token *)eofIn;
+
+    while (true)
+    {
+        if (firstSuffix[i] == eof && secondSuffix[i] == eof)
+        {
+            return 0;
+        }
+        if (firstSuffix[i] == eof)
+        {
+            return -1;
+        }
+        if (secondSuffix[i] == eof)
+        {
+            return 1;
+        }
+        if (firstSuffix[i] != secondSuffix[i])
+        {
+            return firstSuffix[i] < secondSuffix[i] ? -1 : 1;
+        }
+        i++;
+    }
+}
+
+struct node *getNode(int i)
+{
+    auto nn = (struct node *)malloc(sizeof(struct node));
+    nn->data = i;
+    nn->next = nullptr;
+    return nn;
+}
+
+void addAtLast(struct node **head, struct node *nn)
+{
+    if (*head == nullptr)
+    {
+        *head = nn;
+        return;
+    }
+    struct node *temp = *head;
+    while (temp->next != nullptr)
+    {
+        temp = temp->next;
+    }
+    temp->next = nn;
+}
+
+void updateLeftShift(struct node **head, int index, int *leftShift)
+{
+    leftShift[index] = (*head)->data;
+    (*head) = (*head)->next;
+}
+
+void smartstrcpy(Token old_array[], Token *new_array, int length)
+{
+    copy(old_array, old_array + length, new_array);
+}
+
+Token search(Token input_char, Token *list)
+{
+    for (auto i = 0; i < BinaryAlphabetSize + 1; i++)
+    {
+        if (list[i] == input_char)
+        {
+            return (Token)i;
+        }
+    }
+    return 0;
+}
+
+// todo: could be optimized A LOT
+void moveToFront(Token curr_index, Token *list)
+{
+    Token *record = (Token *)malloc(sizeof(Token) * (BinaryAlphabetSize + 1));
+
+    for (auto i = 0; i < BinaryAlphabetSize + 1; ++i)
+    {
+        record[i] = list[i];
+    }
+
+    for (auto i = 1; i <= curr_index; ++i)
+    {
+        list[i] = record[i - 1];
+    }
+
+    list[0] = record[static_cast<Token>(curr_index)];
+}
+
+int getTokenIndex(vector<Token> vector, Token token)
+{
+    auto it = find(vector.begin(), vector.end(), token);
+
+    if (it != vector.end())
+    {
+        return it - vector.begin();
+    }
+    return -1;
+}
+
+BWT::BWT(int chunkSize) : chunkSize(chunkSize), nodes{nullptr}, suffixes(new rotation[chunkSize]) {}
+
+std::vector<Token> BWT::Encode(std::vector<Token>& inputText) {
+    auto chunksCount = inputText.size() / chunkSize + 1;
+    vector<Token> bwtResult;
+    for (auto j = 0; j < chunksCount; ++j)
+    {
+        vector<Token> input(inputText.begin() + j * chunkSize, inputText.begin() + min((j + 1) * chunkSize, (int)inputText.size()));
+        input.push_back(eof);
+        auto bwtVector = bwtEncode(input);
+        bwtResult.insert(bwtResult.end(), bwtVector.begin(), bwtVector.end());
+    }
+    auto mtfResult = mtfEncode(bwtResult);
+    auto res = zleEncode(mtfResult);
+    return res;
+}
+
+std::vector<Token> BWT::Decode(std::vector<Token>& encodedText) {
+    std::vector<Token> toDecode = encodedText;
+
+    auto zleDecodedText = zleDecode(toDecode);
+    auto bwtInputText = mtfDecode(zleDecodedText);
+    vector<Token> answer;
+    for (auto j = 0; j <= bwtInputText.size() / (chunkSize + 1); ++j)
+    {
+        auto bwtTextLength = min(chunkSize + 1, (int)bwtInputText.size() - j * (chunkSize + 1));
+
+        std::vector<Token> outputText(bwtTextLength);
+        for (auto i = 0; i < bwtTextLength; ++i)
+        {
+            outputText[i] = bwtInputText[j * (chunkSize + 1) + i];
+        }
+        auto result = bwtDecode(outputText);
+        auto indexOfLastChar = getTokenIndex(result, eof);
+        answer.insert(answer.end(), result.begin() + indexOfLastChar + 1, result.end());
+        answer.insert(answer.end(), result.begin(), result.begin() + indexOfLastChar);
+    }
+    return answer;
+}
+
+int* BWT::computeSuffixArray(std::vector<Token>& input_text)
+{
+    int len_text = static_cast<int>(input_text.size());
+    for (int i = 0; i < input_text.size(); i++)
+    {
+        suffixes[i].index = i;
+        suffixes[i].suffix = (&(*input_text.begin()) + i);
+    }
+    qsort_r(suffixes, len_text, sizeof(struct rotation),
+            reinterpret_cast<__compar_d_fn_t>(compareRotations), &eof);
+
+    int *suffix_arr = (int *)malloc(len_text * sizeof(int));
+    for (int i = 0; i < len_text; i++)
+    {
+        suffix_arr[i] = suffixes[i].index;
+    }
+
+    return suffix_arr;
+}
+
+vector<Token> BWT::bwtEncode(std::vector<Token>& input_text)
+{
+    int n = static_cast<int>(input_text.size());
+    int* suffix_arr = computeSuffixArray(input_text);
+
+    vector<Token> bwt(n);
+    for (auto i = 0; i < n; i++)
+    {
+        bwt[i] = input_text[suffix_arr[i] != 0 ? suffix_arr[i] - 1 : n - 1];
+    }
+
+    return bwt;
+}
+
+vector<Token> BWT::bwtDecode(std::vector<Token>& bwt_arr)
+{
+    int len_bwt = static_cast<int>(bwt_arr.size());
+    vector<Token> text(len_bwt);
+    Token *sortedBwt = (Token *)malloc(len_bwt * sizeof(Token));
+    smartstrcpy(&(*bwt_arr.begin()), sortedBwt, len_bwt);
+    int *leftShift = (int *)malloc(len_bwt * sizeof(int));
+
+    qsort_r(sortedBwt, len_bwt, sizeof(Token), reinterpret_cast<__compar_d_fn_t>(compareSuffixes), &eof);
+
+    for (auto i = 0; i < len_bwt; i++)
+    {
+        addAtLast(&nodes[bwt_arr[i]], getNode(i));
+    }
+
+    for (auto i = 0; i < len_bwt; i++)
+    {
+        updateLeftShift(&nodes[sortedBwt[i]], i, leftShift);
+    }
+
+    int x = 0;
+    for (auto i = x; i < len_bwt; ++i)
+    {
+        if (bwt_arr[i] == eof)
+        {
+            x = i;
+            break;
+        }
+    }
+
+    for (auto i = 0; i < len_bwt; i++)
+    {
+        x = leftShift[x];
+        text[i] = bwt_arr[x];
+    }
+
+    return text;
+}
+
+vector<Token> BWT::zleEncode(std::vector<Token>& bytes)
+{
+    int size = static_cast<int>(bytes.size());
+
+    vector<Token> result;
+    int count = 0;
+    for (auto i = 0; i < size; ++i)
+    {
+        auto byte = bytes[i];
+        if (byte == 0)
+        {
+            count += 1;
+            continue;
+        }
+        if (count != 0)
+        {
+            while (count > 0)
+            {
+                result.push_back((count & 1) ? 257 : 256);
+                count >>= 1;
+            }
+            count = 0;
+        }
+        if (byte == 257 || byte == 256)
+        {
+            result.push_back(0);
+        }
+        result.push_back(byte);
+    }
+
+    if (count != 0)
+    {
+        while (count > 0)
+        {
+            result.push_back((count & 1) == 1 ? 257 : 256);
+            count >>= 1;
+        }
+    }
+
+    return result;
+}
+
+vector<Token> BWT::zleDecode(std::vector<Token>& bytes)
+{
+    int size = static_cast<int>(bytes.size());
+
+    vector<Token> result;
+    int run_length = 0;
+    int run_bin_len = 0;
+    int i = 0;
+    while (i < size)
+    {
+        auto byte = bytes[i];
+        if (byte == 257 || byte == 256)
+        {
+            run_length |= (byte == 257 ? 1 : 0) << run_bin_len;
+            run_bin_len += 1;
+            i += 1;
+            continue;
+        }
+        for (auto j = 0; j < run_length; j++)
+        {
+            result.push_back(0);
+        }
+        run_length = 0;
+        run_bin_len = 0;
+
+        if (byte == 0)
+        {
+            result.push_back(bytes[i + 1]);
+            i += 2;
+            continue;
+        }
+        result.push_back(byte);
+        i += 1;
+    }
+
+    for (auto j = 0; j < run_length; j++)
+    {
+        result.push_back(0);
+    }
+
+    return result;
+}
+
+vector<Token> BWT::mtfEncode(std::vector<Token>& input_text)
+{
+    int len_text = static_cast<int>(input_text.size());
+    array<Token, BinaryAlphabetSize + 1> alphabet = getAlphabet();
+
+    vector<Token> result(len_text);
+
+    for (auto i = 0; i < len_text; i++)
+    {
+        result[i] = search(input_text[i], alphabet.data());
+        moveToFront(result[i], alphabet.data());
+    }
+    return result;
+}
+
+vector<Token> BWT::mtfDecode(std::vector<Token>& arr)
+{
+    int n = static_cast<int>(arr.size());
+    array<Token, BinaryAlphabetSize + 1> alphabet = getAlphabet();
+    vector<Token> result(n);
+
+    for (auto i = 0; i < n; i++)
+    {
+        result[i] = alphabet[arr[i]];
+        moveToFront(arr[i], alphabet.data());
+    }
+    return result;
+}
+
+
+//class BWT
+//{
+//public:
+//    BWT(int chunkSize, char eof) : chunkSize(chunkSize), eof(eof), alphabet(getAlphabet()), nodes{nullptr}, suffixes(
+//            new rotation[chunkSize]) {}
+//
+//    string Encode(string inputText)
+//    {
+//        auto chunksCount = inputText.length() / chunkSize + 1;
+//        vector<char> bwtResult;
+//        for (auto j = 0; j < chunksCount; ++j)
+//        {
+//            string input(inputText.substr(j * chunkSize, chunkSize) + eof);
+//            char input_text[input.length()];
+//            for (auto i = 0; i < input.length(); ++i)
+//            {
+//                input_text[i] = input.at(i);
+//            }
+//            int chunkLength = sizeof(input_text);
+//            auto bwtVector = bwtEncode(input_text, chunkLength);
+//            bwtResult.insert(bwtResult.end(), bwtVector.begin(), bwtVector.end());
+//        }
+//        auto mtfResult = mtfEncode(bwtResult.data(), bwtResult.size(), alphabet.data());
+//        auto res = zleEncode(mtfResult.data(), mtfResult.size());
+//        return string{res.begin(), res.end()};
+//    }
+//
+//    string Decode(string encodedText)
+//    {
+//        char text[encodedText.length()];
+//        for (auto i = 0; i < encodedText.length(); ++i)
+//        {
+//            text[i] = encodedText.at(i);
+//        }
+//
+//        auto zleDecodedText = zleDecode(text, encodedText.length());
+//        auto bwtInputText = mtfDecode(zleDecodedText.data(), zleDecodedText.size(), alphabet.data());
+//        vector<char> answer;
+//        for (auto j = 0; j <= bwtInputText.size() / (chunkSize + 1); ++j)
+//        {
+//            auto bwtTextLength = min(chunkSize + 1, (int)bwtInputText.size() - j * (chunkSize + 1));
+//
+//            char outputText[bwtTextLength];
+//            for (auto i = 0; i < bwtTextLength; ++i)
+//            {
+//                outputText[i] = bwtInputText[j * (chunkSize + 1) + i];
+//            }
+//            auto result = bwtDecode(outputText, bwtTextLength);
+//            auto indexOfLastChar = getTokenIndex(result, eof);
+//            answer.insert(answer.end(), result.begin() + indexOfLastChar + 1, result.end());
+//            answer.insert(answer.end(), result.begin(), result.begin() + indexOfLastChar);
+//        }
+//        return string{answer.begin(), answer.end()};
+//    }
+//
+//private:
+//    int chunkSize;
+//    char eof;
+//    array<char, alphabetSize> alphabet;
+//    node *nodes[alphabetSize] = {nullptr};
+//    rotation* suffixes{nullptr};
+//
+//    int* computeSuffixArray(char *input_text, int len_text)
+//    {
+//        for (int i = 0; i < len_text; i++)
+//        {
+//            suffixes[i].index = i;
+//            suffixes[i].suffix = (input_text + i);
+//        }
+//        qsort_r(suffixes, len_text, sizeof(struct rotation), compareRotations, &eof);
+//
+//        int *suffix_arr = (int *)malloc(len_text * sizeof(int));
+//        for (int i = 0; i < len_text; i++)
+//        {
+//            suffix_arr[i] = suffixes[i].index;
+//        }
+//
+//        return suffix_arr;
+//    }
+//
+//    vector<char> bwtEncode(char *input_text, int n)
+//    {
+//        int* suffix_arr = computeSuffixArray(input_text, n);
+//
+//        vector<char> bwt(n);
+//        for (auto i = 0; i < n; i++)
+//        {
+//            bwt[i] = input_text[suffix_arr[i] != 0 ? suffix_arr[i] - 1 : n - 1];
+//        }
+//
+//        return bwt;
+//    }
+//
+//    vector<char> bwtDecode(char bwt_arr[], int len_bwt)
+//    {
+//        vector<char> text(len_bwt);
+//        char *sortedBwt = (char *)malloc(len_bwt * sizeof(char));
+//        smartstrcpy(bwt_arr, sortedBwt, len_bwt);
+//        int *leftShift = (int *)malloc(len_bwt * sizeof(int));
+//
+//        qsort_r(sortedBwt, len_bwt, sizeof(char), compareSuffixes, &eof);
+//
+//        for (auto i = 0; i < len_bwt; i++)
+//        {
+//            addAtLast(&nodes[bwt_arr[i]], getNode(i));
+//        }
+//
+//        for (auto i = 0; i < len_bwt; i++)
+//        {
+//            updateLeftShift(&nodes[sortedBwt[i]], i, leftShift);
+//        }
+//
+//        int x = 0;
+//        for (auto i = x; i < len_bwt; ++i)
+//        {
+//            if (bwt_arr[i] == eof)
+//            {
+//                x = i;
+//                break;
+//            }
+//        }
+//
+//        for (auto i = 0; i < len_bwt; i++)
+//        {
+//            x = leftShift[x];
+//            text[i] = bwt_arr[x];
+//        }
+//
+//        return text;
+//    }
+//
+//    vector<char> zleEncode(char bytes[], int size)
+//    {
+//        vector<char> result;
+//        int count = 0;
+//        for (auto i = 0; i < size; ++i)
+//        {
+//            auto byte = bytes[i];
+//            if (byte == 0)
+//            {
+//                count += 1;
+//                continue;
+//            }
+//            if (count != 0)
+//            {
+//                while (count > 0)
+//                {
+//                    result.push_back((count & 1) ? 257 : 256);
+//                    count >>= 1;
+//                }
+//                count = 0;
+//            }
+//            if (byte == 257 || byte == 256)
+//            {
+//                result.push_back(0);
+//            }
+//            result.push_back(byte);
+//        }
+//
+//        if (count != 0)
+//        {
+//            while (count > 0)
+//            {
+//                result.push_back((count & 1) == 1 ? 257 : 256);
+//                count >>= 1;
+//            }
+//        }
+//
+//        return result;
+//    }
+//
+//    vector<char> zleDecode(char bytes[], int size)
+//    {
+//        vector<char> result;
+//        int run_length = 0;
+//        int run_bin_len = 0;
+//        int i = 0;
+//        while (i < size)
+//        {
+//            auto byte = bytes[i];
+//            if (byte == 257 || byte == 256)
+//            {
+//                run_length |= (byte == 257 ? 1 : 0) << run_bin_len;
+//                run_bin_len += 1;
+//                i += 1;
+//                continue;
+//            }
+//            for (auto j = 0; j < run_length; j++)
+//            {
+//                result.push_back(0);
+//            }
+//            run_length = 0;
+//            run_bin_len = 0;
+//
+//            if (byte == 0)
+//            {
+//                result.push_back(bytes[i + 1]);
+//                i += 2;
+//                continue;
+//            }
+//            result.push_back(byte);
+//            i += 1;
+//        }
+//
+//        for (auto j = 0; j < run_length; j++)
+//        {
+//            result.push_back(0);
+//        }
+//
+//        return result;
+//    }
+//
+//    vector<char> mtfEncode(char *input_text, int len_text, char *list)
+//    {
+//        vector<char> result(len_text);
+//
+//        for (auto i = 0; i < len_text; i++)
+//        {
+//            result[i] = search(input_text[i], list);
+//            moveToFront(result[i], list);
+//        }
+//        return result;
+//    }
+//
+//    vector<char> mtfDecode(char arr[], int n, char *list)
+//    {
+//        vector<char> result(n);
+//
+//        for (auto i = 0; i < n; i++)
+//        {
+//            result[i] = list[static_cast<unsigned char>(arr[i])];
+//            moveToFront(arr[i], list);
+//        }
+//        return result;
+//    }
+//};
