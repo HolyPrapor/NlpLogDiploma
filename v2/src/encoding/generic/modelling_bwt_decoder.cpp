@@ -6,13 +6,13 @@
 #include "bwt_decoder.hpp"
 #include "modelling_decoder.hpp"
 
-ModellingBwtDecoder::ModellingBwtDecoder(const std::shared_ptr<BitInputStream> inputStream, int context_size, int chunkSize)
+ModellingBwtDecoder::ModellingBwtDecoder(const std::shared_ptr<BitInputStream> inputStream, int context_size, int chunkSize, int mtfDegree)
     : inputStream(inputStream), ppmBwtDecoder(
         [inputStream, context_size](std::shared_ptr<BitInputStream> inputStream1) {
             return ModellingDecoder::CreateDefault(inputStream1, context_size);
         },
-        [inputStream, chunkSize](std::shared_ptr<BitInputStream> inputStream2) {
-            return std::make_unique<BwtDecoder>(inputStream2, chunkSize);
+        [inputStream, chunkSize, mtfDegree](std::shared_ptr<BitInputStream> inputStream2) {
+            return std::make_unique<BwtDecoder>(inputStream2, chunkSize, mtfDegree);
         },
         inputStream
     ) {}

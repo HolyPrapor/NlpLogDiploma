@@ -155,7 +155,7 @@ std::unique_ptr<GenericEncoder> createGenericEncoder(const GenericCoderConfig& c
         return ModellingEncoder::CreateDefault(stream, config.modelling_coder().context_size());
     }
     if (config.has_bwt_modelling_coder()) {
-        return std::make_unique<ModellingBwtEncoder>(stream, config.bwt_modelling_coder().context_size(), config.bwt_modelling_coder().chunk_size());
+        return std::make_unique<ModellingBwtEncoder>(stream, config.bwt_modelling_coder().context_size(), config.bwt_modelling_coder().chunk_size(), config.bwt_modelling_coder().static_movement_degree());
     }
     return ModellingEncoder::CreateDefault(stream);
 }

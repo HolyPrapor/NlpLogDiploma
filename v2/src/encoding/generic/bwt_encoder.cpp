@@ -5,7 +5,7 @@
 #include "bwt_encoder.hpp"
 #include "encoding/residue_coder.hpp"
 
-BwtEncoder::BwtEncoder(const std::shared_ptr<BitOutputStream> outputStream, int chunkSize) : chunkSize(chunkSize), bwt(chunkSize), outputStream(outputStream) {
+BwtEncoder::BwtEncoder(const std::shared_ptr<BitOutputStream> outputStream, int chunkSize, int mtfDegree) : chunkSize(chunkSize), bwt(chunkSize, mtfDegree), outputStream(outputStream) {
     buffer.reserve(chunkSize);
 }
 

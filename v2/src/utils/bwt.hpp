@@ -26,7 +26,7 @@ struct node
 class BWT
 {
 public:
-    BWT(int chunkSize);
+    BWT(int chunkSize, int mtfDegree = 1);
     ~BWT();
 
     std::vector<Token> Encode(std::vector<Token>& input);
@@ -35,6 +35,7 @@ public:
 
 private:
     int chunkSize;
+    int mtfDegree;
     node *nodes[BinaryAlphabetSize + 1] = {nullptr};
     rotation* suffixes{nullptr};
 

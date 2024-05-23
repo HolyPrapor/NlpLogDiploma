@@ -147,7 +147,7 @@ int getTokenIndex(vector<Token> vector, Token token)
     return -1;
 }
 
-BWT::BWT(int chunkSize) : chunkSize(chunkSize), nodes{nullptr}, suffixes(new rotation[chunkSize + 1]) {}
+BWT::BWT(int chunkSize, int mtfDegree) : chunkSize(chunkSize), mtfDegree(mtfDegree), nodes{nullptr}, suffixes(new rotation[chunkSize + 1]) {}
 
 BWT::~BWT() {
     delete[] suffixes;
@@ -357,7 +357,7 @@ vector<Token> BWT::zleDecode(std::vector<Token>& bytes)
 vector<Token> BWT::mtfEncode(std::vector<Token>& input_text)
 {
     int len_text = static_cast<int>(input_text.size());
-    auto mtfAlphabet = MTF2Storage(getAlphabet());
+    auto mtfAlphabet = MTF2Storage(getAlphabet(), BinaryAlphabetSize, mtfDegree);
 
     vector<Token> result(len_text);
 
@@ -375,7 +375,7 @@ vector<Token> BWT::mtfEncode(std::vector<Token>& input_text)
 vector<Token> BWT::mtfDecode(std::vector<Token>& arr)
 {
     int n = static_cast<int>(arr.size());
-    auto mtfAlphabet = MTF2Storage(getAlphabet());
+    auto mtfAlphabet = MTF2Storage(getAlphabet(), BinaryAlphabetSize, mtfDegree);
 
     vector<Token> result(n);
     for (auto i = 0; i < n; i++)

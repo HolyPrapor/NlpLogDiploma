@@ -11,7 +11,7 @@
 
 class ModellingBwtDecoder : public GenericDecoder {
 public:
-    explicit ModellingBwtDecoder(const std::shared_ptr<BitInputStream> inputStream, int context_size = 3, int chunkSize = 900000);
+    explicit ModellingBwtDecoder(const std::shared_ptr<BitInputStream> inputStream, int context_size = 3, int chunkSize = 900000, int mtfDegree = 1);
     ~ModellingBwtDecoder() override = default;
 
     void Decode(BitOutputStream& data) override;

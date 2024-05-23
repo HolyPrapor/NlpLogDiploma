@@ -13,7 +13,7 @@
 
 class ModellingBwtEncoder : public GenericEncoder {
 public:
-    explicit ModellingBwtEncoder(const std::shared_ptr<BitOutputStream> outputStream, int context_size = 3, int chunkSize = 900000);
+    explicit ModellingBwtEncoder(const std::shared_ptr<BitOutputStream> outputStream, int context_size = 3, int chunkSize = 900000, int mtfDegree = 1);
     ~ModellingBwtEncoder() override = default;
 
     void Encode(BitInputStream& data) override;
