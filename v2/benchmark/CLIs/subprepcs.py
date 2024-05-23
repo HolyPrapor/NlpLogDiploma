@@ -11,13 +11,13 @@ class SubPrePCS(CompressionCLI):
         config_file = self.create_config_file(output_dir)
         filename = os.path.splitext(os.path.basename(input_file))[0]
         output_prefix = os.path.join(output_dir, filename)
-        return f"cat {config_file} | {self.executable} compress {input_file} {output_prefix}"
+        return f"{self.executable} {config_file} compress {input_file} {output_prefix}"
 
     def decompress_command(self, input_file, output_dir):
         config_file = self.create_config_file(output_dir)
         filename = os.path.splitext(os.path.basename(input_file))[0]
         output_prefix = os.path.join(output_dir, filename)
-        return f"cat {config_file} | {self.executable} decompress {output_prefix} {input_file}"
+        return f"{self.executable} {config_file} decompress {output_prefix} {input_file}"
 
     def compressed_size(self, input_file, output_dir):
         filename = os.path.splitext(os.path.basename(input_file))[0]

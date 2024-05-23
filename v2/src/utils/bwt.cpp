@@ -396,6 +396,11 @@ vector<Token> BWT::mtfDecode(std::vector<Token>& arr)
     vector<Token> result(n);
     for (auto i = 0; i < n; i++)
     {
+        if (arr[i] >= mtfAlphabet.Elements.size() || arr[i] < 0)
+        {
+            throw std::out_of_range("Index out of bounds in mtfDecode: " + to_string(arr[i]));
+        }
+
         result[i] = mtfAlphabet.Elements[arr[i]];
         mtfAlphabet.MoveToFront(mtfAlphabet.Elements.begin() + arr[i]);
     }

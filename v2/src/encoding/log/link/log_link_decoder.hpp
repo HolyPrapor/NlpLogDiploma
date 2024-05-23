@@ -11,6 +11,8 @@
 
 class LogLinkDecoder {
 public:
+    virtual ~LogLinkDecoder() = default;
+
     virtual LogLink DecodeLink(BitInputStream& inputStream) = 0;
     virtual Token DecodeToken(BitInputStream& inputStream) = 0;
 };

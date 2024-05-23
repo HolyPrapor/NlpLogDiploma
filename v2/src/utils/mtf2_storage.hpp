@@ -18,6 +18,7 @@ public:
     MTF2Storage(std::vector<T> elements, int staticMovementDegree = 1) : MTF2Storage(elements, elements.size(), staticMovementDegree) {}
     MTF2Storage(std::vector<T> elements, int maxSize, int staticMovementDegree = 1) : Elements(elements), maxSize(maxSize), staticMovementDegree(staticMovementDegree) {}
     std::vector<T> Elements;
+    ~MTF2Storage() = default;
 
     void PushAndOverflow(const T& new_element) {
         if (Elements.size() < maxSize) {
@@ -70,7 +71,11 @@ public:
     }
 
     typename std::vector<T>::iterator Find(const T& element) {
-        return std::find(Elements.begin(), Elements.end(), element);
+        auto it = std::find(Elements.begin(), Elements.end(), element);
+        if (it == Elements.end()) {
+            throw std::invalid_argument("Element not found");
+        }
+        return it;
     }
 
 private:

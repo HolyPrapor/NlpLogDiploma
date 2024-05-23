@@ -11,6 +11,8 @@
 
 class LogLinkEncoder {
 public:
+    virtual ~LogLinkEncoder() = default;
+
     virtual void EncodeLink(BitOutputStream& outputStream, const LogLink& link) = 0;
     virtual void EncodeToken(BitOutputStream& outputStream, Token token) = 0;
 };

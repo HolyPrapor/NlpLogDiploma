@@ -40,41 +40,6 @@ void createDirectoriesForFile(const std::string& filePath) {
     }
 }
 
-CompressionConfig parseEmbeddedConfig() {
-    CompressionConfig compressionConfig;
-    std::string protoStr(reinterpret_cast<const char*>(default_compression_config_textproto), default_compression_config_textproto_len);
-    google::protobuf::TextFormat::Parser parser;
-    parser.AllowUnknownField(false); // Disallow unknown fields
-    if (!parser.ParseFromString(protoStr, &compressionConfig)) {
-        throw std::runtime_error("Error: Failed to parse embedded textproto");
-    }
-    return compressionConfig;
-}
-
-CompressionConfig parseCompressionConfig() {
-    CompressionConfig compressionConfig;
-
-    int flags = fcntl(0, F_GETFL, 0);
-    fcntl(0, F_SETFL, flags | O_NONBLOCK);
-
-    // Check if std::cin has data
-    if (std::cin.peek() != std::char_traits<char>::eof()) {
-        std::ostringstream inputBuffer;
-        inputBuffer << std::cin.rdbuf();
-        std::string protoStr = inputBuffer.str();
-
-        google::protobuf::TextFormat::Parser parser;
-        parser.AllowUnknownField(false); // Disallow unknown fields
-        if (!parser.ParseFromString(protoStr, &compressionConfig)) {
-            throw std::runtime_error("Error: Failed to parse textproto from stdin");
-        }
-    } else {
-        compressionConfig = parseEmbeddedConfig();
-    }
-
-    return compressionConfig;
-}
-
 std::shared_ptr<std::ifstream> openInputFile(const std::string& filePath) {
     auto file = std::make_shared<std::ifstream>(filePath, std::ios::binary);
     if (!file->is_open()) {
@@ -90,6 +55,31 @@ std::shared_ptr<std::ofstream> openOutputFile(const std::string& filePath) {
         throw std::runtime_error("Error: Cannot open output file " + filePath);
     }
     return file;
+}
+
+CompressionConfig parseEmbeddedConfig() {
+    CompressionConfig compressionConfig;
+    std::string protoStr(reinterpret_cast<const char*>(default_compression_config_textproto), default_compression_config_textproto_len);
+    google::protobuf::TextFormat::Parser parser;
+    parser.AllowUnknownField(false); // Disallow unknown fields
+    if (!parser.ParseFromString(protoStr, &compressionConfig)) {
+        throw std::runtime_error("Error: Failed to parse embedded textproto");
+    }
+    return compressionConfig;
+}
+
+CompressionConfig parseCompressionConfig(std::string filename) {
+    CompressionConfig compressionConfig;
+
+    auto file = openInputFile(filename);
+    auto protoStr = std::string(std::istreambuf_iterator<char>(*file), std::istreambuf_iterator<char>());
+    google::protobuf::TextFormat::Parser parser;
+    parser.AllowUnknownField(false); // Disallow unknown fields
+    if (!parser.ParseFromString(protoStr, &compressionConfig)) {
+        throw std::runtime_error("Error: Failed to parse textproto from stdin");
+    }
+
+    return compressionConfig;
 }
 
 std::unique_ptr<LogLinkEncoder> createLogLinkEncoder(const PrimaryLogCoderConfig& config) {
@@ -326,24 +316,45 @@ void decompress(const std::string& inputPrefix, const std::string& outputFile, c
     decoder.Finish(outputStream);
 }
 
+void printUsage() {
+    std::cerr << "Usage:\n"
+              << "  [configPath] compress <inputfile> <outputprefix>\n"
+              << "  [configPath] decompress <inputprefix> <outputfile>\n";
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 4) {
-        std::cerr << "Usage:\n"
-                  << "  compress <inputfile> <outputprefix>\n"
-                  << "  decompress <inputprefix> <outputfile>\n";
+        printUsage();
         return 1;
     }
 
-    std::string command = argv[1];
-    std::string inputFile = argv[2];
-    std::string outputFile = argv[3];
-
+    std::string command;
+    std::string inputFile;
+    std::string outputFile;
     CompressionConfig compressionConfig;
     try {
-        compressionConfig = parseCompressionConfig();
+        compressionConfig = parseEmbeddedConfig();
     } catch (const std::exception& e) {
         std::cerr << e.what() << "\n";
         return 1;
+    }
+
+    if (argv[1] != "compress" && argv[1] != "decompress") {
+        try {
+            compressionConfig = parseCompressionConfig(argv[1]);
+        } catch (const std::exception& e) {
+            std::cerr << e.what() << "\n";
+            printUsage();
+            return 1;
+        }
+        command = argv[2];
+        inputFile = argv[3];
+        outputFile = argv[4];
+    }
+    else {
+        command = argv[1];
+        inputFile = argv[2];
+        outputFile = argv[3];
     }
 
     try {

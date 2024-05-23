@@ -97,7 +97,7 @@ def create_cli_instances():
 def hyperparameter_search(input_dir, output_dir):
     formatted_now = datetime.now().strftime("%Y%m%d_%H%M%S")
     cli_instances = create_cli_instances()
-    results = common.run_commands_in_parallel(cli_instances, input_dir, 3)
+    results = common.run_commands_in_parallel(cli_instances, input_dir, 16)
     output = os.path.join(output_dir, f'hyperparameter_search_results-{formatted_now}.csv')
     common.save_results(results, output)
 
