@@ -6,11 +6,13 @@
 #define DIPLOMA_MTF_LOG_STORAGE_HPP
 
 #include <list>
+#include <memory>
 #include "log_storage.hpp"
+#include "log_filter.hpp"
 
 class MtfLogStorage : public LogStorage {
 public:
-    explicit MtfLogStorage(int maxLogSize);
+    explicit MtfLogStorage(int maxLogSize, std::unique_ptr<LogFilter>&& filter = nullptr);
     ~MtfLogStorage() override = default;
 
     void Store(const std::vector<Token>& log) override;
@@ -20,6 +22,7 @@ public:
 
 private:
     std::list<std::vector<Token>> storage_;
+    std::unique_ptr<LogFilter> filter;
     int maxLogSize_;
 };
 

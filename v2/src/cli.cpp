@@ -31,6 +31,7 @@
 #include "encoding/log/link/storage/mtf2_log_storage.hpp"
 #include "encoding/log/link/delta_link_encoder.hpp"
 #include "encoding/log/link/delta_link_decoder.hpp"
+#include "encoding/log/link/storage/n_gram_filter.hpp"
 
 namespace fs = std::filesystem;
 
@@ -100,22 +101,35 @@ std::unique_ptr<LogStorage> createLogStorage(const PrimaryLogCoderConfig& config
     if (config.storage_size() > 0) {
         storageSize = config.storage_size();
     }
+    std::unique_ptr<LogFilter> filter = nullptr;
+    if (config.has_ngram_log_filter()) {
+        auto n = 3;
+        if (config.ngram_log_filter().n() > 0) {
+            n = config.ngram_log_filter().n();
+        }
+        auto acceptanceThreshold = 0.65f;
+        if (config.ngram_log_filter().acceptance_threshold() > 0) {
+            acceptanceThreshold = config.ngram_log_filter().acceptance_threshold();
+        }
+
+        filter = std::make_unique<NgramFilter>(n, acceptanceThreshold);
+    }
 
     if (config.has_greedy_sliding_window_storage()) {
-        return std::make_unique<GreedyLogStorage>(storageSize);
+        return std::make_unique<GreedyLogStorage>(storageSize, std::move(filter));
     }
     else if (config.has_greedy_move_to_front_storage()) {
-        return std::make_unique<MtfLogStorage>(storageSize);
+        return std::make_unique<MtfLogStorage>(storageSize, std::move(filter));
     }
     else if (config.has_greedy_move_to_front_2_storage()) {
         auto staticMovementDegree = 2;
         if (config.greedy_move_to_front_2_storage().static_movement_degree() != 0) {
             staticMovementDegree = config.greedy_move_to_front_2_storage().static_movement_degree();
         }
-        return std::make_unique<Mtf2LogStorage>(storageSize, staticMovementDegree);
+        return std::make_unique<Mtf2LogStorage>(storageSize, std::move(filter), staticMovementDegree);
     }
 
-    return std::make_unique<GreedyLogStorage>(storageSize);
+    return std::make_unique<GreedyLogStorage>(storageSize, std::move(filter));
 }
 
 std::unique_ptr<SecondaryLogEncoder> createSecondaryLogEncoder(const SecondaryLogCoderConfig& config, std::shared_ptr<BitOutputStream> secondaryStream) {

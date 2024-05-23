@@ -24,8 +24,13 @@ message PrimaryLogCoderConfig {
     GreedyMoveToFront2Storage greedy_move_to_front_2_storage = 5;
   }
 
-  int32 storage_size = 6;
-  int32 min_link_length = 7;
+  oneof filter {
+    NgramLogFilter ngram_log_filter = 6;
+    NoneLogFilter none_log_filter = 7;
+  }
+
+  int32 storage_size = 8;
+  int32 min_link_length = 9;
 }
 
 // Specific configurations for the primary log link coder
@@ -44,6 +49,16 @@ message GreedyMoveToFrontStorage {
 
 message GreedyMoveToFront2Storage {
   int32 static_movement_degree = 1;
+}
+
+// Configurations for different types of log filters
+message NgramLogFilter {
+  int32 n = 1;
+  // Logs producing numbers higher than this will be filtered
+  float acceptance_threshold = 2;
+}
+
+message NoneLogFilter {
 }
 
 message SecondaryLogCoderConfig {

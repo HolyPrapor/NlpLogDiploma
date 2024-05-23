@@ -5,10 +5,19 @@
 #include "mtf2_log_storage.hpp"
 #include "vector_search.hpp"
 
-Mtf2LogStorage::Mtf2LogStorage(int maxLogSize, int staticMovementDegree) : storage(maxLogSize, staticMovementDegree) {}
+Mtf2LogStorage::Mtf2LogStorage(int maxLogSize, std::unique_ptr<LogFilter>&& filter, int staticMovementDegree) : storage(maxLogSize, staticMovementDegree), filter(std::move(filter)), maxLogSize(maxLogSize) {}
 
 void Mtf2LogStorage::Store(const std::vector<Token>& log) {
-    storage.PushAndOverflow(log);
+    if (storage.Elements.size() == maxLogSize && filter != nullptr && filter->Filter(log)) {
+        return;
+    }
+    auto popped = storage.PushAndOverflow(log);
+    if (popped.has_value() && filter != nullptr) {
+        filter->Remove(popped.value());
+    }
+    if (filter != nullptr) {
+        filter->Store(log);
+    }
 }
 
 std::optional<LogLink> Mtf2LogStorage::TryLink(const std::vector<Token>& log, const int& startIndex, const int& minLength) {

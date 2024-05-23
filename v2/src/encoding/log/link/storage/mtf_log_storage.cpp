@@ -13,11 +13,20 @@ static void moveToFront(std::list<std::vector<Token>>& storage, int index) {
     storage.push_back(record);
 }
 
-MtfLogStorage::MtfLogStorage(int maxLogSize) : maxLogSize_(maxLogSize) {}
+MtfLogStorage::MtfLogStorage(int maxLogSize, std::unique_ptr<LogFilter>&& filter) : maxLogSize_(maxLogSize), filter(std::move(filter)) {}
 
 void MtfLogStorage::Store(const std::vector<Token>& log) {
+    if (storage_.size() == maxLogSize_ && filter != nullptr && filter->Filter(log)) {
+        return;
+    }
     storage_.push_back(log);
+    if (filter != nullptr) {
+        filter->Store(log);
+    }
     if (storage_.size() > maxLogSize_) {
+        if (filter != nullptr) {
+            filter->Remove(storage_.front());
+        }
         storage_.pop_front();
     }
 }

@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <map>
+#include <optional>
 
 template <typename T>
 class MTF2Storage {
@@ -20,7 +21,8 @@ public:
     std::vector<T> Elements;
     ~MTF2Storage() = default;
 
-    void PushAndOverflow(const T& new_element) {
+    std::optional<T> PushAndOverflow(const T& new_element) {
+        std::optional<T> pushed = std::nullopt;
         if (Elements.size() < maxSize) {
             Elements.push_back(new_element);
         } else {
@@ -28,9 +30,11 @@ public:
             int insert_location = insert_location_ratio * maxSize;
             Elements.insert(Elements.begin() + insert_location, new_element);
             frequency.erase(Elements.back());
+            pushed = std::make_optional<T>(Elements.back());
             Elements.pop_back();
         }
         frequency[new_element] = 1;
+        return pushed;
     }
 
     int MoveToFrontByIndex(int index) {

@@ -15,6 +15,7 @@
 #include "encoding/log/link/storage/mtf2_log_storage.hpp"
 #include "encoding/log/link/delta_link_decoder.hpp"
 #include "encoding/log/link/delta_link_encoder.hpp"
+#include "encoding/log/link/storage/n_gram_filter.hpp"
 
 namespace fs = std::filesystem;
 
@@ -167,7 +168,7 @@ TEST_CASE("SubPrePCS coding", "[SubPrePCS]") {
 
     SECTION("BWT + PPM") {
         runAgainstTestFiles(basePath, "ppm-bwt",
-                            [](std::shared_ptr<BitOutputStream> p, std::shared_ptr<BitOutputStream> s, std::shared_ptr<BitOutputStream> m) -> SubPrePcsEncoder {return SubPrePcsEncoder::CreateBWTPPM(p, s, m, std::make_unique<DeltaLinkEncoder>(), std::make_unique<Mtf2LogStorage>(255)); },
-                            [](std::shared_ptr<BitInputStream> p, std::shared_ptr<BitInputStream> s, std::shared_ptr<BitInputStream> m) -> SubPrePcsDecoder {return SubPrePcsDecoder::CreateBWTPPM(p, s, m, std::make_unique<DeltaLinkDecoder>(), std::make_unique<Mtf2LogStorage>(255)); });
+                            [](std::shared_ptr<BitOutputStream> p, std::shared_ptr<BitOutputStream> s, std::shared_ptr<BitOutputStream> m) -> SubPrePcsEncoder {return SubPrePcsEncoder::CreateBWTPPM(p, s, m, std::make_unique<DeltaLinkEncoder>(), std::make_unique<Mtf2LogStorage>(255, std::make_unique<NgramFilter>())); },
+                            [](std::shared_ptr<BitInputStream> p, std::shared_ptr<BitInputStream> s, std::shared_ptr<BitInputStream> m) -> SubPrePcsDecoder {return SubPrePcsDecoder::CreateBWTPPM(p, s, m, std::make_unique<DeltaLinkDecoder>(), std::make_unique<Mtf2LogStorage>(255, std::make_unique<NgramFilter>())); });
     }
 }

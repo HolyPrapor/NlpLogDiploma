@@ -6,11 +6,13 @@
 #define DIPLOMA_GREEDY_LOG_STORAGE_HPP
 
 #include <list>
+#include <memory>
 #include "log_storage.hpp"
+#include "log_filter.hpp"
 
 class GreedyLogStorage : public LogStorage {
 public:
-    explicit GreedyLogStorage(int maxLogSize);
+    explicit GreedyLogStorage(int maxLogSize, std::unique_ptr<LogFilter>&& filter = nullptr);
     ~GreedyLogStorage() override = default;
 
     void Store(const std::vector<Token>& log) override;
@@ -19,6 +21,7 @@ public:
     int GetSize() override;
 private:
     std::list<std::vector<Token>> storage_;
+    std::unique_ptr<LogFilter> filter;
     int maxLogSize_;
 };
 

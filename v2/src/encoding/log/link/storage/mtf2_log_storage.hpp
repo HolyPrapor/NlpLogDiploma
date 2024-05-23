@@ -5,12 +5,14 @@
 #ifndef DIPLOMA_MTF2_LOG_STORAGE_HPP
 #define DIPLOMA_MTF2_LOG_STORAGE_HPP
 
+#include <memory>
 #include "log_storage.hpp"
 #include "utils/mtf2_storage.hpp"
+#include "log_filter.hpp"
 
 class Mtf2LogStorage : public LogStorage {
 public:
-    explicit Mtf2LogStorage(int maxLogSize, int staticMovementDegree = 1);
+    explicit Mtf2LogStorage(int maxLogSize, std::unique_ptr<LogFilter>&& filter = nullptr, int staticMovementDegree = 1);
     ~Mtf2LogStorage() override = default;
 
     void Store(const std::vector<Token>& log) override;
@@ -20,6 +22,8 @@ public:
 
 private:
     MTF2Storage<std::vector<Token>> storage;
+    std::unique_ptr<LogFilter> filter;
+    int maxLogSize;
 };
 
 #endif //DIPLOMA_MTF2_LOG_STORAGE_HPP
