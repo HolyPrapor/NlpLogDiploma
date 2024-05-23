@@ -5,9 +5,10 @@ primary_log_coder {
   residue_log_link_coder {
   }
   greedy_move_to_front_2_storage {
+    static_movement_degree: 1
   }
   storage_size: 255
-  min_link_length: 10
+  min_link_length: 6
 }
 
 secondary_log_coder {
@@ -18,8 +19,9 @@ secondary_log_coder {
 
 generic_primary_coder {
   bwt_modelling_coder {
-    context_size: 3
-    chunk_size: 900000
+    context_size: 2
+    chunk_size: 1000000
+    static_movement_degree: 1
   }
 }
 
@@ -30,7 +32,8 @@ generic_secondary_coder {
 
 generic_markup_coder {
   bwt_modelling_coder {
-    context_size: 3
-    chunk_size: 900000
+    context_size: 2
+    chunk_size: 1000000
+    static_movement_degree: 1
   }
 }

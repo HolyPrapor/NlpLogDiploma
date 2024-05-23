@@ -29,6 +29,8 @@
 #include "encoding/generic/modelling_bwt_encoder.hpp"
 #include "encoding/generic/modelling_bwt_decoder.hpp"
 #include "encoding/log/link/storage/mtf2_log_storage.hpp"
+#include "encoding/log/link/delta_link_encoder.hpp"
+#include "encoding/log/link/delta_link_decoder.hpp"
 
 namespace fs = std::filesystem;
 
@@ -85,6 +87,9 @@ CompressionConfig parseCompressionConfig(std::string filename) {
 std::unique_ptr<LogLinkEncoder> createLogLinkEncoder(const PrimaryLogCoderConfig& config) {
     if (config.has_residue_log_link_coder()) {
         return std::make_unique<ResidueLinkEncoder>();
+    }
+    if (config.has_delta_log_link_coder()) {
+        return std::make_unique<DeltaLinkEncoder>();
     }
 
     return std::make_unique<ResidueLinkEncoder>();
@@ -219,6 +224,9 @@ std::unique_ptr<LogLinkDecoder> createLogLinkDecoder(const PrimaryLogCoderConfig
     if (config.has_residue_log_link_coder()) {
         return std::make_unique<ResidueLinkDecoder>();
     }
+    if (config.has_delta_log_link_coder()) {
+        return std::make_unique<DeltaLinkDecoder>();
+    }
 
     return std::make_unique<ResidueLinkDecoder>();
 }
@@ -339,7 +347,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    if (argv[1] != "compress" && argv[1] != "decompress") {
+    std::string pathOrCommand = argv[1];
+
+    if (pathOrCommand != "compress" && pathOrCommand != "decompress") {
         try {
             compressionConfig = parseCompressionConfig(argv[1]);
         } catch (const std::exception& e) {

@@ -13,7 +13,8 @@ def create_cli_instances():
             "min_link_length": 8,
             "greedy_move_to_front_2_storage": {
                 "static_movement_degree": 1
-            }
+            },
+            "delta_log_link_coder": {}
         },
         "secondary_log_coder": {
             "ppm_secondary_log_coder": {
@@ -45,7 +46,7 @@ def create_cli_instances():
 def benchmark_clis(input_dir, output_dir):
     formatted_now = datetime.now().strftime("%Y%m%d_%H%M%S")
     cli_instances = create_cli_instances()
-    results = common.run_commands_in_parallel(cli_instances, input_dir, 2)
+    results = common.run_commands_in_parallel(cli_instances, input_dir, 10)
     output = os.path.join(output_dir, f'benchmark_results-{formatted_now}.csv')
     common.save_results(results, output)
 

@@ -15,20 +15,24 @@ message CompressionConfig {
 message PrimaryLogCoderConfig {
   oneof log_link_coder {
     ResidueLogLinkCoder residue_log_link_coder = 1;
+    DeltaLogLinkCoder delta_log_link_coder = 2;
   }
 
   oneof storage {
-    GreedySlidingWindowStorage greedy_sliding_window_storage = 2;
-    GreedyMoveToFrontStorage greedy_move_to_front_storage = 3;
-    GreedyMoveToFront2Storage greedy_move_to_front_2_storage = 4;
+    GreedySlidingWindowStorage greedy_sliding_window_storage = 3;
+    GreedyMoveToFrontStorage greedy_move_to_front_storage = 4;
+    GreedyMoveToFront2Storage greedy_move_to_front_2_storage = 5;
   }
 
-  int32 storage_size = 5;
-  int32 min_link_length = 6;
+  int32 storage_size = 6;
+  int32 min_link_length = 7;
 }
 
 // Specific configurations for the primary log link coder
 message ResidueLogLinkCoder {
+}
+
+message DeltaLogLinkCoder {
 }
 
 // Configurations for different types of storage
