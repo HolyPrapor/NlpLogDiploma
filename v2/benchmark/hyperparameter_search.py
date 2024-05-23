@@ -68,28 +68,60 @@ def expand_cell(base, cell):
 
 def create_cli_instances():
     """Creates CLI instances for all parameter combinations."""
-    grid = SingleCell("grid",
-        SingleCell("primary_log_coder",
-                   OneOfCell("log_link_coder", SingleCell("residue_log_link_coder")),
-                   OneOfCell("storage",
-                             SingleCell("greedy_sliding_window_storage"),
-                             SingleCell("greedy_move_to_front_2_storage",
-                                        ListCell("static_movement_degree", *[-1, 1, 2]))),
-                   ListCell("storage_size", *[255]),
-                   ListCell("min_link_length", *[6, 8, 10])
-                   ),
-        SingleCell("secondary_log_coder",
-                   OneOfCell("secondary_log_coder",
-                             SingleCell("ppm_secondary_log_coder", ListCell("window_size", *[3, 4, 5])))),
-        SingleCell("generic_primary_coder",
-                   OneOfCell(SingleCell("modelling_coder", ListCell("context_size", *[2, 3, 4])),
-                             SingleCell("bwt_modelling_coder",
-                                        ListCell("context_size", *[2, 3, 4]),
-                                        ListCell("static_movement_degree", *[1, 2]))
-                             )),
+    grid = SingleCell(
+        "grid",
+        SingleCell(
+            "primary_log_coder",
+            OneOfCell(
+                "log_link_coder",
+                SingleCell("residue_log_link_coder"),
+                SingleCell("delta_log_link_coder")
+            ),
+            OneOfCell(
+                "storage",
+                SingleCell("greedy_sliding_window_storage"),
+                SingleCell(
+                    "greedy_move_to_front_2_storage",
+                    ListCell("static_movement_degree", *[-1, 1, 2])
+                )
+            ),
+            ListCell("storage_size", *[255]),
+            ListCell("min_link_length", *[8]),
+            OneOfCell(
+                "filter",
+                SingleCell("none_log_filter"),
+                SingleCell(
+                    "ngram_log_filter",
+                    ListCell("n", *[1, 2]),
+                    ListCell("acceptance_threshold", *[0.3, 0.4, 0.5])
+                )
+            ),
+        ),
+        SingleCell(
+            "secondary_log_coder",
+            OneOfCell(
+                "secondary_log_coder",
+                SingleCell("ppm_secondary_log_coder", ListCell("window_size", *[2, 3, 4])),
+            ),
+        ),
+        SingleCell(
+            "generic_primary_coder",
+            SingleCell(
+                "bwt_modelling_coder",
+                ListCell("context_size", *[2]),
+                ListCell("static_movement_degree", *[1])
+            )
+        ),
         SingleCell("generic_secondary_coder", SingleCell("identity_coder")),
-        SingleCell("generic_markup_coder", SingleCell("modelling_coder", ListCell("context_size", *[3]))),
-          )
+        SingleCell(
+            "generic_markup_coder",
+            SingleCell(
+                "bwt_modelling_coder",
+                ListCell("context_size", *[2]),
+                ListCell("static_movement_degree", *[1])
+            )
+        )
+    )
 
     return [SubPrePCS(params) for params in expand_cell({}, grid)]
 

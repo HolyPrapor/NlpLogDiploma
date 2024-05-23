@@ -118,9 +118,8 @@ def run_commands_in_parallel(clis, dataset_path, max_workers=6):
             try:
                 output = future.result()
                 results.append(output)
-                print(output)
+                # print(output)
             except Exception as e:
                 print(f'Error while running command {command}: {e}, configuration: {command[0]}')
-                break
 
     return results

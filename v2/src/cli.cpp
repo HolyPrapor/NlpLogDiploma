@@ -177,7 +177,7 @@ std::unique_ptr<GenericEncoder> createGenericEncoder(const GenericCoderConfig& c
     }
     if (config.has_bwt_modelling_coder()) {
         auto contextSize = 3;
-        auto chunkSize = 900000;
+        auto chunkSize = 1000000;
         auto staticMovementDegree = 1;
         if (config.bwt_modelling_coder().context_size() > 0) {
             contextSize = config.bwt_modelling_coder().context_size();
@@ -281,7 +281,7 @@ std::unique_ptr<GenericDecoder> createGenericDecoder(const GenericCoderConfig& c
     }
     if (config.has_bwt_modelling_coder()) {
         auto contextSize = 3;
-        auto chunkSize = 900000;
+        auto chunkSize = 1000000;
         auto staticMovementDegree = 1;
         if (config.bwt_modelling_coder().context_size() > 0) {
             contextSize = config.bwt_modelling_coder().context_size();
