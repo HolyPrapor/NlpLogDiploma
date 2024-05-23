@@ -64,7 +64,7 @@ target_include_directories(cli
         src/
         ${CMAKE_CURRENT_BINARY_DIR}
         )
-target_link_libraries(cli ${PROJECT_NAME} ${PROTOBUF_LIBRARIES} -fno-omit-frame-pointer -fsanitize=address)
+target_link_libraries(cli ${PROJECT_NAME} ${PROTOBUF_LIBRARIES})
 
 find_package(Catch2 REQUIRED)
 add_executable(tests

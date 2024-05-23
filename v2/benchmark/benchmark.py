@@ -17,13 +17,13 @@ def create_cli_instances():
         },
         "secondary_log_coder": {
             "ppm_secondary_log_coder": {
-                "window_size": 4
+                "window_size": 5
             }
         },
         "generic_primary_coder": {
             "bwt_modelling_coder": {
-                "context_size": 2,
-                "chunk_size": 100000,
+                "context_size": 3,
+                "chunk_size": 1000000,
                 "static_movement_degree": 1
             }
         },
@@ -33,7 +33,8 @@ def create_cli_instances():
         "generic_markup_coder": {
             "bwt_modelling_coder": {
                 "context_size": 3,
-                "chunk_size": 100000
+                "chunk_size": 1000000,
+                "static_movement_degree": 1
             }
         }
     }
