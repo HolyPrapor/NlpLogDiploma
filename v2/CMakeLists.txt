@@ -77,7 +77,7 @@ add_executable(tests
         tests/encoding/log/link/storage/test_greedy_log_storage.cpp
         tests/encoding/log/link/test_residue_link_coder.cpp
         tests/encoding/log/test_primary_log_coder.cpp
-        tests/encoding/generic/test_subprepcs_coder.cpp tests/utils/test_bwt.cpp)
+        tests/encoding/generic/test_subprepcs_coder.cpp tests/utils/test_bwt.cpp tests/utils/test_mtf2.cpp)
 
 target_include_directories(tests
         PUBLIC

@@ -113,7 +113,11 @@ std::unique_ptr<LogStorage> createLogStorage(const PrimaryLogCoderConfig& config
         return std::make_unique<MtfLogStorage>(storageSize);
     }
     else if (config.has_greedy_move_to_front_2_storage()) {
-        return std::make_unique<Mtf2LogStorage>(storageSize, config.greedy_move_to_front_2_storage().static_movement_degree());
+        auto staticMovementDegree = 2;
+        if (config.greedy_move_to_front_2_storage().static_movement_degree() != 0) {
+            staticMovementDegree = config.greedy_move_to_front_2_storage().static_movement_degree();
+        }
+        return std::make_unique<Mtf2LogStorage>(storageSize, staticMovementDegree);
     }
 
     return std::make_unique<GreedyLogStorage>(storageSize);
@@ -123,7 +127,11 @@ std::unique_ptr<SecondaryLogEncoder> createSecondaryLogEncoder(const SecondaryLo
     std::unique_ptr<SecondaryLogEncoder> encoder = nullptr;
 
     if (config.has_ppm_secondary_log_coder()) {
-        encoder = std::make_unique<PPMSecondaryLogEncoder>(secondaryStream, config.ppm_secondary_log_coder().window_size());
+        auto windowSize = 4;
+        if (config.ppm_secondary_log_coder().window_size() > 0) {
+            windowSize = config.ppm_secondary_log_coder().window_size();
+        }
+        encoder = std::make_unique<PPMSecondaryLogEncoder>(secondaryStream, windowSize);
     }
     else if (config.has_residue_secondary_log_coder()) {
         encoder = std::make_unique<ResidueSecondaryLogEncoder>(secondaryStream);
@@ -152,10 +160,26 @@ std::unique_ptr<GenericEncoder> createGenericEncoder(const GenericCoderConfig& c
         return std::make_unique<IdentityEncoder>(stream);
     }
     if (config.has_modelling_coder()) {
-        return ModellingEncoder::CreateDefault(stream, config.modelling_coder().context_size());
+        auto contextSize = 3;
+        if (config.modelling_coder().context_size() > 0) {
+            contextSize = config.modelling_coder().context_size();
+        }
+        return ModellingEncoder::CreateDefault(stream, contextSize);
     }
     if (config.has_bwt_modelling_coder()) {
-        return std::make_unique<ModellingBwtEncoder>(stream, config.bwt_modelling_coder().context_size(), config.bwt_modelling_coder().chunk_size(), config.bwt_modelling_coder().static_movement_degree());
+        auto contextSize = 3;
+        auto chunkSize = 900000;
+        auto staticMovementDegree = 1;
+        if (config.bwt_modelling_coder().context_size() > 0) {
+            contextSize = config.bwt_modelling_coder().context_size();
+        }
+        if (config.bwt_modelling_coder().chunk_size() > 0) {
+            chunkSize = config.bwt_modelling_coder().chunk_size();
+        }
+        if (config.bwt_modelling_coder().static_movement_degree() != 0) {
+            staticMovementDegree = config.bwt_modelling_coder().static_movement_degree();
+        }
+        return std::make_unique<ModellingBwtEncoder>(stream, contextSize, chunkSize, staticMovementDegree);
     }
     return ModellingEncoder::CreateDefault(stream);
 }
@@ -213,7 +237,11 @@ std::unique_ptr<SecondaryLogDecoder> createSecondaryLogDecoder(const SecondaryLo
     std::unique_ptr<SecondaryLogDecoder> decoder = nullptr;
 
     if (config.has_ppm_secondary_log_coder()) {
-        decoder = std::make_unique<PPMSecondaryLogDecoder>(stream, config.ppm_secondary_log_coder().window_size());
+        auto windowSize = 3;
+        if (config.ppm_secondary_log_coder().window_size() > 0) {
+            windowSize = config.ppm_secondary_log_coder().window_size();
+        }
+        decoder = std::make_unique<PPMSecondaryLogDecoder>(stream, windowSize);
     }
     else if (config.has_residue_secondary_log_coder()) {
         decoder = std::make_unique<ResidueSecondaryLogDecoder>(stream);
@@ -233,10 +261,26 @@ std::unique_ptr<GenericDecoder> createGenericDecoder(const GenericCoderConfig& c
         return std::make_unique<IdentityDecoder>(stream);
     }
     if (config.has_modelling_coder()) {
-        return ModellingDecoder::CreateDefault(stream, config.modelling_coder().context_size());
+        auto contextSize = 3;
+        if (config.modelling_coder().context_size() > 0) {
+            contextSize = config.modelling_coder().context_size();
+        }
+        return ModellingDecoder::CreateDefault(stream, contextSize);
     }
     if (config.has_bwt_modelling_coder()) {
-        return std::make_unique<ModellingBwtDecoder>(stream, config.bwt_modelling_coder().context_size(), config.bwt_modelling_coder().chunk_size());
+        auto contextSize = 3;
+        auto chunkSize = 900000;
+        auto staticMovementDegree = 1;
+        if (config.bwt_modelling_coder().context_size() > 0) {
+            contextSize = config.bwt_modelling_coder().context_size();
+        }
+        if (config.bwt_modelling_coder().chunk_size() > 0) {
+            chunkSize = config.bwt_modelling_coder().chunk_size();
+        }
+        if (config.bwt_modelling_coder().static_movement_degree() != 0) {
+            staticMovementDegree = config.bwt_modelling_coder().static_movement_degree();
+        }
+        return std::make_unique<ModellingBwtDecoder>(stream, contextSize, chunkSize, staticMovementDegree);
     }
     return ModellingDecoder::CreateDefault(stream);
 }

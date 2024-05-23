@@ -48,8 +48,8 @@ public:
                 auto freq = frequency[*element];
                 auto dist = static_cast<int>(std::distance(Elements.begin(), element));
                 auto newIndex = std::max(0, dist - freq);
-                move(Elements, dist, newIndex);
                 frequency[*element]++;
+                move(Elements, dist, newIndex);
                 return newIndex;
             }
             frequency[*element]++;
@@ -57,7 +57,8 @@ public:
         } else {
             // move the element forward every 'staticMovementDegree' time it is accessed
             auto dist = static_cast<int>(std::distance(Elements.begin(), element));
-            if (frequency[*element] == staticMovementDegree) {
+            frequency[*element]++;
+            if (frequency[*element] >= staticMovementDegree) {
                 frequency[*element] = 0;
                 if (element != Elements.begin()) {
                     move(Elements, dist, 0);

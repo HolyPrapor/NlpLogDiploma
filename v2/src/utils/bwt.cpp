@@ -97,8 +97,10 @@ void addAtLast(struct node **head, struct node *nn)
 
 void updateLeftShift(struct node **head, int index, int *leftShift)
 {
-    leftShift[index] = (*head)->data;
-    (*head) = (*head)->next;
+    struct node *temp = *head;
+    leftShift[index] = temp->data;
+    *head = (*head)->next;
+    free(temp);
 }
 
 void smartstrcpy(Token old_array[], Token *new_array, int length)
@@ -151,7 +153,16 @@ BWT::BWT(int chunkSize, int mtfDegree) : chunkSize(chunkSize), mtfDegree(mtfDegr
 
 BWT::~BWT() {
     delete[] suffixes;
-    // todo: also delete nodes?
+    for (auto i = 0; i < BinaryAlphabetSize + 1; i++)
+    {
+        struct node *temp = nodes[i];
+        while (temp != nullptr)
+        {
+            struct node *next = temp->next;
+            free(temp);
+            temp = next;
+        }
+    }
 }
 
 std::vector<Token> BWT::Encode(std::vector<Token>& inputText) {
@@ -227,6 +238,8 @@ vector<Token> BWT::bwtEncode(std::vector<Token>& input_text)
         bwt[i] = input_text[suffix_arr[i] != 0 ? suffix_arr[i] - 1 : n - 1];
     }
 
+    free(suffix_arr);
+
     return bwt;
 }
 
@@ -265,6 +278,9 @@ vector<Token> BWT::bwtDecode(std::vector<Token>& bwt_arr)
         x = leftShift[x];
         text[i] = bwt_arr[x];
     }
+
+    free(sortedBwt);
+    free(leftShift);
 
     return text;
 }

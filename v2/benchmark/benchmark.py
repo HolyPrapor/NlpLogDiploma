@@ -22,8 +22,9 @@ def create_cli_instances():
         },
         "generic_primary_coder": {
             "bwt_modelling_coder": {
-                "context_size": 3,
-                "chunk_size": 1000000
+                "context_size": 2,
+                "chunk_size": 100000,
+                "static_movement_degree": 1
             }
         },
         "generic_secondary_coder": {
@@ -32,7 +33,7 @@ def create_cli_instances():
         "generic_markup_coder": {
             "bwt_modelling_coder": {
                 "context_size": 3,
-                "chunk_size": 1000000
+                "chunk_size": 100000
             }
         }
     }

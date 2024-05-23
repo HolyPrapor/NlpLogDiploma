@@ -1,4 +1,5 @@
 import math
+import shutil
 import subprocess
 import os
 import tempfile
@@ -79,22 +80,28 @@ def save_results(results, path):
 def run_command_with_temp_dir(cli, test_type, input_file):
     """Runs the CLI command with a temporary directory and cleans up after execution."""
     with tempfile.TemporaryDirectory() as temp_dir:
-        compress_cmd = cli.compress_command(input_file, temp_dir)
+        dst = os.path.join(temp_dir, os.path.basename(input_file))
+        shutil.copyfile(input_file, dst)
+        compress_cmd = cli.compress_command(dst, temp_dir)
         start = time.time()
-        subprocess.run(compress_cmd, shell=True, check=True)
+        res = subprocess.run(compress_cmd, shell=True, check=True)
         compress_ms = (time.time() - start) * 1000
+        if res.returncode != 0:
+            raise Exception(f"Compression failed with return code {res.returncode}")
 
-        decompress_cmd = cli.decompress_command(input_file, temp_dir)
+        decompress_cmd = cli.decompress_command(dst, temp_dir)
         start = time.time()
-        subprocess.run(decompress_cmd, shell=True, check=True)
+        res = subprocess.run(decompress_cmd, shell=True, check=True)
         decompress_ms = (time.time() - start) * 1000
+        if res.returncode != 0:
+            raise Exception(f"Decompression failed with return code {res.returncode}")
 
-        compressed_size = cli.compressed_size(input_file, temp_dir)
-        original_size = os.path.getsize(input_file)
+        compressed_size = cli.compressed_size(dst, temp_dir)
+        original_size = os.path.getsize(dst)
         compression_ratio = original_size / compressed_size if compressed_size != 0 else 0
-        entropy = cli.entropy(input_file, temp_dir)
+        entropy = cli.entropy(dst, temp_dir)
 
-        formatted_filename = os.path.basename(input_file)
+        formatted_filename = os.path.basename(dst)
         return CompressionResult(str(cli), f"{test_type}-{formatted_filename}", compress_ms, decompress_ms, compression_ratio, entropy)
 
 
@@ -113,6 +120,7 @@ def run_commands_in_parallel(clis, dataset_path, max_workers=6):
                 results.append(output)
                 print(output)
             except Exception as e:
-                print(f'Error with command {command}: {e}')
+                print(f'Error while running command {command}: {e}, configuration: {command[0]}')
+                break
 
     return results
