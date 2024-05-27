@@ -5,7 +5,7 @@
 
 It's possible to specify algorithm parameters through a `.textproto` file.
 Check out `compression_config.proto` for the available options.
-Run with `cat my_config.textproto | ./cli compress <input_file> <output_prefix>` to use a custom configuration.
+Run with `./cli [config_file] compress <input_file> <output_prefix>` to use a custom configuration.
 
 # Required steps to work with the project
 
