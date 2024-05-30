@@ -129,7 +129,7 @@ void runAgainstTestFiles(const std::string& basePath,
         for (auto& file: fs::directory_iterator(p.path())) {
             auto fileName = file.path().stem().string();
             // note: disabled since they don't fit into restrictions of Github Actions
-            if (fileName != "java" && fileName != "android")
+            if (fileName != "java" /*&& fileName != "android"*/)
                 continue;
             SECTION(dirName + "/" + fileName) {
                 compressAndDecompressFile(basePath, dirName, fileName, coderName, createEncoder, createDecoder);
