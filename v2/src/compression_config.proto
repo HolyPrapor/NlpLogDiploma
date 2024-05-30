@@ -49,6 +49,7 @@ message GreedyMoveToFrontStorage {
 
 message GreedyMoveToFront2Storage {
   int32 static_movement_degree = 1;
+  bool stable = 2;
 }
 
 // Configurations for different types of log filters

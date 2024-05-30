@@ -15,18 +15,19 @@
 template <typename T>
 class MTF2Storage {
 public:
+    MTF2Storage() : maxSize(0), staticMovementDegree(1) {}
     MTF2Storage(int maxSize, int staticMovementDegree = 1) : MTF2Storage(std::vector<T>(), maxSize, staticMovementDegree) {}
     MTF2Storage(std::vector<T> elements, int staticMovementDegree = 1) : MTF2Storage(elements, elements.size(), staticMovementDegree) {}
     MTF2Storage(std::vector<T> elements, int maxSize, int staticMovementDegree = 1) : Elements(elements), maxSize(maxSize), staticMovementDegree(staticMovementDegree) {}
     std::vector<T> Elements;
     ~MTF2Storage() = default;
 
-    std::optional<T> PushAndOverflow(const T& new_element) {
+    virtual std::optional<T> PushAndOverflow(const T& new_element) {
         std::optional<T> pushed = std::nullopt;
         if (Elements.size() < maxSize) {
             Elements.push_back(new_element);
         } else {
-            const float insert_location_ratio = 0.5;
+            const float insert_location_ratio = 0.25;
             int insert_location = insert_location_ratio * maxSize;
             Elements.insert(Elements.begin() + insert_location, new_element);
             frequency.erase(Elements.back());
@@ -46,7 +47,7 @@ public:
         return MoveToFront(elementLocation);
     }
 
-    int MoveToFront(typename std::vector<T>::iterator element) {
+    virtual int MoveToFront(typename std::vector<T>::iterator element) {
         if (staticMovementDegree == -1) {
             // move the element forward by the number of times it was accessed
             if (element != Elements.begin()) {
@@ -82,7 +83,7 @@ public:
         return it;
     }
 
-private:
+protected:
     int maxSize;
     int staticMovementDegree;
     std::map<T, int> frequency;

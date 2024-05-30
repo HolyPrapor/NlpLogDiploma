@@ -12,7 +12,7 @@
 
 class Mtf2LogStorage : public LogStorage {
 public:
-    explicit Mtf2LogStorage(int maxLogSize, std::unique_ptr<LogFilter>&& filter = nullptr, int staticMovementDegree = 1);
+    explicit Mtf2LogStorage(int maxLogSize, std::unique_ptr<LogFilter>&& filter = nullptr, int staticMovementDegree = 1, bool stable = false);
     ~Mtf2LogStorage() override = default;
 
     void Store(const std::vector<Token>& log) override;
@@ -21,7 +21,7 @@ public:
     int GetSize() override;
 
 private:
-    MTF2Storage<std::vector<Token>> storage;
+    std::unique_ptr<MTF2Storage<std::vector<Token>>> storage;
     std::unique_ptr<LogFilter> filter;
     int maxLogSize;
 };

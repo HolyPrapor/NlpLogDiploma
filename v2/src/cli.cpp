@@ -126,7 +126,11 @@ std::unique_ptr<LogStorage> createLogStorage(const PrimaryLogCoderConfig& config
         if (config.greedy_move_to_front_2_storage().static_movement_degree() != 0) {
             staticMovementDegree = config.greedy_move_to_front_2_storage().static_movement_degree();
         }
-        return std::make_unique<Mtf2LogStorage>(storageSize, std::move(filter), staticMovementDegree);
+        auto stable = false;
+        if (config.greedy_move_to_front_2_storage().stable()) {
+            stable = config.greedy_move_to_front_2_storage().stable();
+        }
+        return std::make_unique<Mtf2LogStorage>(storageSize, std::move(filter), staticMovementDegree, stable);
     }
 
     return std::make_unique<GreedyLogStorage>(storageSize, std::move(filter));

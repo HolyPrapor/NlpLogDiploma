@@ -6,6 +6,7 @@ primary_log_coder {
   }
   greedy_move_to_front_2_storage {
     static_movement_degree: 1
+    stable: true
   }
   ngram_log_filter {
     n: 2
