@@ -3,6 +3,30 @@ project(diploma)
 
 set(CMAKE_CXX_STANDARD 17)
 
+find_path(ZSTD_INCLUDE_DIR NAMES zstd.h)
+
+# FIND(ZSTD REQUIRED) -- begin
+find_library(ZSTD_LIBRARY_DEBUG NAMES zstdd zstd_staticd)
+find_library(ZSTD_LIBRARY_RELEASE NAMES zstd zstd_static)
+
+include(SelectLibraryConfigurations)
+SELECT_LIBRARY_CONFIGURATIONS(ZSTD)
+
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(
+        ZSTD DEFAULT_MSG
+        ZSTD_LIBRARY ZSTD_INCLUDE_DIR
+)
+
+if (ZSTD_FOUND)
+    message(STATUS "Found Zstd: ${ZSTD_LIBRARY}")
+endif()
+
+mark_as_advanced(ZSTD_INCLUDE_DIR ZSTD_LIBRARY)
+# FIND(ZSTD REQUIRED) -- end
+
+include_directories(${ZSTD_INCLUDE_DIR})
+
 add_library(${PROJECT_NAME}
         src/encoding/utils/bit_input_stream.cpp
         src/encoding/utils/bit_output_stream.cpp
@@ -29,7 +53,23 @@ add_library(${PROJECT_NAME}
         src/encoding/log/link/storage/mtf_log_storage.cpp
         src/encoding/generic/identity_encoder.cpp
         src/encoding/generic/identity_decoder.cpp
-        src/encoding/generic/bwt_encoder.cpp src/encoding/generic/bwt_encoder.hpp src/utils/bwt.cpp src/utils/bwt.hpp src/encoding/generic/bwt_decoder.cpp src/encoding/generic/bwt_decoder.hpp src/encoding/generic/chained_generic_encoder.cpp src/encoding/generic/chained_generic_encoder.hpp src/encoding/generic/chained_generic_decoder.cpp src/encoding/generic/chained_generic_decoder.hpp src/encoding/generic/modelling_bwt_encoder.cpp src/encoding/generic/modelling_bwt_encoder.hpp src/encoding/generic/modelling_bwt_decoder.cpp src/encoding/generic/modelling_bwt_decoder.hpp src/utils/mtf2_storage.hpp src/encoding/log/link/storage/mtf2_log_storage.cpp src/encoding/log/link/storage/mtf2_log_storage.hpp src/encoding/log/zigzag_coder.hpp src/encoding/log/link/delta_link_encoder.cpp src/encoding/log/link/delta_link_encoder.hpp src/encoding/log/link/delta_link_decoder.cpp src/encoding/log/link/delta_link_decoder.hpp src/encoding/log/link/storage/log_filter.hpp src/encoding/log/link/storage/n_gram_filter.cpp src/encoding/log/link/storage/n_gram_filter.hpp src/utils/mtf2_stable_storage.hpp)
+        src/encoding/generic/bwt_encoder.cpp
+        src/utils/bwt.cpp
+        src/encoding/generic/bwt_decoder.cpp
+        src/encoding/generic/chained_generic_encoder.cpp
+        src/encoding/generic/chained_generic_decoder.cpp
+        src/encoding/generic/modelling_bwt_encoder.cpp
+        src/encoding/generic/modelling_bwt_decoder.cpp
+        src/utils/mtf2_storage.hpp
+        src/encoding/log/link/storage/mtf2_log_storage.cpp
+        src/encoding/log/zigzag_coder.hpp
+        src/encoding/log/link/delta_link_encoder.cpp
+        src/encoding/log/link/delta_link_decoder.cpp
+        src/encoding/log/link/storage/log_filter.hpp
+        src/encoding/log/link/storage/n_gram_filter.cpp
+        src/utils/mtf2_stable_storage.hpp
+        src/encoding/generic/zstd/zstdstream.cpp
+        src/encoding/generic/zstd/zstdstream.hpp)
 
 target_include_directories(${PROJECT_NAME}
         PUBLIC
@@ -64,7 +104,7 @@ target_include_directories(cli
         src/
         ${CMAKE_CURRENT_BINARY_DIR}
         )
-target_link_libraries(cli ${PROJECT_NAME} ${PROTOBUF_LIBRARIES})
+target_link_libraries(cli ${PROJECT_NAME} ${PROTOBUF_LIBRARIES} ${ZSTD_LIBRARIES})
 
 find_package(Catch2 REQUIRED)
 add_executable(tests
@@ -77,7 +117,10 @@ add_executable(tests
         tests/encoding/log/link/storage/test_greedy_log_storage.cpp
         tests/encoding/log/link/test_residue_link_coder.cpp
         tests/encoding/log/test_primary_log_coder.cpp
-        tests/encoding/generic/test_subprepcs_coder.cpp tests/utils/test_bwt.cpp tests/utils/test_mtf2.cpp)
+        tests/encoding/generic/test_subprepcs_coder.cpp
+        tests/utils/test_bwt.cpp
+        tests/utils/test_mtf2.cpp
+        tests/encoding/generic/test_zstd.cpp tests/encoding/generic/test_zstd.cpp tests/encoding/generic/test_zstd.cpp)
 
 target_include_directories(tests
         PUBLIC
@@ -87,5 +130,6 @@ target_include_directories(tests
 target_link_libraries(tests
         Catch2::Catch2WithMain
         ${PROJECT_NAME}
+        ${ZSTD_LIBRARIES}
         -fno-omit-frame-pointer -fsanitize=address
         )
