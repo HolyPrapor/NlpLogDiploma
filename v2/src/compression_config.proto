@@ -31,6 +31,7 @@ message PrimaryLogCoderConfig {
 
   int32 storage_size = 8;
   int32 min_link_length = 9;
+  bool use_optimal_partitioning = 10;
 }
 
 // Specific configurations for the primary log link coder

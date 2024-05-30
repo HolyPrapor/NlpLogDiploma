@@ -143,7 +143,7 @@ SubPrePcsEncoder SubPrePcsEncoder::CreateBWTPPM(
             secondary,
             markup,
             [](std::unique_ptr<LogLinkEncoder> linkEncoder, std::unique_ptr<LogStorage> storage, std::unique_ptr<SecondaryLogEncoder> secondaryEncoder, std::shared_ptr<BitOutputStream> primaryOut, std::shared_ptr<BitOutputStream> markupOut) {
-                return std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryOut, markupOut);
+                return std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryEncoder), primaryOut, markupOut, 6, true);
             },
             [](std::shared_ptr<BitOutputStream> out) { return std::make_unique<PPMSecondaryLogEncoder>(out); },
             [](std::shared_ptr<BitOutputStream> out) { return std::make_unique<ModellingBwtEncoder>(out); },

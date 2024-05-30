@@ -6,7 +6,7 @@ primary_log_coder {
   }
   greedy_move_to_front_2_storage {
     static_movement_degree: 1
-    stable: true
+    stable: false
   }
   ngram_log_filter {
     n: 2
@@ -14,6 +14,7 @@ primary_log_coder {
   }
   storage_size: 255
   min_link_length: 6
+  use_optimal_partitioning: true
 }
 
 secondary_log_coder {

@@ -165,6 +165,11 @@ std::unique_ptr<PrimaryLogEncoder> createPrimaryLogEncoder(const PrimaryLogCoder
         minLinkLength = config.min_link_length();
     }
 
+    bool useOptimalPartitioning = true;
+    if (config.use_optimal_partitioning()) {
+        useOptimalPartitioning = config.use_optimal_partitioning();
+    }
+
     return std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryLogEncoder), primaryStream, markupStream, minLinkLength);
 }
 
