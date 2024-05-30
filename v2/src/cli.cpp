@@ -32,6 +32,8 @@
 #include "encoding/log/link/delta_link_encoder.hpp"
 #include "encoding/log/link/delta_link_decoder.hpp"
 #include "encoding/log/link/storage/n_gram_filter.hpp"
+#include "encoding/generic/zstd/zstd_decoder.hpp"
+#include "encoding/generic/zstd/zstd_encoder.hpp"
 
 namespace fs = std::filesystem;
 
@@ -199,6 +201,13 @@ std::unique_ptr<GenericEncoder> createGenericEncoder(const GenericCoderConfig& c
         }
         return std::make_unique<ModellingBwtEncoder>(stream, contextSize, chunkSize, staticMovementDegree);
     }
+    if (config.has_zstd_coder()) {
+        auto compressionLevel = 20;
+        if (config.zstd_coder().compression_level() > 0) {
+            compressionLevel = config.zstd_coder().compression_level();
+        }
+        return std::make_unique<ZstdEncoder>(stream, compressionLevel);
+    }
     return ModellingEncoder::CreateDefault(stream);
 }
 
@@ -302,6 +311,9 @@ std::unique_ptr<GenericDecoder> createGenericDecoder(const GenericCoderConfig& c
             staticMovementDegree = config.bwt_modelling_coder().static_movement_degree();
         }
         return std::make_unique<ModellingBwtDecoder>(stream, contextSize, chunkSize, staticMovementDegree);
+    }
+    if (config.has_zstd_coder()) {
+        return std::make_unique<ZstdDecoder>(stream);
     }
     return ModellingDecoder::CreateDefault(stream);
 }

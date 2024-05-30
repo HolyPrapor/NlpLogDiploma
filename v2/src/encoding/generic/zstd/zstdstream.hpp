@@ -37,7 +37,7 @@ namespace zstd {
 */
     class cstream {
     public:
-        static constexpr int defaultLevel = 5;
+        static constexpr int defaultLevel = 20;
 
         cstream();
         ~cstream();

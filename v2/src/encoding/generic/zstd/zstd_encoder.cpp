@@ -4,8 +4,8 @@
 
 #include "zstd_encoder.hpp"
 
-ZstdEncoder::ZstdEncoder(const std::shared_ptr<BitOutputStream>& outputStream)
-    : outputStream_(outputStream), zstdStream_(*outputStream->Data()) {}
+ZstdEncoder::ZstdEncoder(const std::shared_ptr<BitOutputStream>& outputStream, int compressionLevel)
+    : outputStream_(outputStream), zstdStream_(*outputStream->Data(), compressionLevel) {}
 
 void ZstdEncoder::Encode(BitInputStream& data) {
     while (!data.IsEOF()) {

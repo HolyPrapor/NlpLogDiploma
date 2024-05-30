@@ -11,7 +11,7 @@
 
 class ZstdEncoder : public GenericEncoder {
 public:
-    explicit ZstdEncoder(const std::shared_ptr<BitOutputStream>& outputStream);
+    explicit ZstdEncoder(const std::shared_ptr<BitOutputStream>& outputStream, int compressionLevel = zstd::cstream::defaultLevel);
     ~ZstdEncoder() override = default;
 
     void Encode(BitInputStream& data) override;

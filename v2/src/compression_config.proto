@@ -87,6 +87,7 @@ message GenericCoderConfig {
     ModellingCoder modelling_coder = 1;
     IdentityCoder identity_coder = 2;
     BwtModellingCoder bwt_modelling_coder = 3;
+    ZstdCoder zstd_coder = 4;
   }
 }
 
@@ -102,4 +103,8 @@ message BwtModellingCoder {
 }
 
 message IdentityCoder {
+}
+
+message ZstdCoder {
+  int32 compression_level = 1;
 }
