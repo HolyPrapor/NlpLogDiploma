@@ -53,6 +53,10 @@ public:
         }
         return eof;
     }
+
+    std::shared_ptr<std::istream>& Data() {
+        return input_stream_;
+    }
 };
 
 #endif //NLPLOGDIPLOMA_BIT_INPUT_STREAM_H

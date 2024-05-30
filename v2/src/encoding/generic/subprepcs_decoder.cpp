@@ -13,6 +13,7 @@
 #include "encoding/log/link/residue_link_encoder.hpp"
 #include "identity_decoder.hpp"
 #include "modelling_bwt_decoder.hpp"
+#include "encoding/generic/zstd/zstd_decoder.hpp"
 
 SubPrePcsDecoder SubPrePcsDecoder::Create(std::shared_ptr<BitInputStream> primary,
                                           std::shared_ptr<BitInputStream> secondary,
@@ -135,6 +136,27 @@ SubPrePcsDecoder SubPrePcsDecoder::CreateBWTPPM(std::shared_ptr<BitInputStream> 
             [](std::shared_ptr<BitInputStream> in) { return std::make_unique<ModellingBwtDecoder>(in); },
             [](std::shared_ptr<BitInputStream> in) { return std::make_unique<IdentityDecoder>(in); },
             [](std::shared_ptr<BitInputStream> in) { return std::make_unique<ModellingBwtDecoder>(in); },
+            std::move(linkDecoder),
+            std::move(storage)
+    );
+}
+
+SubPrePcsDecoder SubPrePcsDecoder::CreateZstd(std::shared_ptr<BitInputStream> primary,
+                                              std::shared_ptr<BitInputStream> secondary,
+                                              std::shared_ptr<BitInputStream> markup,
+                                              std::unique_ptr<LogLinkDecoder> linkDecoder,
+                                              std::unique_ptr<LogStorage> storage) {
+    return Create(
+            primary,
+            secondary,
+            markup,
+            [](std::unique_ptr<LogLinkDecoder> linkDecoder, std::unique_ptr<LogStorage> storage, std::unique_ptr<SecondaryLogDecoder> secondaryDecoder, std::shared_ptr<BitInputStream> primaryIn, std::shared_ptr<BitInputStream> markupIn) {
+                return std::make_unique<PrimaryLogDecoder>(std::move(linkDecoder), std::move(storage), std::move(secondaryDecoder), primaryIn, markupIn);
+            },
+            [](std::shared_ptr<BitInputStream> in) { return std::make_unique<ResidueSecondaryLogDecoder>(in); },
+            [](std::shared_ptr<BitInputStream> in) { return std::make_unique<ZstdDecoder>(in); },
+            [](std::shared_ptr<BitInputStream> in) { return std::make_unique<ZstdDecoder>(in);  },
+            [](std::shared_ptr<BitInputStream> in) { return std::make_unique<ZstdDecoder>(in);  },
             std::move(linkDecoder),
             std::move(storage)
     );

@@ -39,6 +39,10 @@ public:
             WriteByte(byte);
         }
     }
+
+    std::shared_ptr<std::ostream>& Data() {
+        return output_stream_;
+    }
 };
 
 #endif //NLPLOGDIPLOMA_BIT_OUTPUT_STREAM_H

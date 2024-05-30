@@ -69,7 +69,7 @@ add_library(${PROJECT_NAME}
         src/encoding/log/link/storage/n_gram_filter.cpp
         src/utils/mtf2_stable_storage.hpp
         src/encoding/generic/zstd/zstdstream.cpp
-        src/encoding/generic/zstd/zstdstream.hpp)
+        src/encoding/generic/zstd/zstdstream.hpp src/encoding/generic/zstd/zstd_encoder.cpp src/encoding/generic/zstd/zstd_encoder.hpp src/encoding/generic/zstd/zstd_decoder.cpp src/encoding/generic/zstd/zstd_decoder.hpp)
 
 target_include_directories(${PROJECT_NAME}
         PUBLIC

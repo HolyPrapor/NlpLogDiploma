@@ -11,4 +11,5 @@ Run with `./cli [config_file] compress <input_file> <output_prefix>` to use a cu
 
 1. Install cmake (sudo apt-get install cmake)
 2. Install Protobuf (sudo apt-get install libprotobuf-dev protobuf-compiler)
-3. Install Catch2 (https://github.com/etaler/Etaler/issues/33#issuecomment-508972564)
+3. Install zstd (sudo apt-get install libzstd-dev)
+4. Install Catch2 (https://github.com/etaler/Etaler/issues/33#issuecomment-508972564)
