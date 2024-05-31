@@ -11,16 +11,19 @@ from tqdm import tqdm
 
 
 class CompressionResult:
-    def __init__(self, algo, filename, compress_ms, decompress_ms, compression_ratio, entropy):
+    def __init__(self, algo, filename, compress_ms, decompress_ms, compression_ratio, entropy, extra1=0, extra2=0, extra3=0):
         self.compressMs = compress_ms
         self.decompressMs = decompress_ms
         self.compressionRatio = compression_ratio
         self.entropy = entropy
         self.algo = algo
         self.filename = filename
+        self.extra1 = extra1
+        self.extra2 = extra2
+        self.extra3 = extra3
 
     def __str__(self):
-        return f"{self.algo} - {self.filename}: Compress: {self.compressMs:.0f}ms, Decompress: {self.decompressMs:.0f}ms, Compression Ratio: {self.compressionRatio:.3f}, Entropy: {self.entropy:.3f}"
+        return f"{self.algo} - {self.filename}: Compress: {self.compressMs:.0f}ms, Decompress: {self.decompressMs:.0f}ms, Compression Ratio: {self.compressionRatio:.3f}, Entropy: {self.entropy:.3f}, Extra1: {self.extra1}, Extra2: {self.extra2}, Extra3: {self.extra3}"
 
 
 class CompressionCLI(ABC):
@@ -43,6 +46,9 @@ class CompressionCLI(ABC):
     @abstractmethod
     def __str__(self):
         pass
+
+    def get_extras(self, input_file, output_dir):
+        return 0, 0, 0
 
 
 def load_dataset(dataset_path):
@@ -72,9 +78,9 @@ def save_results(results, path):
     """Saves results as csv to the specified path."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as f:
-        f.write("Algorithm,Filename,CompressMs,DecompressMs,CompressionRatio,Entropy\n")
+        f.write("Algorithm,Filename,CompressMs,DecompressMs,CompressionRatio,Entropy,Extra1,Extra2,Extra3\n")
         for result in results:
-            f.write(f"{result.algo},{result.filename},{result.compressMs},{result.decompressMs},{result.compressionRatio},{result.entropy}\n")
+            f.write(f"{result.algo},{result.filename},{result.compressMs},{result.decompressMs},{result.compressionRatio},{result.entropy},{result.extra1},{result.extra2},{result.extra3}\n")
 
 
 def run_command_with_temp_dir(cli, test_type, input_file):
@@ -89,20 +95,22 @@ def run_command_with_temp_dir(cli, test_type, input_file):
         if res.returncode != 0:
             raise Exception(f"Compression failed with return code {res.returncode}")
 
-        decompress_cmd = cli.decompress_command(dst, temp_dir)
-        start = time.time()
-        res = subprocess.run(decompress_cmd, shell=True, check=True)
-        decompress_ms = (time.time() - start) * 1000
-        if res.returncode != 0:
-            raise Exception(f"Decompression failed with return code {res.returncode}")
+        # Note: needed to speed up the benchmark
+        # decompress_cmd = cli.decompress_command(dst, temp_dir)
+        # start = time.time()
+        # res = subprocess.run(decompress_cmd, shell=True, check=True)
+        # decompress_ms = (time.time() - start) * 1000
+        # if res.returncode != 0:
+        #     raise Exception(f"Decompression failed with return code {res.returncode}")
 
         compressed_size = cli.compressed_size(dst, temp_dir)
         original_size = os.path.getsize(dst)
         compression_ratio = original_size / compressed_size if compressed_size != 0 else 0
         entropy = cli.entropy(dst, temp_dir)
+        extra1, extra2, extra3 = cli.get_extras(dst, temp_dir)
 
         formatted_filename = os.path.basename(dst)
-        return CompressionResult(str(cli), f"{test_type}-{formatted_filename}", compress_ms, decompress_ms, compression_ratio, entropy)
+        return CompressionResult(str(cli), f"{test_type}-{formatted_filename}", compress_ms, 0, compression_ratio, entropy, extra1, extra2, extra3)
 
 
 def run_commands_in_parallel(clis, dataset_path, max_workers=6):

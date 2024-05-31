@@ -1,0 +1,8 @@
+Algorithm,Filename,CompressMs,DecompressMs,CompressionRatio,Entropy,Extra1,Extra2,Extra3
+zstd,medium-java.log,39.70789909362793,0,131.47782724430135,0.9953304038071027,0,0,0
+gzip,medium-java.log,74.91874694824219,0,58.43798629839735,0.968294048538507,0,0,0
+rar,medium-java.log,161.45563125610352,0,131.78880525714817,0.9977968974086615,0,0,0
+zpaq,medium-java.log,217.90409088134766,0,71.18523040517577,0.9875558529192802,0,0,0
+7zip,medium-java.log,589.5974636077881,0,117.67484394506866,0.9997883804068206,0,0,0
+bzip2,medium-java.log,1707.021713256836,0,90.9339153924075,0.994107565163875,0,0,0
+SubPrePCS({'primary_log_coder': {'residue_log_link_coder': {} 'greedy_move_to_front_2_storage': {'static_movement_degree': 1 'stable': False} 'storage_size': 1020 'min_link_length': 3 'ngram_log_filter': {'n': 1 'acceptance_threshold': 0.55} 'use_optimal_partitioning': False} 'secondary_log_coder': {'residue_secondary_log_coder': {}} 'generic_primary_coder': {'zstd_coder': {'compression_level': 22}} 'generic_secondary_coder': {'zstd_coder': {'compression_level': 22}} 'generic_markup_coder': {'zstd_coder': {'compression_level': 22}}}),medium-java.log,4170.243247350057,0,174.28374310230262,0.999518209309012,41468,18246,44125

@@ -33,6 +33,13 @@ class SubPrePCS(CompressionCLI):
         markup = os.path.join(output_dir, f'{filename}_markup')
         return calculate_entropy([primary, secondary, markup])
 
+    def get_extras(self, input_file, output_dir):
+        filename = os.path.splitext(os.path.basename(input_file))[0]
+        primary = os.path.join(output_dir, f'{filename}_primary')
+        secondary = os.path.join(output_dir, f'{filename}_secondary')
+        markup = os.path.join(output_dir, f'{filename}_markup')
+        return os.path.getsize(primary), os.path.getsize(secondary), os.path.getsize(markup)
+
     def create_config_file(self, output_dir):
         config_file_path = os.path.join(output_dir, 'compression_config.textproto')
         save_textproto(self.params, config_file_path)
