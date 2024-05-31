@@ -113,8 +113,12 @@ std::unique_ptr<LogStorage> createLogStorage(const PrimaryLogCoderConfig& config
         if (config.ngram_log_filter().acceptance_threshold() > 0) {
             acceptanceThreshold = config.ngram_log_filter().acceptance_threshold();
         }
+        auto useCosineSimilarity = false;
+        if (config.ngram_log_filter().use_cosine_similarity()) {
+            useCosineSimilarity = config.ngram_log_filter().use_cosine_similarity();
+        }
 
-        filter = std::make_unique<NgramFilter>(n, acceptanceThreshold);
+        filter = std::make_unique<NgramFilter>(n, acceptanceThreshold, useCosineSimilarity);
     }
 
     if (config.has_greedy_sliding_window_storage()) {
@@ -167,12 +171,12 @@ std::unique_ptr<PrimaryLogEncoder> createPrimaryLogEncoder(const PrimaryLogCoder
         minLinkLength = config.min_link_length();
     }
 
-    bool useOptimalPartitioning = true;
+    bool useOptimalPartitioning = false;
     if (config.use_optimal_partitioning()) {
         useOptimalPartitioning = config.use_optimal_partitioning();
     }
 
-    return std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryLogEncoder), primaryStream, markupStream, minLinkLength);
+    return std::make_unique<PrimaryLogEncoder>(std::move(linkEncoder), std::move(storage), std::move(secondaryLogEncoder), primaryStream, markupStream, minLinkLength, useOptimalPartitioning);
 }
 
 std::unique_ptr<GenericEncoder> createGenericEncoder(const GenericCoderConfig& config, std::shared_ptr<BitOutputStream> stream) {

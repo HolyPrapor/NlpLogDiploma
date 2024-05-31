@@ -58,6 +58,7 @@ message NgramLogFilter {
   int32 n = 1;
   // Logs producing numbers higher than this will be filtered
   float acceptance_threshold = 2;
+  bool use_cosine_similarity = 3;
 }
 
 message NoneLogFilter {
